@@ -1,0 +1,4 @@
+*.py?
+.env
+/db/*.db
+/db/*.db-journal

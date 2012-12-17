@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+{% block body %}
+  {% if series_list %}
+    <ul class="feeds">
+      {% for series in series_list %}
+        <li>
+          <div class="thumbnail">
+            <img src="{{ series.thumbnail_url|via_imgproxy }}" alt="" width="217" height="165" title="{{ series.title }}" />
+          </div>
+          <div class="text">
+            <a href="{{ url_for('show_feed', series_id=series.id) }}">
+              <b>{{ series.title }}</b>
+              <br />
+              {{ series.author }}
+            </a>
+          </div>
+          <div class="links">
+            <a href="http://www.google.com/reader/view/feed/{{ url_for('show_feed', series_id=series.id)|make_external }}" target="_blank" class="hide-text" title="Google 리더에서 보기"><i class="icon-google-reader"></i>Google 리더에서 보기</a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>구독할 수 있는 웹툰이 없습니다.</p>
+  {% endif %}
+  <div class="clear"></div>
+{% endblock %}

@@ -1,0 +1,17 @@
+Flask==0.9
+Flask-Cache==0.9.2
+Flask-SQLAlchemy==0.16
+Flask-Script==0.5.1
+Jinja2==2.6
+SQLAlchemy==0.8.0b2
+Werkzeug==0.8.3
+argparse==1.2.1
+gevent==0.13.8
+greenlet==0.4.0
+gunicorn==0.16.1
+lxml==3.0.2
+mechanize==0.2.5
+psycopg2==2.4.6
+python-memcached==1.48
+pytz==2012h
+wsgiref==0.1.2
