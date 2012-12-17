@@ -90,19 +90,24 @@ class Series(db.Model):
 
     def update(self):
         app.logger.debug('Updating series #%d', self.id)
-        r = browser.open(NAVER_URLS['last_chapter'].format(series_id=self.id))
+        url = NAVER_URLS['last_chapter'].format(series_id=self.id)
+        r = browser.open(url)
         try:
             doc = lxml.html.fromstring(r.read())
         except AttributeError:
             return
-        comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
-        self.title = comicinfo_dsc.xpath('h2/text()')[0].strip()
-        self.author = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
-        self.description = br2nl(comicinfo_dsc.xpath('p[@class="txt"]')[0].inner_html()).strip()
-        remote_url = doc.xpath('//meta[@property="og:url"]/@content')[0]
-        self.last_chapter = int(re.search('no=(\d+)', remote_url).group(1))
-        self.is_completed = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip() == u'완결웹툰'
-        self.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
+        if r.geturl() != url:
+            app.logger.warning('Series #{0} seems removed'.format(self.id))
+            self.is_completed = True
+        else:
+            comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
+            self.title = comicinfo_dsc.xpath('h2/text()')[0].strip()
+            self.author = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
+            self.description = br2nl(comicinfo_dsc.xpath('p[@class="txt"]')[0].inner_html()).strip()
+            remote_url = doc.xpath('//meta[@property="og:url"]/@content')[0]
+            self.last_chapter = int(re.search('no=(\d+)', remote_url).group(1))
+            self.is_completed = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip() == u'완결웹툰'
+            self.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
 
     def update_chapters(self, update_self=False):
         if update_self:
