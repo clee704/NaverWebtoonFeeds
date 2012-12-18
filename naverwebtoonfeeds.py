@@ -113,22 +113,29 @@ class Series(db.Model):
     def update(self):
         app.logger.debug('Updating series #%d', self.id)
         url = Naver.URL['last_chapter'].format(series_id=self.id)
+        app.logger.debug('Requesting GET %s', url)
         doc, response = browser.get(url)
+        app.logger.debug('Response URL: %s', url)
         if response.url != url and 'login' not in response.url:
-            # Redirected to a page other than requiring login
+            app.logger.debug('Redirected to a page other than requiring login')
             if not self.is_completed:
                 app.logger.warning('Series #%d seems removed', self.id)
                 self.is_completed = True
         else:
-            comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
-            permalink     = doc.xpath('//meta[@property="og:url"]/@content')[0]
-            status        = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
-            self.title         = comicinfo_dsc.xpath('h2/text()')[0].strip()
-            self.author        = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
-            self.description   = br2nl(comicinfo_dsc.xpath('p[@class="txt"]')[0].inner_html())
-            self.last_chapter  = int(re.search('no=(\d+)', permalink).group(1))
-            self.is_completed  = status == u'완결웹툰'
-            self.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
+            app.logger.debug('Parsing series info')
+            try:
+                comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
+                permalink     = doc.xpath('//meta[@property="og:url"]/@content')[0]
+                status        = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
+                self.title         = comicinfo_dsc.xpath('h2/text()')[0].strip()
+                self.author        = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
+                self.description   = br2nl(comicinfo_dsc.xpath('p[@class="txt"]')[0].inner_html())
+                self.last_chapter  = int(re.search('no=(\d+)', permalink).group(1))
+                self.is_completed  = status == u'완결웹툰'
+                self.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
+            except IndexError:
+                app.logger.error('An IndexError occured', exc_info=True)
+                app.logger.error(response.text)
 
 
 class Chapter(db.Model):
