@@ -14,6 +14,8 @@ URL_ROOT = 'http://example.com'
 # If set, DEBUG level logs will be printed.
 DEBUG = False
 
+LOG_LEVEL = logging.WARNING
+
 # If set, email logs of the specified level to admins.
 #SEND_EMAIL = not DEBUG
 EMAIL_LEVEL = logging.ERROR

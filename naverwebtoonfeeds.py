@@ -11,16 +11,23 @@ app = Flask(__name__)
 app.config.from_object('default_settings')
 app.config.from_envvar('NAVERWEBTOONFEEDS_SETTINGS')
 
+app.logger.setLevel(app.config['LOG_LEVEL'])
+formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s')
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.DEBUG)
+stream_handler.setFormatter(formatter)
+app.logger.addHandler(stream_handler)
 if app.config.get('SEND_EMAIL'):
     from logging.handlers import SMTPHandler
-    handler = SMTPHandler(app.config['MAIL_HOST'],
-                          app.config['MAIL_FROMADDR'],
-                          app.config['MAIL_TOADDRS'],
-                          app.config['MAIL_SUBJECT'],
-                          app.config['MAIL_CREDENTIALS'],
-                          app.config['MAIL_SECURE'])
-    handler.setLevel(app.config['EMAIL_LEVEL'])
-    app.logger.addHandler(handler)
+    smtp_handler = SMTPHandler(app.config['MAIL_HOST'],
+                               app.config['MAIL_FROMADDR'],
+                               app.config['MAIL_TOADDRS'],
+                               app.config['MAIL_SUBJECT'],
+                               app.config['MAIL_CREDENTIALS'],
+                               app.config['MAIL_SECURE'])
+    smtp_handler.setLevel(app.config['EMAIL_LEVEL'])
+    smtp_handler.setFormatter(formatter)
+    app.logger.addHandler(smtp_handler)
 
 # Time zone should be the same as that used by Naver
 tz = pytz.timezone('Asia/Seoul')
@@ -72,6 +79,7 @@ class MyBrowser(object):
         if 'location.replace' not in r.text[:100]:
             raise RuntimeError("Cannot log in to naver.com")
         self.last_login = datetime.now()
+        app.logger.info('Logged in')
 
     def get(self, url):
         if (self.last_login is None or
@@ -80,10 +88,12 @@ class MyBrowser(object):
         errors = 0
         while True:
             try:
+                app.logger.debug('Requesting GET %s', url)
                 r = requests.get(url, cookies=self.cookies, headers=self.headers)
                 self.cookies = r.cookies
                 return r
             except urllib2.URLError:
+                app.logger.info('A URLError occurred', exc_info=True)
                 if errors > 5:
                     raise
                 errors += 1
@@ -110,8 +120,8 @@ class Series(db.Model):
             doc = lxml.html.fromstring(r.text)
         except AttributeError:
             return
-        if r.url != url:
-            app.logger.warning('Series #{0} seems removed'.format(self.id))
+        if r.url != url and 'login' not in r.url:
+            app.logger.warning('Series #%d seems removed', self.id)
             self.is_completed = True
         else:
             comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
@@ -122,11 +132,6 @@ class Series(db.Model):
             self.last_chapter = int(re.search('no=(\d+)', remote_url).group(1))
             self.is_completed = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip() == u'완결웹툰'
             self.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
-
-    def update_chapters(self, update_self=False):
-        if update_self:
-            self.update()
-        update_chapters(self)
 
 
 class Chapter(db.Model):
@@ -218,27 +223,32 @@ lxml.html.HtmlElement.inner_html = inner_html
 # Views
 @app.route('/')
 def show_feed_list():
+    app.logger.info('GET /')
     response = cache.get(show_feed_list.cache_key)
     if response:
+        app.logger.debug('Cache hit')
         return response
     valid_for = update_series_info()
     series_list = Series.query.filter_by(is_completed=False).order_by(Series.title).all()
     response = render_template('feeds.html', series_list=series_list)
     cache.set(show_feed_list.cache_key, response, valid_for)
+    app.logger.debug('Cache created')
     return response
 show_feed_list.cache_key = 'feeds'
 
 
 @app.route('/feeds/<int:series_id>.xml')
 def show_feed(series_id):
+    app.logger.info('GET /feeds/%d.xml', series_id)
     cache_key = show_feed.cache_key.format(series_id)
     response = cache.get(cache_key)
     if response:
+        app.logger.debug('Cache hit')
         return response
     series = Series.query.get(series_id)
     if series is None:
         abort(404)
-    valid_for = series.update_chapters(update_self=True)
+    valid_for = update_chapters(series, update_series=True)
     chapters = []
     for c in series.chapters:
         # _pubdate_tz is used in templates to correct time zone
@@ -247,6 +257,7 @@ def show_feed(series_id):
     xml = render_template('feed.xml', series=series, chapters=chapters, naver_url=naver_url)
     response = Response(response=xml, content_type='application/atom+xml')
     cache.set(cache_key, response, valid_for)
+    app.logger.debug('Cache created')
     return response
 show_feed.cache_key = 'feed_{0}'
 
@@ -326,7 +337,7 @@ def update_series_info(force_update=False, should_update_chapters=False):
         try:
             db.session.commit()
         except IntegrityError:
-            app.logger.warning('IntegrityError', exc_info=True)
+            app.logger.error('IntegrityError', exc_info=True)
             db.session.rollback()
             continue
         if should_update_chapters:
@@ -339,7 +350,7 @@ def update_series_info(force_update=False, should_update_chapters=False):
     return update_interval
 
 
-def update_chapters(series):
+def update_chapters(series, update_series=False):
     """
     Get new chapters of the specified series. Returns the remaining seconds
     before the next update can occur.
@@ -348,6 +359,10 @@ def update_chapters(series):
     previous update is within 1 hour ago, update will not occur.
 
     """
+    if update_series:
+        series.update()
+        db.session.add(series)
+        db.session.commit()
     update_interval = timedelta(hours=1)
     config_key = '{0}_chapters_updated'.format(series.id)
     u = Config.query.get(config_key)
@@ -372,7 +387,7 @@ def update_chapters(series):
         try:
             db.session.commit()
         except IntegrityError:
-            app.logger.warning('IntegrityError', exc_info=True)
+            app.logger.error('IntegrityError', exc_info=True)
             db.session.rollback()
             continue
     remove_cache(show_feed, series.id)
@@ -408,5 +423,8 @@ db.create_all()
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    try:
+        port = int(os.environ.get('PORT', 5000))
+        app.run(host='0.0.0.0', port=port)
+    except Exception:
+        app.logger.critical('A critical error occurred', exc_info=True)

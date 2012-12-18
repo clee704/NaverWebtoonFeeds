@@ -1,7 +1,8 @@
 import logging, os
 URL_ROOT = os.environ['URL_ROOT']
+LOG_LEVEL = getattr(logging, os.environ['LOG_LEVEL'])
 SEND_EMAIL = os.environ['SEND_EMAIL'] == '1'
-EMAIL_LEVEL = logging.WARNING
+EMAIL_LEVEL = getattr(logging, os.environ['EMAIL_LEVEL'])
 MAIL_HOST = ('smtp.gmail.com', 587)
 MAIL_FROMADDR = os.environ['FROMADDR']
 MAIL_TOADDRS = [os.environ['ADMIN_EMAIL']]
