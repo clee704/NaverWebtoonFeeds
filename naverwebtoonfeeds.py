@@ -326,6 +326,7 @@ def update_series_info(force_update=False, should_update_chapters=False):
         try:
             db.session.commit()
         except IntegrityError:
+            app.logger.warning('IntegrityError', exc_info=True)
             db.session.rollback()
             continue
         if should_update_chapters:
@@ -371,6 +372,7 @@ def update_chapters(series):
         try:
             db.session.commit()
         except IntegrityError:
+            app.logger.warning('IntegrityError', exc_info=True)
             db.session.rollback()
             continue
     remove_cache(show_feed, series.id)
