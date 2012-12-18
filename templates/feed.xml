@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title type="text">{{ series.title }}</title>
-  <id>{{ request.url|fix_strange_url }}</id>
+  <id>{{ request.url }}</id>
   <updated>{{ series.chapters[0]._pubdate_tz.isoformat() }}</updated>
   <link href="{{ naver_url(series.id) }}" />
-  <link href="{{ request.url|fix_strange_url }}" rel="self" />
+  <link href="{{ request.url }}" rel="self" />
   <author>
     <name>{{ series.author }}</name>
   </author>
@@ -12,7 +12,7 @@
   <logo>{{ series.thumbnail_url|via_imgproxy }}</logo>
   <generator>Naver Webtoon Feeds</generator>
   {% for chapter in chapters %}
-    <entry xml:base="{{ request.url|fix_strange_url }}">
+    <entry xml:base="{{ request.url }}">
       <title type="text">{{ chapter.title }}</title>
       <id>{{ naver_url(series.id, chapter.id) }}</id>
       <updated>{{ chapter._pubdate_tz.isoformat() }}</updated>

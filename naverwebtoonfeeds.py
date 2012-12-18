@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-import HTMLParser, errno, logging, os, re, sys, time, urlparse, urllib2
+import HTMLParser, errno, logging, os, re, time, urlparse, urllib2
 import pytz, lxml.html, requests
 from datetime import datetime, timedelta
 from flask import Flask, abort, render_template, Response
@@ -11,6 +11,7 @@ app = Flask(__name__)
 app.config.from_object('default_settings')
 app.config.from_envvar('NAVERWEBTOONFEEDS_SETTINGS')
 
+# Logging settings
 app.logger.setLevel(app.config['LOG_LEVEL'])
 formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s')
 stream_handler = logging.StreamHandler()
@@ -29,41 +30,37 @@ if app.config.get('SEND_EMAIL'):
     smtp_handler.setFormatter(formatter)
     app.logger.addHandler(smtp_handler)
 
-# Time zone should be the same as that used by Naver
+# Naver is in the Seoul time zone (+0900)
 tz = pytz.timezone('Asia/Seoul')
-
-PROJECT_DIR = os.path.dirname(__file__)
-NAVER_URLS = {
-    'mobile': 'http://m.comic.naver.com/webtoon/detail.nhn?titleId={series_id}&no={chapter_id}',
-    'chapter': 'http://comic.naver.com/webtoon/detail.nhn?titleId={series_id}&no={chapter_id}',
-    'series': 'http://comic.naver.com/webtoon/list.nhn?titleId={series_id}',
-    'last_chapter': 'http://comic.naver.com/webtoon/detail.nhn?titleId={series_id}',
-    'series_by_day': 'http://comic.naver.com/webtoon/weekday.nhn',
-}
 
 db = SQLAlchemy(app)
 cache = Cache(app)
 htmlparser = HTMLParser.HTMLParser()
-class MyBrowser(object):
 
+class Naver(object):
     RELOGIN_INTERVAL = timedelta(minutes=10)
+    BASE             = 'http://comic.naver.com/webtoon'
+    MOBILE_BASE      = 'http://m.comic.naver.com/webtoon'
+    URL = {
+        'last_chapter' : BASE        + '/detail.nhn?titleId={series_id}',
+        'chapter'      : BASE        + '/detail.nhn?titleId={series_id}&no={chapter_id}',
+        'mobile'       : MOBILE_BASE + '/detail.nhn?titleId={series_id}&no={chapter_id}',
+        'series'       : BASE        + '/list.nhn?titleId={series_id}',
+        'series_by_day': BASE        + '/webtoon/weekday.nhn',
+    }
 
     def __init__(self):
         self.cookies = None
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 6.1; ko; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'User-Agent'     : 'Mozilla/5.0 (Windows; U; Windows NT 6.1; ko; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3',
+            'Accept'         : 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Encoding': 'gzip,deflate',
             'Accept-Language': 'ko-kr,ko;q=0.8,en-us;q=0.5,en;q=0.3',
-            'Connection': 'keep-alive',
+            'Connection'     : 'keep-alive',
         }
         self.last_login = None
 
     def login(self):
-        """
-        Log in to Naver using the username and password in the configuration file.
-
-        """
         if not app.config.get('NAVER_USERNAME'):
             return
         url = 'https://nid.naver.com/nidlogin.login'
@@ -71,8 +68,8 @@ class MyBrowser(object):
         headers.update(self.headers)
         data = {
             'enctp': '2',
-            'id': app.config['NAVER_USERNAME'],
-            'pw': app.config['NAVER_PASSWORD'],
+            'id'   : app.config['NAVER_USERNAME'],
+            'pw'   : app.config['NAVER_PASSWORD'],
         }
         r = requests.post(url, data=data, cookies=self.cookies, headers=headers)
         self.cookies = r.cookies
@@ -82,8 +79,8 @@ class MyBrowser(object):
         app.logger.info('Logged in')
 
     def get(self, url):
-        if (self.last_login is None or
-                self.last_login + MyBrowser.RELOGIN_INTERVAL < datetime.now()):
+        never_logged_in = self.last_login is None
+        if never_logged_in or self.last_login + Naver.RELOGIN_INTERVAL < datetime.now():
             self.login()
         errors = 0
         while True:
@@ -91,71 +88,67 @@ class MyBrowser(object):
                 app.logger.debug('Requesting GET %s', url)
                 r = requests.get(url, cookies=self.cookies, headers=self.headers)
                 self.cookies = r.cookies
-                return r
+                return lxml.html.fromstring(r.text), r
             except urllib2.URLError:
                 app.logger.info('A URLError occurred', exc_info=True)
                 if errors > 5:
                     raise
                 errors += 1
-                time.sleep(3)
+                app.logger.info('Waiting for 5 seconds before reconnecting')
+                time.sleep(5)
 
-browser = MyBrowser()
+browser = Naver()
 
 
 # Models
 class Series(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.Text, nullable=False)
-    author = db.Column(db.Text, nullable=False)
-    description = db.Column(db.Text)
-    last_chapter = db.Column(db.Integer, nullable=False)
-    is_completed = db.Column(db.Boolean, default=False, nullable=False)
+    id            = db.Column(db.Integer, primary_key=True)
+    title         = db.Column(db.Text,    nullable=False)
+    author        = db.Column(db.Text,    nullable=False)
+    description   = db.Column(db.Text)
+    last_chapter  = db.Column(db.Integer, nullable=False)
+    is_completed  = db.Column(db.Boolean, nullable=False, default=False)
     thumbnail_url = db.Column(db.Text)
 
     def update(self):
         app.logger.debug('Updating series #%d', self.id)
-        url = NAVER_URLS['last_chapter'].format(series_id=self.id)
-        r = browser.get(url)
-        try:
-            doc = lxml.html.fromstring(r.text)
-        except AttributeError:
-            return
-        if r.url != url and 'login' not in r.url:
-            app.logger.warning('Series #%d seems removed', self.id)
-            self.is_completed = True
+        url = Naver.URL['last_chapter'].format(series_id=self.id)
+        doc, response = browser.get(url)
+        if response.url != url and 'login' not in response.url:
+            # Redirected to a page other than requiring login
+            if not self.is_completed:
+                app.logger.warning('Series #%d seems removed', self.id)
+                self.is_completed = True
         else:
             comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
-            self.title = comicinfo_dsc.xpath('h2/text()')[0].strip()
-            self.author = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
-            self.description = br2nl(comicinfo_dsc.xpath('p[@class="txt"]')[0].inner_html()).strip()
-            remote_url = doc.xpath('//meta[@property="og:url"]/@content')[0]
-            self.last_chapter = int(re.search('no=(\d+)', remote_url).group(1))
-            self.is_completed = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip() == u'완결웹툰'
+            permalink     = doc.xpath('//meta[@property="og:url"]/@content')[0]
+            status        = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
+            self.title         = comicinfo_dsc.xpath('h2/text()')[0].strip()
+            self.author        = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
+            self.description   = br2nl(comicinfo_dsc.xpath('p[@class="txt"]')[0].inner_html())
+            self.last_chapter  = int(re.search('no=(\d+)', permalink).group(1))
+            self.is_completed  = status == u'완결웹툰'
             self.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
 
 
 class Chapter(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    series_id = db.Column(db.Integer, db.ForeignKey('series.id'), primary_key=True)
-    series = db.relationship('Series', backref=db.backref('chapters', order_by=id.desc(), lazy='dynamic'))
-    title = db.Column(db.Text, nullable=False)
-    pubdate = db.Column(db.DateTime, nullable=False)
+    id            = db.Column(db.Integer,  primary_key=True)
+    title         = db.Column(db.Text,     nullable=False)
+    pubdate       = db.Column(db.DateTime, nullable=False)
     thumbnail_url = db.Column(db.Text)
+    series_id     = db.Column(db.Integer,  db.ForeignKey('series.id'), primary_key=True)
+    series        = db.relationship('Series', backref=db.backref('chapters', order_by=id.desc(), lazy='dynamic'))
 
     def update(self):
         app.logger.debug('Updating chapter #%d of series #%d', self.id, self.series.id)
-        url = NAVER_URLS['chapter'].format(series_id=self.series.id, chapter_id=self.id)
-        r = browser.get(url)
-        try:
-            doc = lxml.html.fromstring(r.text)
-        except AttributeError:
-            return
+        url = Naver.URL['chapter'].format(series_id=self.series.id, chapter_id=self.id)
+        doc, _ = browser.get(url)
         if url != doc.xpath('//meta[@property="og:url"]/@content')[0]:
             raise Chapter.DoesNotExist
-        self.title = doc.xpath('//meta[@property="og:description"]/@content')[0]
         date_str = doc.xpath('//form[@name="reportForm"]/input[@name="itemDt"]/@value')[0]
         naive_dt = datetime.strptime(date_str, '%a %b %d %H:%M:%S KST %Y')
-        self.pubdate = tz.localize(naive_dt).astimezone(pytz.utc).replace(tzinfo=None)
+        self.title         = doc.xpath('//meta[@property="og:description"]/@content')[0]
+        self.pubdate       = tz.localize(naive_dt).astimezone(pytz.utc).replace(tzinfo=None)
         self.thumbnail_url = doc.xpath('//*[@id="comic_move"]//*[@class="on"]/img/@src')[0]
         assert '{0}/{1}'.format(self.series.id, self.id) in self.thumbnail_url
 
@@ -164,13 +157,13 @@ class Chapter(db.Model):
 
 
 class UpdateDay(db.Model):
+    day       = db.Column(db.Integer, primary_key=True)
     series_id = db.Column(db.Integer, db.ForeignKey('series.id'), primary_key=True)
-    series = db.relationship('Series', backref=db.backref('updatedays', lazy='dynamic'))
-    day = db.Column(db.Integer, primary_key=True)
+    series    = db.relationship('Series', backref=db.backref('updatedays', lazy='dynamic'))
 
 
 class Config(db.Model):
-    key = db.Column(db.Text, primary_key=True)
+    key   = db.Column(db.Text, primary_key=True)
     value = db.Column(db.PickleType)
 
 
@@ -189,14 +182,11 @@ def br2nl(html):
     'welcome\\nto\\nearth'
 
     """
-    html = html.replace('\r\n', '\n')
-    html = html.replace('\n', ' ')
-    html = re.sub(r'<br */?>', '\n', html)
-    html = re.sub(r' +', ' ', html)
-    html = re.sub(r' ?\n ?', '\n', html)
-    html = html.strip()
-    html = htmlparser.unescape(html)
-    return html
+    newlines_removed      = html.replace('\r\n', '\n').replace('\n', ' ')
+    br_converted          = re.sub(r'<br */?>', '\n', newlines_removed)
+    whitespaces_collapsed = re.sub(r' +', ' ', br_converted)
+    whitespaces_merged    = re.sub(r' ?\n ?', '\n', whitespaces_collapsed)
+    return htmlparser.unescape(whitespaces_merged.strip())
 
 
 def inner_html(self):
@@ -232,7 +222,7 @@ def show_feed_list():
     series_list = Series.query.filter_by(is_completed=False).order_by(Series.title).all()
     response = render_template('feeds.html', series_list=series_list)
     cache.set(show_feed_list.cache_key, response, valid_for)
-    app.logger.debug('Cache created')
+    app.logger.debug('Cache created, valid for %s seconds', valid_for)
     return response
 show_feed_list.cache_key = 'feeds'
 
@@ -257,13 +247,13 @@ def show_feed(series_id):
     xml = render_template('feed.xml', series=series, chapters=chapters, naver_url=naver_url)
     response = Response(response=xml, content_type='application/atom+xml')
     cache.set(cache_key, response, valid_for)
-    app.logger.debug('Cache created')
+    app.logger.debug('Cache created, valid for %s seconds', valid_for)
     return response
 show_feed.cache_key = 'feed_{0}'
 
 
 @app.errorhandler(500)
-def page_not_found(e):
+def internal_server_error(e):
     return render_template('500.html'), 500
 
 
@@ -279,21 +269,6 @@ def make_external(url):
 
 
 @app.template_filter()
-def fix_strange_url(url):
-    """
-    Fix the strange URL returned by request.url which has duplicate domain
-    names, e.g. "http://example.com,example.com/path/to/foo".
-
-    """
-    parsed = urlparse.urlparse(url)
-    x = parsed.netloc.split(',')
-    if len(x) == 2 and x[0] == x[1]:
-        return urlparse.urlunparse(parsed._replace(netloc=x[0]))
-    else:
-        return url
-
-
-@app.template_filter()
 def via_imgproxy(url):
     u = app.config.get('IMGPROXY_URL')
     return u.format(url=url) if u else url
@@ -302,7 +277,7 @@ def via_imgproxy(url):
 def naver_url(series_id, chapter_id=None, mobile=False):
     """Return appropriate webtoon URL for the given arguments."""
     key = 'mobile' if mobile else 'series' if chapter_id is None else 'chapter'
-    return NAVER_URLS[key].format(series_id=series_id, chapter_id=chapter_id)
+    return Naver.URL[key].format(series_id=series_id, chapter_id=chapter_id)
 
 
 # Update functions
@@ -318,17 +293,16 @@ def update_series_info(force_update=False, should_update_chapters=False):
 
     """
     update_interval = timedelta(days=7)
-    config_key = 'series_info_updated'
-    u = Config.query.get(config_key)
-    if not force_update and u is not None:
+    timer_key = 'series_info_updated'
+    u = Config.query.get(timer_key)
+    if u is not None and not force_update:
         since_last_update = datetime.now() - u.value
         if since_last_update < update_interval:
             return int(since_last_update.total_seconds())
     today = datetime.now().weekday()
     for series_id, update_days in fetch_series_ids().items():
         s = Series.query.get(series_id)
-        new = s is None
-        if new:
+        if s is None:
             s = Series(id=series_id)
         s.update()
         db.session.add(s)
@@ -342,12 +316,7 @@ def update_series_info(force_update=False, should_update_chapters=False):
             continue
         if should_update_chapters:
             s.update_chapters()
-    remove_cache(show_feed_list)
-    Config.query.filter_by(key=config_key).delete()
-    updated = datetime.now()
-    db.session.add(Config(key=config_key, value=updated))
-    db.session.commit()
-    return update_interval
+    return reset_cache([show_feed_list], timer_key, update_interval)
 
 
 def update_chapters(series, update_series=False):
@@ -364,8 +333,8 @@ def update_chapters(series, update_series=False):
         db.session.add(series)
         db.session.commit()
     update_interval = timedelta(hours=1)
-    config_key = '{0}_chapters_updated'.format(series.id)
-    u = Config.query.get(config_key)
+    timer_key = '{0}_chapters_updated'.format(series.id)
+    u = Config.query.get(timer_key)
     if u is not None:
         since_last_update = datetime.now() - u.value
         if since_last_update < update_interval:
@@ -375,7 +344,7 @@ def update_chapters(series, update_series=False):
     chapter_ids = range(start, series.last_chapter + 1)
     if not chapter_ids:
         # Nothing new
-        return
+        return int(update_interval.total_seconds())
     for chapter_id in chapter_ids:
         c = Chapter(series=series, id=chapter_id)
         try:
@@ -390,23 +359,23 @@ def update_chapters(series, update_series=False):
             app.logger.error('IntegrityError', exc_info=True)
             db.session.rollback()
             continue
-    remove_cache(show_feed, series.id)
-    Config.query.filter_by(key=config_key).delete()
+    return reset_cache([show_feed, series.id], timer_key, update_interval)
+
+
+def reset_cache(cache_key, timer_key, update_interval):
+    remove_cache(*cache_key)
+    Config.query.filter_by(key=timer_key).delete()
     updated = datetime.now()
-    db.session.add(Config(key=config_key, value=updated))
+    db.session.add(Config(key=timer_key, value=updated))
     db.session.commit()
-    return update_interval
+    return int(update_interval.total_seconds())
 
 
 NUMERIC_DAYS = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6}
 def fetch_series_ids():
     """Fetch series IDs and their update days and return a dictionary."""
-    r = browser.get(NAVER_URLS['series_by_day'])
     series_ids = {}
-    try:
-        doc = lxml.html.fromstring(r.text)
-    except AttributeError:
-        return series_ids
+    doc, _ = browser.get(Naver.URL['series_by_day'])
     for url in doc.xpath('//*[@class="list_area daily_all"]//li//a[@class="title"]/@href'):
         m = re.search(r'titleId=(?P<id>\d+)&weekday=(?P<day>[a-z]+)', url)
         series_id, day = int(m.group('id')), m.group('day')
