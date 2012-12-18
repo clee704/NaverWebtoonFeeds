@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
-import HTMLParser, errno, logging, os, re, sys, urlparse, lxml.html, mechanize
-import time, pytz, urllib2
+import HTMLParser, errno, logging, os, re, sys, time, urlparse, urllib2
+import pytz, lxml.html, requests
 from datetime import datetime, timedelta
 from flask import Flask, abort, render_template, Response
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -42,15 +42,14 @@ class MyBrowser(object):
     RELOGIN_INTERVAL = timedelta(minutes=10)
 
     def __init__(self):
-        self.b = mechanize.Browser()
-        self.b.set_handle_robots(False)
-        self.b.addheaders = [
-            ('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 6.1; ko; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3'),
-            ('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'),
-            ('Accept-Language', 'ko-kr,ko;q=0.8,en-us;q=0.5,en;q=0.3'),
-            ('Keep-Alive', '115'),
-            ('Connection', 'keep-alive'),
-        ]
+        self.cookies = None
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 6.1; ko; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Encoding': 'gzip,deflate',
+            'Accept-Language': 'ko-kr,ko;q=0.8,en-us;q=0.5,en;q=0.3',
+            'Connection': 'keep-alive',
+        }
         self.last_login = None
 
     def login(self):
@@ -60,23 +59,30 @@ class MyBrowser(object):
         """
         if not app.config.get('NAVER_USERNAME'):
             return
-        self.b.open('http://static.nid.naver.com/login.nhn')
-        self.b.select_form(nr=0)
-        self.b.form['id'] = app.config['NAVER_USERNAME']
-        self.b.form['pw'] = app.config['NAVER_PASSWORD']
-        r = self.b.submit()
-        if 'location.replace' not in r.read()[:100]:
+        url = 'https://nid.naver.com/nidlogin.login'
+        headers = {'Referer': 'http://static.nid.naver.com/login.nhn'}
+        headers.update(self.headers)
+        data = {
+            'enctp': '2',
+            'id': app.config['NAVER_USERNAME'],
+            'pw': app.config['NAVER_PASSWORD'],
+        }
+        r = requests.post(url, data=data, cookies=self.cookies, headers=headers)
+        self.cookies = r.cookies
+        if 'location.replace' not in r.text[:100]:
             raise RuntimeError("Cannot log in to naver.com")
         self.last_login = datetime.now()
 
-    def open(self, url):
+    def get(self, url):
         if (self.last_login is None or
                 self.last_login + MyBrowser.RELOGIN_INTERVAL < datetime.now()):
             self.login()
         errors = 0
         while True:
             try:
-                return self.b.open(url)
+                r = requests.get(url, cookies=self.cookies, headers=self.headers)
+                self.cookies = r.cookies
+                return r
             except urllib2.URLError:
                 if errors > 5:
                     raise
@@ -99,12 +105,12 @@ class Series(db.Model):
     def update(self):
         app.logger.debug('Updating series #%d', self.id)
         url = NAVER_URLS['last_chapter'].format(series_id=self.id)
-        r = browser.open(url)
+        r = browser.get(url)
         try:
-            doc = lxml.html.fromstring(r.read())
+            doc = lxml.html.fromstring(r.text)
         except AttributeError:
             return
-        if r.geturl() != url:
+        if r.url != url:
             app.logger.warning('Series #{0} seems removed'.format(self.id))
             self.is_completed = True
         else:
@@ -134,9 +140,9 @@ class Chapter(db.Model):
     def update(self):
         app.logger.debug('Updating chapter #%d of series #%d', self.id, self.series.id)
         url = NAVER_URLS['chapter'].format(series_id=self.series.id, chapter_id=self.id)
-        r = browser.open(url)
+        r = browser.get(url)
         try:
-            doc = lxml.html.fromstring(r.read())
+            doc = lxml.html.fromstring(r.text)
         except AttributeError:
             return
         if url != doc.xpath('//meta[@property="og:url"]/@content')[0]:
@@ -378,10 +384,10 @@ def update_chapters(series):
 NUMERIC_DAYS = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6}
 def fetch_series_ids():
     """Fetch series IDs and their update days and return a dictionary."""
-    r = browser.open(NAVER_URLS['series_by_day'])
+    r = browser.get(NAVER_URLS['series_by_day'])
     series_ids = {}
     try:
-        doc = lxml.html.fromstring(r.read())
+        doc = lxml.html.fromstring(r.text)
     except AttributeError:
         return series_ids
     for url in doc.xpath('//*[@class="list_area daily_all"]//li//a[@class="title"]/@href'):
