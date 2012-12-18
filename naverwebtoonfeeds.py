@@ -71,6 +71,7 @@ class Naver(object):
             'id'   : app.config['NAVER_USERNAME'],
             'pw'   : app.config['NAVER_PASSWORD'],
         }
+        self.get('http://www.naver.com', autologin=False)   # Get cookies
         r = requests.post(url, data=data, cookies=self.cookies, headers=headers)
         self.cookies = r.cookies
         if 'location.replace' not in r.text[:100]:
@@ -78,9 +79,10 @@ class Naver(object):
         self.last_login = datetime.now()
         app.logger.info('Logged in')
 
-    def get(self, url):
+    def get(self, url, autologin=True):
         never_logged_in = self.last_login is None
-        if never_logged_in or self.last_login + Naver.RELOGIN_INTERVAL < datetime.now():
+        should_login = never_logged_in or self.last_login + Naver.RELOGIN_INTERVAL < datetime.now()
+        if autologin and should_login:
             self.login()
         errors = 0
         while True:
@@ -123,19 +125,15 @@ class Series(db.Model):
                 self.is_completed = True
         else:
             app.logger.debug('Parsing series info')
-            try:
-                comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
-                permalink     = doc.xpath('//meta[@property="og:url"]/@content')[0]
-                status        = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
-                self.title         = comicinfo_dsc.xpath('h2/text()')[0].strip()
-                self.author        = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
-                self.description   = br2nl(comicinfo_dsc.xpath('p[@class="txt"]')[0].inner_html())
-                self.last_chapter  = int(re.search('no=(\d+)', permalink).group(1))
-                self.is_completed  = status == u'완결웹툰'
-                self.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
-            except IndexError:
-                app.logger.error('An IndexError occured', exc_info=True)
-                app.logger.error(response.text)
+            comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
+            permalink     = doc.xpath('//meta[@property="og:url"]/@content')[0]
+            status        = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
+            self.title         = comicinfo_dsc.xpath('h2/text()')[0].strip()
+            self.author        = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
+            self.description   = br2nl(comicinfo_dsc.xpath('p[@class="txt"]')[0].inner_html())
+            self.last_chapter  = int(re.search('no=(\d+)', permalink).group(1))
+            self.is_completed  = status == u'완결웹툰'
+            self.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
 
 
 class Chapter(db.Model):
@@ -153,7 +151,7 @@ class Chapter(db.Model):
         if url != doc.xpath('//meta[@property="og:url"]/@content')[0]:
             raise Chapter.DoesNotExist
         date_str = doc.xpath('//form[@name="reportForm"]/input[@name="itemDt"]/@value')[0]
-        naive_dt = datetime.strptime(date_str, '%a %b %d %H:%M:%S KST %Y')
+        naive_dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
         self.title         = doc.xpath('//meta[@property="og:description"]/@content')[0]
         self.pubdate       = tz.localize(naive_dt).astimezone(pytz.utc).replace(tzinfo=None)
         self.thumbnail_url = doc.xpath('//*[@id="comic_move"]//*[@class="on"]/img/@src')[0]
