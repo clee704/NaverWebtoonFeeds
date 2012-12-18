@@ -125,15 +125,19 @@ class Series(db.Model):
                 self.is_completed = True
         else:
             app.logger.debug('Parsing series info')
-            comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
-            permalink     = doc.xpath('//meta[@property="og:url"]/@content')[0]
-            status        = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
-            self.title         = comicinfo_dsc.xpath('h2/text()')[0].strip()
-            self.author        = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
-            self.description   = br2nl(comicinfo_dsc.xpath('p[@class="txt"]')[0].inner_html())
-            self.last_chapter  = int(re.search('no=(\d+)', permalink).group(1))
-            self.is_completed  = status == u'완결웹툰'
-            self.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
+            try:
+                comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
+                permalink     = doc.xpath('//meta[@property="og:url"]/@content')[0]
+                status        = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
+                self.title         = comicinfo_dsc.xpath('h2/text()')[0].strip()
+                self.author        = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
+                self.description   = br2nl(comicinfo_dsc.xpath('p[@class="txt"]')[0].inner_html())
+                self.last_chapter  = int(re.search('no=(\d+)', permalink).group(1))
+                self.is_completed  = status == u'완결웹툰'
+                self.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
+            except IndexError:
+                app.logger.error(response.text)
+                raise
 
 
 class Chapter(db.Model):
