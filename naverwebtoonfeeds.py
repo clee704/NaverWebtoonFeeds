@@ -58,7 +58,6 @@ class Naver(object):
             'Accept-Language': 'ko-kr,ko;q=0.8,en-us;q=0.5,en;q=0.3',
             'Connection'     : 'keep-alive',
         }
-        self.last_login = None
 
     def login(self):
         if not app.config.get('NAVER_USERNAME'):
@@ -71,25 +70,23 @@ class Naver(object):
             'id'   : app.config['NAVER_USERNAME'],
             'pw'   : app.config['NAVER_PASSWORD'],
         }
-        self.get('http://www.naver.com', autologin=False)   # Get cookies
+        self.get('http://www.naver.com')   # Get cookies
         r = requests.post(url, data=data, cookies=self.cookies, headers=headers)
         self.cookies = r.cookies
         if 'location.replace' not in r.text[:100]:
             raise RuntimeError("Cannot log in to naver.com")
-        self.last_login = datetime.now()
         app.logger.info('Logged in')
 
-    def get(self, url, autologin=True):
-        never_logged_in = self.last_login is None
-        should_login = never_logged_in or self.last_login + Naver.RELOGIN_INTERVAL < datetime.now()
-        if autologin and should_login:
-            self.login()
+    def get(self, url):
         errors = 0
         while True:
             try:
                 app.logger.debug('Requesting GET %s', url)
                 r = requests.get(url, cookies=self.cookies, headers=self.headers)
                 self.cookies = r.cookies
+                if r.url != url and 'login' in r.url:
+                    self.login()
+                    continue
                 return lxml.html.fromstring(r.text), r
             except urllib2.URLError:
                 app.logger.info('A URLError occurred', exc_info=True)
@@ -115,17 +112,15 @@ class Series(db.Model):
     def update(self):
         app.logger.debug('Updating series #%d', self.id)
         url = Naver.URL['last_chapter'].format(series_id=self.id)
-        app.logger.debug('Requesting GET %s', url)
         doc, response = browser.get(url)
         app.logger.debug('Response URL: %s', url)
-        if response.url != url and 'login' not in response.url:
-            app.logger.debug('Redirected to a page other than requiring login')
+        if response.url != url:
             if not self.is_completed:
                 app.logger.warning('Series #%d seems removed', self.id)
                 self.is_completed = True
         else:
-            app.logger.debug('Parsing series info')
             try:
+                app.logger.debug('Parsing series info')
                 comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
                 permalink     = doc.xpath('//meta[@property="og:url"]/@content')[0]
                 status        = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
@@ -136,7 +131,7 @@ class Series(db.Model):
                 self.is_completed  = status == u'완결웹툰'
                 self.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
             except IndexError:
-                app.logger.error(response.text)
+                app.logger.error(response.url + '\n' + response.text)
                 raise
 
 
