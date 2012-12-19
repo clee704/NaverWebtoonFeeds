@@ -38,24 +38,24 @@ cache = Cache(app)
 htmlparser = HTMLParser.HTMLParser()
 
 class Naver(object):
-    BASE             = 'http://comic.naver.com/webtoon'
-    MOBILE_BASE      = 'http://m.comic.naver.com/webtoon'
+    BASE = 'http://comic.naver.com/webtoon'
+    MOBILE_BASE = 'http://m.comic.naver.com/webtoon'
     URL = {
-        'last_chapter' : BASE        + '/detail.nhn?titleId={series_id}',
-        'chapter'      : BASE        + '/detail.nhn?titleId={series_id}&no={chapter_id}',
-        'mobile'       : MOBILE_BASE + '/detail.nhn?titleId={series_id}&no={chapter_id}',
-        'series'       : BASE        + '/list.nhn?titleId={series_id}',
-        'series_by_day': BASE        + '/webtoon/weekday.nhn',
+        'last_chapter': BASE + '/detail.nhn?titleId={series_id}',
+        'chapter': BASE + '/detail.nhn?titleId={series_id}&no={chapter_id}',
+        'mobile': MOBILE_BASE + '/detail.nhn?titleId={series_id}&no={chapter_id}',
+        'series': BASE + '/list.nhn?titleId={series_id}',
+        'series_by_day': BASE + '/webtoon/weekday.nhn',
     }
 
     def __init__(self):
         self.cookies = None
         self.headers = {
-            'User-Agent'     : 'Mozilla/5.0 (Windows; U; Windows NT 6.1; ko; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3',
-            'Accept'         : 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 6.1; ko; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Encoding': 'gzip,deflate',
             'Accept-Language': 'ko-kr,ko;q=0.8,en-us;q=0.5,en;q=0.3',
-            'Connection'     : 'keep-alive',
+            'Connection': 'keep-alive',
         }
 
     def login(self):
@@ -66,8 +66,8 @@ class Naver(object):
         headers.update(self.headers)
         data = {
             'enctp': '2',
-            'id'   : app.config['NAVER_USERNAME'],
-            'pw'   : app.config['NAVER_PASSWORD'],
+            'id': app.config['NAVER_USERNAME'],
+            'pw': app.config['NAVER_PASSWORD'],
         }
         self.get('http://www.naver.com')   # Get cookies
         r = requests.post(url, data=data, cookies=self.cookies, headers=headers)
@@ -100,12 +100,12 @@ browser = Naver()
 
 # Models
 class Series(db.Model):
-    id            = db.Column(db.Integer, primary_key=True)
-    title         = db.Column(db.Text,    nullable=False)
-    author        = db.Column(db.Text,    nullable=False)
-    description   = db.Column(db.Text)
-    last_chapter  = db.Column(db.Integer, nullable=False)
-    is_completed  = db.Column(db.Boolean, nullable=False, default=False)
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.Text, nullable=False)
+    author = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
+    last_chapter = db.Column(db.Integer, nullable=False)
+    is_completed = db.Column(db.Boolean, nullable=False, default=False)
     thumbnail_url = db.Column(db.Text)
 
     def update(self):
@@ -121,13 +121,13 @@ class Series(db.Model):
             try:
                 app.logger.debug('Parsing series info')
                 comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
-                permalink     = doc.xpath('//meta[@property="og:url"]/@content')[0]
-                status        = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
-                self.title         = comicinfo_dsc.xpath('h2/text()')[0].strip()
-                self.author        = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
-                self.description   = br2nl(comicinfo_dsc.xpath('p[@class="txt"]')[0].inner_html())
-                self.last_chapter  = int(re.search('no=(\d+)', permalink).group(1))
-                self.is_completed  = status == u'완결웹툰'
+                permalink = doc.xpath('//meta[@property="og:url"]/@content')[0]
+                status = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
+                self.title = comicinfo_dsc.xpath('h2/text()')[0].strip()
+                self.author = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
+                self.description = br2nl(comicinfo_dsc.xpath('p[@class="txt"]')[0].inner_html())
+                self.last_chapter = int(re.search('no=(\d+)', permalink).group(1))
+                self.is_completed = status == u'완결웹툰'
                 self.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
             except IndexError:
                 app.logger.error(response.url + '\n' + response.text)
@@ -135,12 +135,12 @@ class Series(db.Model):
 
 
 class Chapter(db.Model):
-    id            = db.Column(db.Integer,  primary_key=True)
-    title         = db.Column(db.Text,     nullable=False)
-    pubdate       = db.Column(db.DateTime, nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.Text, nullable=False)
+    pubdate = db.Column(db.DateTime, nullable=False)
     thumbnail_url = db.Column(db.Text)
-    series_id     = db.Column(db.Integer,  db.ForeignKey('series.id'), primary_key=True)
-    series        = db.relationship('Series', backref=db.backref('chapters', order_by=id.desc(), lazy='dynamic'))
+    series_id = db.Column(db.Integer, db.ForeignKey('series.id'), primary_key=True)
+    series = db.relationship('Series', backref=db.backref('chapters', order_by=id.desc(), lazy='dynamic'))
 
     def update(self):
         app.logger.debug('Updating chapter #%d of series #%d', self.id, self.series.id)
@@ -150,8 +150,8 @@ class Chapter(db.Model):
             raise Chapter.DoesNotExist
         date_str = doc.xpath('//form[@name="reportForm"]/input[@name="itemDt"]/@value')[0]
         naive_dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-        self.title         = doc.xpath('//meta[@property="og:description"]/@content')[0]
-        self.pubdate       = tz.localize(naive_dt).astimezone(pytz.utc).replace(tzinfo=None)
+        self.title = doc.xpath('//meta[@property="og:description"]/@content')[0]
+        self.pubdate = tz.localize(naive_dt).astimezone(pytz.utc).replace(tzinfo=None)
         self.thumbnail_url = doc.xpath('//*[@id="comic_move"]//*[@class="on"]/img/@src')[0]
         assert '{0}/{1}'.format(self.series.id, self.id) in self.thumbnail_url
 
@@ -160,13 +160,13 @@ class Chapter(db.Model):
 
 
 class UpdateDay(db.Model):
-    day       = db.Column(db.Integer, primary_key=True)
+    day = db.Column(db.Integer, primary_key=True)
     series_id = db.Column(db.Integer, db.ForeignKey('series.id'), primary_key=True)
-    series    = db.relationship('Series', backref=db.backref('updatedays', lazy='dynamic'))
+    series = db.relationship('Series', backref=db.backref('updatedays', lazy='dynamic'))
 
 
 class Config(db.Model):
-    key   = db.Column(db.Text, primary_key=True)
+    key = db.Column(db.Text, primary_key=True)
     value = db.Column(db.PickleType)
 
 
@@ -185,10 +185,10 @@ def br2nl(html):
     'welcome\\nto\\nearth'
 
     """
-    newlines_removed      = html.replace('\r\n', '\n').replace('\n', ' ')
-    br_converted          = re.sub(r'<br */?>', '\n', newlines_removed)
+    newlines_removed = html.replace('\r\n', '\n').replace('\n', ' ')
+    br_converted = re.sub(r'<br */?>', '\n', newlines_removed)
     whitespaces_collapsed = re.sub(r' +', ' ', br_converted)
-    whitespaces_merged    = re.sub(r' ?\n ?', '\n', whitespaces_collapsed)
+    whitespaces_merged = re.sub(r' ?\n ?', '\n', whitespaces_collapsed)
     return htmlparser.unescape(whitespaces_merged.strip())
 
 
