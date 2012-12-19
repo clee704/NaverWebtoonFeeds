@@ -6,6 +6,7 @@ from flask import Flask, render_template, Response
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.cache import Cache
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
 
 app = Flask(__name__)
 app.config.from_object('default_settings')
@@ -148,7 +149,7 @@ class Chapter(db.Model):
     pubdate = db.Column(db.DateTime, nullable=False)
     thumbnail_url = db.Column(db.Text)
     series_id = db.Column(db.Integer, db.ForeignKey('series.id'), primary_key=True)
-    series = db.relationship('Series', backref=db.backref('chapters', order_by=id.desc(), lazy='dynamic'))
+    series = db.relationship('Series', backref=db.backref('chapters', order_by=id.desc()))
 
     def update(self):
         app.logger.debug('Updating chapter #%d of series #%d', self.id, self.series.id)
@@ -170,7 +171,7 @@ class Chapter(db.Model):
 class UpdateDay(db.Model):
     day = db.Column(db.Integer, primary_key=True)
     series_id = db.Column(db.Integer, db.ForeignKey('series.id'), primary_key=True)
-    series = db.relationship('Series', backref=db.backref('updatedays', lazy='dynamic'))
+    series = db.relationship('Series', backref=db.backref('updatedays'))
 
 
 class Config(db.Model):
@@ -246,7 +247,7 @@ def show_feed(series_id):
     if response:
         app.logger.debug('Cache hit')
         return response
-    series = Series.query.get_or_404(series_id)
+    series = Series.query.options(joinedload('chapters')).get_or_404(series_id)
     valid_for = update_chapters(series, update_series=True)
     chapters = []
     for c in series.chapters:
@@ -303,9 +304,9 @@ def update_series_info(force_update=False, should_update_chapters=False):
     """
     update_interval = timedelta(days=7)
     timer_key = 'series_info_updated'
-    u = Config.query.get(timer_key)
-    if u is not None and not force_update:
-        since_last_update = datetime.now() - u.value
+    timer = Config.query.get(timer_key)
+    if timer is not None and not force_update:
+        since_last_update = datetime.now() - timer.value
         if since_last_update < update_interval:
             return int(since_last_update.total_seconds())
     today = datetime.now().weekday()
@@ -325,7 +326,7 @@ def update_series_info(force_update=False, should_update_chapters=False):
             continue
         if should_update_chapters:
             s.update_chapters()
-    return reset_cache(show_feed_list.cache_key, timer_key, update_interval)
+    return reset_cache(show_feed_list.cache_key, timer, timer_key, update_interval)
 
 
 def update_chapters(series, update_series=False):
@@ -343,12 +344,12 @@ def update_chapters(series, update_series=False):
         db.session.commit()
     update_interval = timedelta(hours=1)
     timer_key = '{0}_chapters_updated'.format(series.id)
-    u = Config.query.get(timer_key)
-    if u is not None:
-        since_last_update = datetime.now() - u.value
+    timer = Config.query.get(timer_key)
+    if timer is not None:
+        since_last_update = datetime.now() - timer.value
         if since_last_update < update_interval:
             return int(since_last_update.total_seconds())
-    current_last_chapter = series.chapters[0].id if series.chapters.count() else 0
+    current_last_chapter = series.chapters[0].id if len(series.chapters) else 0
     start = current_last_chapter + 1
     chapter_ids = range(start, series.last_chapter + 1)
     if not chapter_ids:
@@ -368,14 +369,17 @@ def update_chapters(series, update_series=False):
             app.logger.error('IntegrityError', exc_info=True)
             db.session.rollback()
             continue
-    return reset_cache(show_feed.cache_key.format(series.id), timer_key, update_interval)
+    return reset_cache(show_feed.cache_key.format(series.id), timer, timer_key, update_interval)
 
 
-def reset_cache(cache_key, timer_key, update_interval):
+def reset_cache(cache_key, timer, timer_key, update_interval):
     cache.delete(cache_key)
-    Config.query.filter_by(key=timer_key).delete()
     updated = datetime.now()
-    db.session.add(Config(key=timer_key, value=updated))
+    if timer is not None:
+        timer.value = updated
+    else:
+        timer = Config(key=timer_key, value=updated)
+    db.session.add(timer)
     db.session.commit()
     return int(update_interval.total_seconds())
 
