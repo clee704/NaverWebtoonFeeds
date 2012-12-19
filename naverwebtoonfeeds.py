@@ -319,7 +319,7 @@ def update_series_info(force_update=False, should_update_chapters=False):
             continue
         if should_update_chapters:
             s.update_chapters()
-    return reset_cache([show_feed_list], timer_key, update_interval)
+    return reset_cache(show_feed_list.cache_key, timer_key, update_interval)
 
 
 def update_chapters(series, update_series=False):
@@ -362,11 +362,11 @@ def update_chapters(series, update_series=False):
             app.logger.error('IntegrityError', exc_info=True)
             db.session.rollback()
             continue
-    return reset_cache([show_feed, series.id], timer_key, update_interval)
+    return reset_cache(show_feed.cache_key.format(series.id), timer_key, update_interval)
 
 
 def reset_cache(cache_key, timer_key, update_interval):
-    remove_cache(*cache_key)
+    cache.delete(cache_key)
     Config.query.filter_by(key=timer_key).delete()
     updated = datetime.now()
     db.session.add(Config(key=timer_key, value=updated))
@@ -384,10 +384,6 @@ def fetch_series_ids():
         series_id, day = int(m.group('id')), m.group('day')
         series_ids.setdefault(series_id, []).append(NUMERIC_DAYS[day])
     return series_ids
-
-
-def remove_cache(view_func, *args):
-    cache.delete(view_func.cache_key.format(*args))
 
 
 # Create tables for models
