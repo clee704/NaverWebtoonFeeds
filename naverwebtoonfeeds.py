@@ -38,7 +38,6 @@ cache = Cache(app)
 htmlparser = HTMLParser.HTMLParser()
 
 class Naver(object):
-    RELOGIN_INTERVAL = timedelta(minutes=10)
     BASE             = 'http://comic.naver.com/webtoon'
     MOBILE_BASE      = 'http://m.comic.naver.com/webtoon'
     URL = {
