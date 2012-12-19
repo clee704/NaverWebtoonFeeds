@@ -13,7 +13,7 @@ app.config.from_envvar('NAVERWEBTOONFEEDS_SETTINGS')
 
 # Logging settings
 app.logger.setLevel(app.config['LOG_LEVEL'])
-formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s')
+formatter = logging.Formatter('%(asctime)s [%(name)s] [%(levelname)s] %(message)s')
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.DEBUG)
 stream_handler.setFormatter(formatter)
@@ -86,14 +86,22 @@ class Naver(object):
                 if r.url != url and 'login' in r.url:
                     self.login()
                     continue
+                if r.status_code == 403:
+                    app.logger.error('Access forbidden to public IP %s', self.get_public_ip())
+                    raise urllib2.HTTPError(url, 403, 'Forbidden', r.headers, None)
                 return lxml.html.fromstring(r.text), r
             except urllib2.URLError:
                 app.logger.info('A URLError occurred', exc_info=True)
+                errors += 1
                 if errors > 5:
                     raise
-                errors += 1
                 app.logger.info('Waiting for 5 seconds before reconnecting')
                 time.sleep(5)
+
+    def get_public_ip(self):
+        r = requests.get('http://checkip.dyndns.com/')
+        # r.text = '<html><head><title>Current IP Check</title></head><body>Current IP Address: 65.96.168.198</body></html>\r\n'
+        return re.compile(r'Address: (\d+\.\d+\.\d+\.\d+)').search(r.text).group(1)
 
 browser = Naver()
 
