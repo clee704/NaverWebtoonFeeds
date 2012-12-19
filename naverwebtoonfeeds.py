@@ -2,7 +2,7 @@
 import HTMLParser, errno, logging, os, re, time, urlparse, urllib2
 import pytz, lxml.html, requests
 from datetime import datetime, timedelta
-from flask import Flask, abort, render_template, Response
+from flask import Flask, render_template, Response
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.cache import Cache
 from sqlalchemy.exc import IntegrityError
@@ -246,9 +246,7 @@ def show_feed(series_id):
     if response:
         app.logger.debug('Cache hit')
         return response
-    series = Series.query.get(series_id)
-    if series is None:
-        abort(404)
+    series = Series.query.get_or_404(series_id)
     valid_for = update_chapters(series, update_series=True)
     chapters = []
     for c in series.chapters:
