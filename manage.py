@@ -16,17 +16,11 @@ def resetdb():
 
 @manager.command
 def update(debug=False):
-    """Update local data to date with Naver Comics."""
+    """Update database by fetching changes from Naver Comics."""
     if debug:
         app.config['DEBUG'] = True
-    from naverwebtoonfeeds import update_series_info
-    update_series_info(force_update=True, should_update_chapters=True)
-
-@manager.command
-def test():
-    """Test the application with doctest."""
-    import doctest, naverwebtoonfeeds
-    doctest.testmod(naverwebtoonfeeds)
+    from naverwebtoonfeeds.lib.updater import update_all
+    update_all()
 
 if __name__ == '__main__':
     manager.run()
