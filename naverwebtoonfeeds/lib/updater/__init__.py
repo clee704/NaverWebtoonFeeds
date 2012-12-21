@@ -17,7 +17,7 @@ browser = NaverBrowser(app)
 def update_all():
     add_new_series()
     for series in Series.query.all():
-        update_seriers(series)
+        update_series(series)
 
 
 def add_new_series():
