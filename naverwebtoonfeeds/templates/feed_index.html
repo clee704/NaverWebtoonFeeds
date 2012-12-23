@@ -1,28 +1,68 @@
 {% extends "layout.html" %}
 {% block body %}
-  {% if series_list %}
-    <ul class="feeds">
-      {% for series in series_list %}
-        <li>
-          <div class="thumbnail">
-            <img src="{{ series.thumbnail_url|via_imgproxy }}" alt="" width="217" height="165" title="{{ series.title }}" />
-          </div>
-          <div class="text">
-            <a href="{{ url_for('feed_show', series_id=series.id) }}">
-              <b>{{ series.title }}</b>
-              <br />
-              {{ series.author }}
-            </a>
-          </div>
-          <div class="links">
-            <a href="http://www.google.com/reader/view/feed/{{ url_for('feed_show', series_id=series.id)|make_external }}" target="_blank" class="hide-text" title="Google 리더에서 보기"><i class="icon-google-reader"></i>Google 리더에서 보기</a>
-          </div>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>구독할 수 있는 웹툰이 없습니다.</p>
-  {% endif %}
-  <div class="clear"></div>
-  <a href="https://github.com/clee704/NaverWebtoonFeeds"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+  <div class="container">
+    <form class="form-search">
+      <div class="row">
+        <div class="span4">
+          <input type="text" class="input-block-level search-query" placeholder="검색" autofocus="autofocus" />
+          <a class="close" href="#">&times;</a>
+        </div>
+      </div>
+    </form>
+    {% if series_list %}
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#all" data-toggle="tab">전체</a></li>
+        <li><a href="#mon" data-toggle="tab">월요일</a></li>
+        <li><a href="#tue" data-toggle="tab">화요일</a></li>
+        <li><a href="#wed" data-toggle="tab">수요일</a></li>
+        <li><a href="#thu" data-toggle="tab">목요일</a></li>
+        <li><a href="#fri" data-toggle="tab">금요일</a></li>
+        <li><a href="#sat" data-toggle="tab">토요일</a></li>
+        <li><a href="#sun" data-toggle="tab">일요일</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane active" id="all">
+          {% for series in series_list %}
+            <article class="media" data-update_days="{{ series.update_days }}">
+              <span class="pull-left">
+                <img class="media-object" src="{{ series.thumbnail_url|via_imgproxy }}" alt="" width="217" height="165" />
+              </span>
+              <div class="media-body">
+                <header>
+                  <h1><a class="title" href="{{ url_for('feed_show', series_id=series.id) }}">{{ series.title }}</a></h1>
+                  <span class="muted">by <span class="author">{{ series.author }}</span></span>
+                </header>
+                <p class="description">{{ series.description }}</p>
+                <div class="well well-small">
+                  <ul class="unstyled small muted">
+                    <li class="feed-url-wrapper">
+                      <i class="icon-bookmark"></i>
+                      <input class="feed-url span6" value="{{ url_for('feed_show', series_id=series.id)|make_external }}" readonly="readonly" />
+                    </li>
+                    <li>
+                      <i class="icon-globe"></i>
+                      <a href="{{ url_for('feed_show', series_id=series.id)|make_external }}">브라우저에서 보기</a>
+                    </li>
+                    <li>
+                      <i class="icon-plus"></i>
+                      <a href="http://www.google.com/reader/view/feed/{{ url_for('feed_show', series_id=series.id)|make_external }}" target="_blank">Google 리더에서 보기</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+        <div class="tab-pane" id="mon"></div>
+        <div class="tab-pane" id="tue"></div>
+        <div class="tab-pane" id="wed"></div>
+        <div class="tab-pane" id="thu"></div>
+        <div class="tab-pane" id="fri"></div>
+        <div class="tab-pane" id="sat"></div>
+        <div class="tab-pane" id="sun"></div>
+      </div>
+    {% else %}
+      <p>구독할 수 있는 웹툰이 없습니다.</p>
+    {% endif %}
+  </div>
 {% endblock %}
