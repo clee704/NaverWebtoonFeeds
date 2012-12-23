@@ -82,6 +82,7 @@ input.feed-url {
 
 .form-search .search-query {
   box-sizing: border-box;
+  -moz-box-sizing: border-box;
 }
 
 .form-search .close {
