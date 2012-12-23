@@ -69,7 +69,8 @@ $(function () {
 
   // Filter media elements by the query string.
   $tabContent = $('.tab-content');
-  $('.search-query').on('keyup', function (e) {
+  $searchQuery = $('.search-query');
+  $searchQuery.on('keyup', function (e) {
     var query = normalize($(this).val());
     if (query.length == 0) {
       $tabContent.removeClass('filtered');
@@ -86,13 +87,12 @@ $(function () {
         $this.addClass('show');
       }
     });
-  })
+  }).trigger('keyup');
   $('.form-search').on('submit', function (e) {
     e.preventDefault();
     return false;
-  });
-  $('.form-search .close').on('click', function (e) {
-    $('.search-query').val('').trigger('keyup').focus();
+  }).find('.close').on('click', function (e) {
+    $searchQuery.val('').trigger('keyup').focus();
     e.preventDefault();
     return false;
   });
