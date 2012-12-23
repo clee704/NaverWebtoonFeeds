@@ -11,7 +11,7 @@ greenlet==0.4.0
 gunicorn==0.16.1
 lxml==3.0.2
 psycopg2==2.4.6
-python-memcached==1.48
 pytz==2012h
+redis==2.7.2
 requests==1.0.2
 wsgiref==0.1.2
