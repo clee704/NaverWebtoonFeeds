@@ -89,7 +89,7 @@ $(function () {
     });
   }).trigger('keyup');
   $('.form-search').on('submit', function (e) {
-    $searchQuery.blur();
+    $searchQuery.trigger('keyup').blur();
     return false;
   }).find('.close').on('click', function (e) {
     $searchQuery.val('').trigger('keyup').focus();
