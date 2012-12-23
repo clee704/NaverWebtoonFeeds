@@ -98,6 +98,9 @@ $(function () {
         $this.addClass('empty');
       }
     });
+    if ($navTabsLi.slice(1).is('.active.empty')) {
+      $navTabsLi.first().find('a').tab('show');
+    }
   }).trigger('keyup');
   $('.form-search').on('submit', function (e) {
     $searchQuery.trigger('keyup').blur();
