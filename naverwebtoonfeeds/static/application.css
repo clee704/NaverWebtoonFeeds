@@ -37,6 +37,11 @@ header h1 a:hover {
   margin-bottom: 15px;
 }
 
+.media .small i + a {
+  position: relative;
+  top: 1px;
+}
+
 .media .well {
   margin-bottom: 0;
 }
