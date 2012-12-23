@@ -89,11 +89,10 @@ $(function () {
     });
   }).trigger('keyup');
   $('.form-search').on('submit', function (e) {
-    e.preventDefault();
+    $searchQuery.blur();
     return false;
   }).find('.close').on('click', function (e) {
     $searchQuery.val('').trigger('keyup').focus();
-    e.preventDefault();
     return false;
   });
 });

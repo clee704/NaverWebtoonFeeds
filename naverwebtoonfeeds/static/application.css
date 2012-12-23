@@ -9,7 +9,7 @@ body, input, button {
 }
 
 body {
-  margin: 30px 0;
+  margin: 20px 0 30px;
 }
 
 header {
@@ -34,7 +34,7 @@ header h1 a:hover {
 }
 
 .media p {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .media .well {
@@ -60,6 +60,7 @@ input.feed-url {
 
 .feed-url-wrapper {
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .filtered .media {
@@ -72,6 +73,10 @@ input.feed-url {
 
 .form-search .span4 {
   position: relative;
+}
+
+.form-search .search-query {
+  box-sizing: border-box;
 }
 
 .form-search .close {
