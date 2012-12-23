@@ -29,7 +29,7 @@
               </span>
               <div class="media-body">
                 <header>
-                  <h1><a class="title" href="{{ url_for('feed_show', series_id=series.id) }}">{{ series.title }}</a></h1>
+                  <h1><a class="title" href="{{ naver_url(series.id) }}">{{ series.title }}</a></h1>
                   <span class="muted">by <span class="author">{{ series.author }}</span></span>
                 </header>
                 <p class="description">{{ series.description|safe }}</p>
