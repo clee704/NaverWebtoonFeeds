@@ -8,31 +8,19 @@ from naverwebtoonfeeds.lib.updater import add_new_series, update_series
 
 
 @app.route('/')
+@cache.cached(timeout=86400)
 def feed_index():
     app.logger.info('GET /')
-    cache_key = 'feed_index'
-    cache_lifetime = 86400   # 1 day
-    response = cache.get(cache_key)
-    if response:
-        app.logger.debug('Cache hit')
-        return response
     add_new_series()
     series_list = Series.query.filter_by(is_completed=False).order_by(Series.title).all()
     response = render_template('feed_index.html', series_list=series_list)
-    cache.set(cache_key, response, cache_lifetime)
-    app.logger.debug('Cache created, valid for %s seconds', cache_lifetime)
     return response
 
 
 @app.route('/feeds/<int:series_id>.xml')
+@cache.cached(timeout=3600)
 def feed_show(series_id):
     app.logger.info('GET /feeds/%d.xml', series_id)
-    cache_key = 'feed_show_%d' % series_id
-    cache_lifetime = 3600   # 1 hour
-    response = cache.get(cache_key)
-    if response:
-        app.logger.debug('Cache hit')
-        return response
     series = Series.query.options(joinedload('chapters')).get_or_404(series_id)
     update_series(series)
     chapters = []
@@ -42,8 +30,6 @@ def feed_show(series_id):
         chapters.append(c)
     xml = render_template('feed_show.xml', series=series, chapters=chapters)
     response = Response(response=xml, content_type='application/atom+xml')
-    cache.set(cache_key, response, cache_lifetime)
-    app.logger.debug('Cache created, valid for %s seconds', cache_lifetime)
     return response
 
 
