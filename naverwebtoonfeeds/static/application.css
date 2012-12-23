@@ -98,3 +98,20 @@ input.feed-url {
 .media:first-child {
   margin-top: 15px;
 }
+
+.nav-tabs .empty {
+  display: none;
+}
+
+.nav-tabs .empty:first-child {
+  display: list-item;
+}
+
+.no-results {
+  display: none;
+}
+
+.empty .no-results {
+  display: block;
+  margin-top: 15px;
+}

@@ -68,10 +68,14 @@ $(function () {
   });
 
   // Filter media elements by the query string.
+  $navTabsLi = $('.nav-tabs li');
   $tabContent = $('.tab-content');
+  $tabContentTabPane = $tabContent.find('.tab-pane');
   $searchQuery = $('.search-query');
   $searchQuery.on('keyup', function (e) {
     var query = normalize($(this).val());
+    $navTabsLi.removeClass('empty');
+    $tabContentTabPane.removeClass('empty');
     if (query.length == 0) {
       $tabContent.removeClass('filtered');
       return;
@@ -85,6 +89,13 @@ $(function () {
           data.author.indexOf(query) >= 0 ||
           data.description.indexOf(query) >= 0) {
         $this.addClass('show');
+      }
+    });
+    $tabContentTabPane.each(function (i) {
+      var $this = $(this);
+      if ($this.find('.media.show').length == 0) {
+        $navTabsLi.eq(i).addClass('empty');
+        $this.addClass('empty');
       }
     });
   }).trigger('keyup');
