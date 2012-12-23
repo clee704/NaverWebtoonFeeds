@@ -22,5 +22,11 @@ def update(debug=False):
     from naverwebtoonfeeds.lib.updater import update_all
     update_all()
 
+@manager.command
+def migrate(action):
+    from flask.ext.evolution import Evolution
+    evolution = Evolution(app)
+    evolution.manager(action)
+
 if __name__ == '__main__':
     manager.run()

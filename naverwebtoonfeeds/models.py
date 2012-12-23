@@ -12,6 +12,7 @@ class Series(db.Model):
     last_chapter = db.Column(db.Integer, nullable=False)
     is_completed = db.Column(db.Boolean, nullable=False, default=False)
     thumbnail_url = db.Column(db.Text)
+    update_days = db.Column(db.Text)
 
 
 class Chapter(db.Model):
