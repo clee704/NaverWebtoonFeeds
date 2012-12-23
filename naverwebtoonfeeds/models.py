@@ -24,9 +24,3 @@ class Chapter(db.Model):
 
     class DoesNotExist(Exception):
         pass
-
-
-class UpdateDay(db.Model):
-    day = db.Column(db.Integer, primary_key=True)
-    series_id = db.Column(db.Integer, db.ForeignKey('series.id'), primary_key=True)
-    series = db.relationship('Series', backref=db.backref('updatedays'))
