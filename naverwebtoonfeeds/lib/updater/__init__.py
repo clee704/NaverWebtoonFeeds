@@ -14,18 +14,15 @@ from naverwebtoonfeeds.lib.updater.helpers import br2nl, inner_html
 browser = NaverBrowser(app)
 
 
-def update_all():
-    add_new_series()
-    for series in Series.query.all():
-        update_series(series)
-
-
-def add_new_series():
+def update_series_list(append_only=False):
     old_series_ids = set(map(lambda r: r[0], db.session.query(Series.id).all()))
     for series_id, update_days in _fetch_series_ids().items():
-        if series_id in old_series_ids:
+        if append_only and series_id in old_series_ids:
             continue
-        series = Series(id=series_id)
+        series = Series.query.get(series_id)
+        if series is None:
+            series = Series(id=series_id)
+        series.update_days = ','.join(update_days)
         update_series(series)
 
 

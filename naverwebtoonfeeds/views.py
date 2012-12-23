@@ -4,14 +4,14 @@ import pytz
 
 from naverwebtoonfeeds import app, cache, tz
 from naverwebtoonfeeds.models import Series
-from naverwebtoonfeeds.lib.updater import add_new_series, update_series
+from naverwebtoonfeeds.lib.updater import update_series_list, update_series
 
 
 @app.route('/')
 @cache.cached(timeout=86400)
 def feed_index():
     app.logger.info('GET /')
-    add_new_series()
+    update_series_list(append_only=True)
     series_list = Series.query.filter_by(is_completed=False).order_by(Series.title).all()
     response = render_template('feed_index.html', series_list=series_list)
     return response

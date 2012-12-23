@@ -19,8 +19,8 @@ def update(debug=False):
     """Update database by fetching changes from Naver Comics."""
     if debug:
         app.config['DEBUG'] = True
-    from naverwebtoonfeeds.lib.updater import update_all
-    update_all()
+    from naverwebtoonfeeds.lib.updater import update_series_list
+    update_series_list()
 
 @manager.command
 def migrate(action):
