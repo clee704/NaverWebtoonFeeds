@@ -7,27 +7,6 @@ import lxml.html
 htmlparser = HTMLParser.HTMLParser()
 
 
-def br2nl(html):
-    """
-    Convert newlines to spaces, <br> tags to newlines, collapse consecutive
-    whitespaces into single whitespace, remove leading and trailing
-    whitespaces, and unescape HTML entities.
-
-    >>> br2nl('hello,<br>world! ')
-    'hello,\\nworld!'
-    >>> br2nl('\\nnice to meet you!<br />')
-    'nice to meet you!'
-    >>> br2nl(' <br> welcome<br >to  <br/>  earth')
-    'welcome\\nto\\nearth'
-
-    """
-    newlines_removed = html.replace('\r\n', '\n').replace('\n', ' ')
-    br_converted = re.sub(r'<br */?>', '\n', newlines_removed)
-    whitespaces_collapsed = re.sub(r' +', ' ', br_converted)
-    whitespaces_merged = re.sub(r' ?\n ?', '\n', whitespaces_collapsed)
-    return htmlparser.unescape(whitespaces_merged.strip())
-
-
 def inner_html(element):
     """
     Return the string for this HtmlElement, without enclosing start and end

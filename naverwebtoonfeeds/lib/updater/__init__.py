@@ -8,7 +8,7 @@ import pytz
 from naverwebtoonfeeds import app, db, tz
 from naverwebtoonfeeds.models import Series, Chapter
 from naverwebtoonfeeds.lib.naver import URL, NaverBrowser
-from naverwebtoonfeeds.lib.updater.helpers import br2nl, inner_html
+from naverwebtoonfeeds.lib.updater.helpers import inner_html
 
 
 browser = NaverBrowser(app)
@@ -67,7 +67,7 @@ def _fetch_series_data(series):
             status = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
             series.title = comicinfo_dsc.xpath('h2/text()')[0].strip()
             series.author = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
-            series.description = br2nl(inner_html(comicinfo_dsc.xpath('p[@class="txt"]')[0]))
+            series.description = inner_html(comicinfo_dsc.xpath('p[@class="txt"]')[0])
             series.last_chapter = int(re.search('no=(\d+)', permalink).group(1))
             series.is_completed = status == u'완결웹툰'
             series.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
