@@ -1,5 +1,6 @@
 from flask import Flask
 from flask.ext.cache import Cache
+from flask.ext.gzip import Gzip
 import pytz
 
 from naverwebtoonfeeds.models import db
@@ -10,6 +11,7 @@ app.config.from_envvar('NAVERWEBTOONFEEDS_SETTINGS')
 
 db.init_app(app)
 cache = Cache(app)
+gzip = Gzip(app)
 
 tz = pytz.timezone('Asia/Seoul')   # Naver's time zone
 
