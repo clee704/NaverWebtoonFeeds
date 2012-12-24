@@ -19,7 +19,7 @@ URL = {
 
 class NaverBrowser(object):
 
-    def __init__(self, app, max_retry=5):
+    def __init__(self, app, max_retry=3):
         self.app = app
         self.cookies = None
         self.headers = {
@@ -52,7 +52,7 @@ class NaverBrowser(object):
                     raise
                 self.app.logger.info('Waiting for %d seconds before reconnecting', delay)
                 time.sleep(delay)
-                delay *= 2
+                delay += 0.5
 
     def login_required(self, response):
         return 'login' in response.url
