@@ -8,7 +8,7 @@
   <author>
     <name>{{ series.author }}</name>
   </author>
-  <subtitle type="text">{{ series.description }}</subtitle>
+  <subtitle type="html"><![CDATA[{{ series.description|safe }}]]></subtitle>
   <logo>{{ series.thumbnail_url|via_imgproxy }}</logo>
   <generator>Naver Webtoon Feeds</generator>
   {% for chapter in chapters %}
