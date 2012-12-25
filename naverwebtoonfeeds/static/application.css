@@ -57,7 +57,7 @@ input.feed-url {
   padding: 0;
   margin: 0;
   display: inline;
-  cursor: default;
+  cursor: pointer;
   font-size: inherit;
   width: 100%;
   min-height: 0;
