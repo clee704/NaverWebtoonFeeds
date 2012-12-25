@@ -11,7 +11,10 @@ from naverwebtoonfeeds.lib.updater import update_series_list, update_series
 @cache.cached(timeout=86400)
 def feed_index():
     app.logger.info('GET /')
-    update_series_list(append_only=True)
+    try:
+        update_series_list(append_only=True)
+    except:
+        app.logger.error('An error occurred while updating series list', exc_info=True)
     series_list = Series.query.filter_by(is_completed=False).order_by(Series.title).all()
     response = render_template('feed_index.html', series_list=series_list)
     return response
@@ -22,7 +25,10 @@ def feed_index():
 def feed_show(series_id):
     app.logger.info('GET /feeds/%d.xml', series_id)
     series = Series.query.options(joinedload('chapters')).get_or_404(series_id)
-    update_series(series)
+    try:
+        update_series(series)
+    except:
+        app.logger.error('An error occurred while updating series info', exc_info=True)
     chapters = []
     for c in series.chapters:
         # _pubdate_tz is used in templates to correct time zone
