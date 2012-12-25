@@ -50,7 +50,6 @@ $(function () {
     }
     return temp.join('');
   }
-  window.decompose = decompose;
 
   // Select the feed URL when clicked.
   $('.tab-pane').on('click', '.feed-url', function (e) {
