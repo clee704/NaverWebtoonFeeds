@@ -29,7 +29,10 @@ $(function () {
     var temp = [];
     for (var i = 0; i < str.length; i++) {
       var c = str.charAt(i);
-      if (c < '가' || c > '힣') {
+      if (c in doubles) {
+        temp.push(doubles[c]);
+      }
+      else if (c < '가' || c > '힣') {
         temp.push(c);
       }
       else {
