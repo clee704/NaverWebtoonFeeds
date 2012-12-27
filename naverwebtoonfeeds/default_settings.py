@@ -11,6 +11,10 @@ import logging
 # at the root, not below the root like http://example.com/myapp/.
 URL_ROOT = 'http://example.com'
 
+# If set, requests from different hosts other than URL_ROOT will be redirected
+# to the corresponding canonical URL.
+#FORCE_REDIRECT = True
+
 # If set, DEBUG level logs will be printed.
 DEBUG = False
 
