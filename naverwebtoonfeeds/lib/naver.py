@@ -2,7 +2,7 @@ import re
 import time
 import urllib2
 
-import lxml.html
+import lxml.html.soupparser
 import requests
 
 
@@ -44,7 +44,7 @@ class NaverBrowser(object):
                     continue
                 if response.status_code == 403:
                     raise urllib2.HTTPError(url, 403, 'Forbidden', response.headers, None)
-                return lxml.html.fromstring(response.text), response
+                return lxml.html.soupparser.fromstring(response.text), response
             except urllib2.URLError:
                 self.app.logger.info('A URLError occurred', exc_info=True)
                 errors += 1
