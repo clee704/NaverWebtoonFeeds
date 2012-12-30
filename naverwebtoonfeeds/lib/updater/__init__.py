@@ -5,32 +5,72 @@ from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
 import pytz
 
-from naverwebtoonfeeds import app, db, tz
+from naverwebtoonfeeds import app, cache, db, tz
 from naverwebtoonfeeds.models import Series, Chapter
 from naverwebtoonfeeds.lib.naver import URL, NaverBrowser
 from naverwebtoonfeeds.lib.updater.helpers import inner_html
 
 
+# The longer this interval, the fewer HTTP requests will be made to Naver.
+# 30 min to 1 hour would be a good choice.
+# Should be shorter than 1 day.
+SERIES_STATS_UPDATE_INTERVAL = timedelta(hours=1)
+
+# Used to set a permanent cache.
+CACHE_PERMANENT = 86400 * 365 * 10
+
+
 browser = NaverBrowser(app)
 
 
-def update_series_list(append_only=False):
-    old_series_ids = set(map(lambda r: r[0], db.session.query(Series.id).all()))
-    for series_id, update_days in _fetch_series_ids().items():
-        if append_only and series_id in old_series_ids:
+def update_series_list(update_all=False):
+    fetched = cache.get('series_list_fetched')
+    if (update_all or fetched is None or
+            fetched + SERIES_STATS_UPDATE_INTERVAL < datetime.now()):
+        _fetch_series_list(update_all)
+        cache.set('series_list_fetched', datetime.now(), CACHE_PERMANENT)
+
+
+def _fetch_series_list(update_all):
+    fetched_data = {}
+    doc, _ = browser.get(URL['series_by_day'])
+    for a in doc.xpath('//*[@class="list_area daily_all"]//li/*[@class="thumb"]/a'):
+        url = a.attrib['href']
+        m = re.search(r'titleId=(?P<id>\d+)&weekday=(?P<day>[a-z]+)', url)
+        series_id, day = int(m.group('id')), m.group('day')
+        updated = len(a.xpath('em[@class="ico_updt"]')) > 0
+        info = fetched_data.setdefault(series_id, {})
+        info.setdefault('update_days', []).append(day)
+        if info.get('updated') is None or updated:
+            info['updated'] = updated
+    series_list = Series.query.all()
+    series_ids = set()
+    for series in series_list:
+        series_ids.add(series.id)
+        if update_all:
+            update_series(series, add_new_chapters=update_all, do_commit=False)
+        info = fetched_data.get(series.id)
+        if info is None:
+            # The series is completed or somehow not showing up in the index
             continue
-        series = Series.query.get(series_id)
-        if series is None:
-            series = Series(id=series_id)
-        series.update_days = ','.join(update_days)
-        update_series(series)
+        series.update_days = ','.join(info['update_days'])
+        if not series.last_update_status and info['updated']:
+            series.new_chapters_available = True
+        series.last_update_status = info['updated']
+    for series_id in fetched_data.viewkeys() - series_ids:
+        series = Series(id=series_id)
+        update_series(series, add_new_chapters=update_all, do_commit=False)
+    _commit()
 
 
-def update_series(series):
+def update_series(series, add_new_chapters=True, do_commit=True):
     _fetch_series_data(series)
     db.session.add(series)
-    _commit()
-    _add_new_chapters(series)
+    if add_new_chapters and series.new_chapters_available:
+        _add_new_chapters(series)
+        series.new_chapters_available = False
+    if do_commit:
+        _commit()
 
 
 def _commit():
@@ -39,16 +79,6 @@ def _commit():
     except IntegrityError:
         app.logger.error('IntegrityError', exc_info=True)
         db.session.rollback()
-
-
-def _fetch_series_ids():
-    series_ids = {}
-    doc, _ = browser.get(URL['series_by_day'])
-    for url in doc.xpath('//*[@class="list_area daily_all"]//li//a[@class="title"]/@href'):
-        m = re.search(r'titleId=(?P<id>\d+)&weekday=(?P<day>[a-z]+)', url)
-        series_id, day = int(m.group('id')), m.group('day')
-        series_ids.setdefault(series_id, []).append(day)
-    return series_ids
 
 
 def _fetch_series_data(series):
@@ -99,7 +129,5 @@ def _add_new_chapters(series):
         try:
             _fetch_chapter_data(chapter)
         except Chapter.DoesNotExist:
-            db.session.rollback()
             continue
         db.session.add(chapter)
-        _commit()

@@ -24,10 +24,7 @@ def redirect_to_canonical_url(view):
 @redirect_to_canonical_url
 @cache.cached(timeout=86400)
 def feed_index():
-    try:
-        update_series_list(append_only=True)
-    except:
-        app.logger.error('An error occurred while updating series list', exc_info=True)
+    update_series_list()
     series_list = Series.query.filter_by(is_completed=False).order_by(Series.title).all()
     return render_template('feed_index.html', series_list=series_list)
 
@@ -36,11 +33,10 @@ def feed_index():
 @redirect_to_canonical_url
 @cache.cached(timeout=3600)
 def feed_show(series_id):
+    update_series_list()
     series = Series.query.options(joinedload('chapters')).get_or_404(series_id)
-    try:
+    if series.new_chapters_available:
         update_series(series)
-    except:
-        app.logger.error('An error occurred while updating series info', exc_info=True)
     chapters = []
     for c in series.chapters:
         # _pubdate_tz is used in templates to correct time zone

@@ -20,7 +20,7 @@ def update(debug=False):
     if debug:
         app.config['DEBUG'] = True
     from naverwebtoonfeeds.lib.updater import update_series_list
-    update_series_list()
+    update_series_list(update_all=True)
 
 @manager.command
 def migrate(action):
