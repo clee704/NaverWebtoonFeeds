@@ -22,9 +22,9 @@ browser = NaverBrowser(app)
 def update_series_list(update_all=False):
     fetched = cache.get('series_list_fetched')
     if (update_all or fetched is None or
-            fetched + SERIES_STATS_UPDATE_INTERVAL < datetime.now()):
+            fetched + SERIES_STATS_UPDATE_INTERVAL < datetime.utcnow()):
         _fetch_series_list(update_all)
-        cache.set('series_list_fetched', datetime.now(), CACHE_PERMANENT)
+        cache.set('series_list_fetched', datetime.utcnow(), CACHE_PERMANENT)
 
 
 def _fetch_series_list(update_all):
