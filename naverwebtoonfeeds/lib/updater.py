@@ -1,16 +1,12 @@
 from datetime import datetime, timedelta
 
 from sqlalchemy.exc import IntegrityError
+import pytz
 
 from naverwebtoonfeeds import app, cache, db, tz
 from naverwebtoonfeeds.models import Series, Chapter
 from naverwebtoonfeeds.lib.naver import NaverBrowser
 
-
-# The longer this interval, the fewer HTTP requests will be made to Naver.
-# 30 min to 1 hour would be a good choice.
-# Should be shorter than 1 day.
-SERIES_STATS_UPDATE_INTERVAL = timedelta(hours=1)
 
 # Used to set a permanent cache.
 CACHE_PERMANENT = 86400 * 365 * 10
@@ -22,9 +18,23 @@ browser = NaverBrowser(app)
 def update_series_list(update_all=False):
     fetched = cache.get('series_list_fetched')
     if (update_all or fetched is None or
-            fetched + SERIES_STATS_UPDATE_INTERVAL < datetime.utcnow()):
+            fetched + _series_stats_update_interval() < datetime.utcnow()):
         _fetch_series_list(update_all)
         cache.set('series_list_fetched', datetime.utcnow(), CACHE_PERMANENT)
+
+
+def _series_stats_update_interval():
+    # The longer this interval, the fewer HTTP requests will be made to Naver.
+    # 30 min to 1 hour would be a good choice.
+    # Should be shorter than 1 day.
+    naver_time = pytz.utc.localize(datetime.utcnow()).astimezone(tz)
+    hour = naver_time.hour
+    if 23 <= hour or hour < 1:
+        return timedelta(minutes=15)
+    elif 1 <= hour < 3:
+        return timedelta(minutes=30)
+    else:
+        return timedelta(hours=1)
 
 
 def _fetch_series_list(update_all):
