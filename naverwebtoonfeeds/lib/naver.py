@@ -46,6 +46,7 @@ class NaverBrowser(object):
                     self.login()
                     continue
                 if response.status_code == 403:
+                    self.app.logger.warning('Forbidden IP: %s', self._get_public_ip())
                     raise urllib2.HTTPError(url, 403, 'Forbidden', response.headers, None)
                 return lxml.html.soupparser.fromstring(response.text), response
             except urllib2.URLError:
@@ -79,7 +80,8 @@ class NaverBrowser(object):
         self.app.logger.info('Logged in')
 
     def get_series_list(self):
-        doc, _ = self.get(URL['series_by_day'])
+        doc, response = self.get(URL['series_by_day'])
+        self.app.logger.info('Final URL: %s', response.url)
         for a in doc.xpath('//*[@class="list_area daily_all"]//li/*[@class="thumb"]/a'):
             url = a.attrib['href']
             m = re.search(r'titleId=(?P<id>\d+)&weekday=(?P<day>[a-z]+)', url)
@@ -106,8 +108,8 @@ class NaverBrowser(object):
                 'is_completed': status == u'완결웹툰',
                 'thumbnail_url': doc.xpath('//meta[@property="og:image"]/@content')[0],
             }
-        except IndexError:
-            app.logger.error(response.url + '\n' + response.text)
+        except:
+            self.app.logger.error(response.url + '\n' + response.text, exc_info=True)
             raise
 
     def get_chapter_data(self, series_id, chapter_id, tz):
@@ -124,8 +126,14 @@ class NaverBrowser(object):
             'pubdate': tz.localize(naive_dt).astimezone(pytz.utc).replace(tzinfo=None),
             'thumbnail_url': doc.xpath('//*[@id="comic_move"]//*[@class="on"]/img/@src')[0],
         }
-        assert '{0}/{1}'.format(series_id, chapter_id) in data['thumbnail_url']
+        if '{0}/{1}'.format(series_id, chapter_id) not in data['thumbnail_url']:
+            self.app.logger.error('Thumbnail URL looks strange: thumbnail_url=%s, series_id=%d, chapter_id=%d', data['thumbnail_url'], series_id, chapter_id)
         return data
+
+    def _get_public_ip(self):
+        data = requests.get('http://checkip.dyndns.com/').text
+        # data = '<html><head><title>Current IP Check</title></head><body>Current IP Address: 65.96.168.198</body></html>\r\n'
+        return re.search('Address: (\d+\.\d+\.\d+\.\d+)', data).group(1)
 
 
 def inner_html(element):

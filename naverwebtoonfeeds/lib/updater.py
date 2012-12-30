@@ -29,7 +29,13 @@ def update_series_list(update_all=False):
 
 def _fetch_series_list(update_all):
     fetched_data = {}
-    for data in browser.get_series_list():
+    try:
+        series_list = browser.get_series_list()
+    except:
+        app.logger.error("An error occurred while getting series list",
+            exc_info=True)
+        return
+    for data in series_list:
         info = fetched_data.setdefault(data['id'], {})
         info.setdefault('update_days', []).append(data['day'])
         if info.get('updated') is None or data['updated']:
@@ -73,7 +79,12 @@ def _commit():
 
 
 def _fetch_series_data(series):
-    data = browser.get_series_data(series.id)
+    try:
+        data = browser.get_series_data(series.id)
+    except:
+        app.logger.error("An error occurred while getting data for series #%d",
+            series.id, exc_info=True)
+        return
     if data.get('removed'):
         if not series.is_completed:
             app.logger.warning('Series #%d seems removed', series.id)
@@ -88,12 +99,18 @@ def _fetch_series_data(series):
 
 
 def _fetch_chapter_data(chapter):
-    data = browser.get_chapter_data(chapter.series.id, chapter.id, tz)
+    try:
+        data = browser.get_chapter_data(chapter.series.id, chapter.id, tz)
+    except:
+        app.logger.error("An error occurred while getting data for chapter #%d of series #%d",
+            chapter.id, chapter.series.id, exc_info=True)
+        return False
     if data.get('not_found'):
         raise Chapter.DoesNotExist
     chapter.title = data['title']
     chapter.pubdate = data['pubdate']
     chapter.thumbnail_url = data['thumbnail_url']
+    return True
 
 
 def _add_new_chapters(series):
@@ -103,7 +120,8 @@ def _add_new_chapters(series):
     for chapter_id in chapter_ids:
         chapter = Chapter(series=series, id=chapter_id)
         try:
-            _fetch_chapter_data(chapter)
+            success = _fetch_chapter_data(chapter)
         except Chapter.DoesNotExist:
             continue
-        db.session.add(chapter)
+        if success:
+            db.session.add(chapter)
