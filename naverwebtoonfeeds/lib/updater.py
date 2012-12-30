@@ -1,14 +1,10 @@
-# -*- coding: UTF-8 -*-
-import re
 from datetime import datetime, timedelta
 
 from sqlalchemy.exc import IntegrityError
-import pytz
 
 from naverwebtoonfeeds import app, cache, db, tz
 from naverwebtoonfeeds.models import Series, Chapter
-from naverwebtoonfeeds.lib.naver import URL, NaverBrowser
-from naverwebtoonfeeds.lib.updater.helpers import inner_html
+from naverwebtoonfeeds.lib.naver import NaverBrowser
 
 
 # The longer this interval, the fewer HTTP requests will be made to Naver.
@@ -33,16 +29,11 @@ def update_series_list(update_all=False):
 
 def _fetch_series_list(update_all):
     fetched_data = {}
-    doc, _ = browser.get(URL['series_by_day'])
-    for a in doc.xpath('//*[@class="list_area daily_all"]//li/*[@class="thumb"]/a'):
-        url = a.attrib['href']
-        m = re.search(r'titleId=(?P<id>\d+)&weekday=(?P<day>[a-z]+)', url)
-        series_id, day = int(m.group('id')), m.group('day')
-        updated = len(a.xpath('em[@class="ico_updt"]')) > 0
-        info = fetched_data.setdefault(series_id, {})
-        info.setdefault('update_days', []).append(day)
-        if info.get('updated') is None or updated:
-            info['updated'] = updated
+    for data in browser.get_series_list():
+        info = fetched_data.setdefault(data['id'], {})
+        info.setdefault('update_days', []).append(data['day'])
+        if info.get('updated') is None or data['updated']:
+            info['updated'] = data['updated']
     series_list = Series.query.all()
     series_ids = set()
     for series in series_list:
@@ -82,42 +73,27 @@ def _commit():
 
 
 def _fetch_series_data(series):
-    url = URL['last_chapter'].format(series_id=series.id)
-    doc, response = browser.get(url)
-    app.logger.debug('Response URL: %s', url)
-    if response.url != url:
+    data = browser.get_series_data(series.id)
+    if data.get('removed'):
         if not series.is_completed:
             app.logger.warning('Series #%d seems removed', series.id)
             series.is_completed = True
     else:
-        try:
-            app.logger.debug('Parsing data for series #%d', series.id)
-            comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
-            permalink = doc.xpath('//meta[@property="og:url"]/@content')[0]
-            status = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
-            series.title = comicinfo_dsc.xpath('h2/text()')[0].strip()
-            series.author = comicinfo_dsc.xpath('h2/em')[0].text_content().strip()
-            series.description = inner_html(comicinfo_dsc.xpath('p[@class="txt"]')[0])
-            series.last_chapter = int(re.search('no=(\d+)', permalink).group(1))
-            series.is_completed = status == u'완결웹툰'
-            series.thumbnail_url = doc.xpath('//meta[@property="og:image"]/@content')[0]
-        except IndexError:
-            app.logger.error(response.url + '\n' + response.text)
-            raise
+        series.title = data['title']
+        series.author = data['author']
+        series.description = data['description']
+        series.last_chapter = data['last_chapter']
+        series.is_completed = data['is_completed']
+        series.thumbnail_url = data['thumbnail_url']
 
 
 def _fetch_chapter_data(chapter):
-    url = URL['chapter'].format(series_id=chapter.series.id, chapter_id=chapter.id)
-    doc, _ = browser.get(url)
-    if url != doc.xpath('//meta[@property="og:url"]/@content')[0]:
+    data = browser.get_chapter_data(chapter.series.id, chapter.id, tz)
+    if data.get('not_found'):
         raise Chapter.DoesNotExist
-    app.logger.debug('Parsing data for chapter #%d of series #%d', chapter.id, chapter.series.id)
-    date_str = doc.xpath('//form[@name="reportForm"]/input[@name="itemDt"]/@value')[0]
-    naive_dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-    chapter.title = doc.xpath('//meta[@property="og:description"]/@content')[0]
-    chapter.pubdate = tz.localize(naive_dt).astimezone(pytz.utc).replace(tzinfo=None)
-    chapter.thumbnail_url = doc.xpath('//*[@id="comic_move"]//*[@class="on"]/img/@src')[0]
-    assert '{0}/{1}'.format(chapter.series.id, chapter.id) in chapter.thumbnail_url
+    chapter.title = data['title']
+    chapter.pubdate = data['pubdate']
+    chapter.thumbnail_url = data['thumbnail_url']
 
 
 def _add_new_chapters(series):
