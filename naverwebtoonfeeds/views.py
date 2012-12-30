@@ -1,4 +1,4 @@
-from flask import Response, render_template, request, redirect
+from flask import Response, render_template, request, redirect, url_for
 from sqlalchemy.orm import joinedload
 import pytz
 
@@ -24,6 +24,7 @@ def redirect_to_canonical_url(view):
 @redirect_to_canonical_url
 @cache.cached(timeout=86400)
 def feed_index():
+    app.logger.info('feed_index (GET %s)', url_for('feed_index'))
     update_series_list()
     series_list = Series.query.filter_by(is_completed=False).order_by(Series.title).all()
     return render_template('feed_index.html', series_list=series_list)
@@ -33,6 +34,7 @@ def feed_index():
 @redirect_to_canonical_url
 @cache.cached(timeout=3600)
 def feed_show(series_id):
+    app.logger.info('feed_show, series_id=%d (GET %s)', series_id, url_for('feed_show', series_id=series_id))
     update_series_list()
     series = Series.query.options(joinedload('chapters')).get_or_404(series_id)
     if series.new_chapters_available:

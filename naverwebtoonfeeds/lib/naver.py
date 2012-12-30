@@ -90,7 +90,7 @@ class NaverBrowser(object):
     def get_series_data(self, series_id):
         url = URL['last_chapter'].format(series_id=series_id)
         doc, response = self.get(url)
-        self.app.logger.info('Response URL: %s', url)
+        self.app.logger.info('Final URL: %s', response.url)
         if response.url != url:
             return {'removed': True}
         try:
@@ -112,7 +112,8 @@ class NaverBrowser(object):
 
     def get_chapter_data(self, series_id, chapter_id, tz):
         url = URL['chapter'].format(series_id=series_id, chapter_id=chapter_id)
-        doc, _ = self.get(url)
+        doc, response = self.get(url)
+        self.app.logger.info('Final URL: %s', response.url)
         if url != doc.xpath('//meta[@property="og:url"]/@content')[0]:
             return {'not_found': True}
         self.app.logger.debug('Parsing data for chapter #%d of series #%d', chapter_id, series_id)
