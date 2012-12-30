@@ -39,7 +39,7 @@ class NaverBrowser(object):
         delay = 1
         while True:
             try:
-                self.app.logger.debug('Requesting GET %s', url)
+                self.app.logger.info('Requesting GET %s', url)
                 response = requests.get(url, cookies=self.cookies, headers=self.headers)
                 self.cookies = response.cookies
                 if self.login_required(response):
@@ -90,7 +90,7 @@ class NaverBrowser(object):
     def get_series_data(self, series_id):
         url = URL['last_chapter'].format(series_id=series_id)
         doc, response = self.get(url)
-        self.app.logger.debug('Response URL: %s', url)
+        self.app.logger.info('Response URL: %s', url)
         if response.url != url:
             return {'removed': True}
         try:
