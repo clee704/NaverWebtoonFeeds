@@ -30,12 +30,12 @@ def update_series_list(update_all=False):
 def _fetch_series_list(update_all):
     fetched_data = {}
     try:
-        series_list = browser.get_series_list()
+        series_data_list = browser.get_series_list()
     except:
         app.logger.error("An error occurred while getting series list",
             exc_info=True)
         return
-    for data in series_list:
+    for data in series_data_list:
         info = fetched_data.setdefault(data['id'], {})
         info.setdefault('update_days', []).append(data['day'])
         if info.get('updated') is None or data['updated']:
