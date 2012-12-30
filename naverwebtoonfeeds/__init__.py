@@ -11,7 +11,8 @@ app.config.from_envvar('NAVERWEBTOONFEEDS_SETTINGS')
 
 db.init_app(app)
 cache = Cache(app)
-gzip = Gzip(app)   # for Heroku deployment; maybe redundant for others
+if app.config.get('GZIP'):
+    gzip = Gzip(app)
 
 tz = pytz.timezone('Asia/Seoul')   # Naver's time zone
 

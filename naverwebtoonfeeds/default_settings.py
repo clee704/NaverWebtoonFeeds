@@ -53,3 +53,6 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///db/naverwebtoonfeeds.db'
 #CACHE_TYPE = 'memcached'
 #CACHE_KEY_PREFIX = 'naverwebtoonfeeds'
 #CACHE_MEMCACHED_SERVERS = ['127.0.0.1:11211']
+
+# Enable Gzip compression
+#GZIP = True
