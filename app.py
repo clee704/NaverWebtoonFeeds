@@ -2,12 +2,14 @@ import logging
 from naverwebtoonfeeds import app
 
 # Logging settings
-app.logger.setLevel(app.config['LOG_LEVEL'])
+loggers = [app.logger, logging.getLogger('sqlalchemy.engine')]
 formatter = logging.Formatter('%(asctime)s [%(name)s] [%(levelname)s] %(message)s')
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.DEBUG)
 stream_handler.setFormatter(formatter)
-app.logger.addHandler(stream_handler)
+for logger in loggers:
+    logger.setLevel(app.config['LOG_LEVEL'])
+    logger.addHandler(stream_handler)
 if app.config.get('SEND_EMAIL'):
     from logging.handlers import SMTPHandler
     smtp_handler = SMTPHandler(app.config['MAIL_HOST'],
@@ -18,7 +20,8 @@ if app.config.get('SEND_EMAIL'):
                                app.config['MAIL_SECURE'])
     smtp_handler.setLevel(app.config['EMAIL_LEVEL'])
     smtp_handler.setFormatter(formatter)
-    app.logger.addHandler(smtp_handler)
+    for logger in loggers:
+        logger.addHandler(smtp_handler)
 
 if __name__ == '__main__':
     try:
