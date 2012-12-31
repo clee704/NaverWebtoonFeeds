@@ -35,6 +35,10 @@ MAIL_SECURE = None
 # IMGPROXY_URL.format(url=thumbnail_url).
 IMGPROXY_URL = 'http://images2-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&url={url}'
 
+# You can use multiple hostnames to speed up page loading.
+IMGPROXY_URL_PATTERN = 'http://images{variable}-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&url={url}'
+IMGPROXY_URL_VARIABLE = lambda url: hash(url) % 20
+
 # NaverWebtoonFeeds uses Flask-SQLAlchemy to persist data.
 # See the Flask-SQLAlchemy documentation at
 # http://packages.python.org/Flask-SQLAlchemy/config.html for more details.

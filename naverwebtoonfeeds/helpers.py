@@ -16,8 +16,11 @@ def make_external(url):
 
 @app.template_filter()
 def via_imgproxy(url):
-    u = app.config.get('IMGPROXY_URL')
-    return u.format(url=url) if u else url
+    if not app.config.get('IMGPROXY_URL_PATTERN'):
+        url_format = app.config.get('IMGPROXY_URL')
+        return url_format.format(url=url) if url_format else url
+    pattern = app.config['IMGPROXY_URL_PATTERN']
+    return pattern.format(variable=app.config['IMGPROXY_URL_VARIABLE'](url), url=url)
 
 
 @app.context_processor
