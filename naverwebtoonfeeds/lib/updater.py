@@ -40,16 +40,17 @@ def _series_stats_update_interval():
 def _fetch_series_list(update_all):
     fetched_data = {}
     try:
-        series_data_list = browser.get_series_list()
+        issues = browser.get_issues()
     except:
         app.logger.error("An error occurred while getting series list",
             exc_info=True)
         return
-    for data in series_data_list:
+    for data in issues:
         info = fetched_data.setdefault(data['id'], {})
         info.setdefault('update_days', []).append(data['day'])
-        if info.get('updated') is None or data['updated']:
-            info['updated'] = data['updated']
+        days_updated = info.setdefault('days_updated', [])
+        if data['days_updated']:
+            days_updated.append(data['days_updated'])
     series_list = Series.query.all()
     series_ids = set()
     for series in series_list:
@@ -61,9 +62,9 @@ def _fetch_series_list(update_all):
             # The series is completed or somehow not showing up in the index
             continue
         series.update_days = ','.join(info['update_days'])
-        if not series.last_update_status and info['updated']:
+        if any(day not in series.last_update_status for day in info['days_updated']):
             series.new_chapters_available = True
-        series.last_update_status = info['updated']
+        series.last_update_status = ','.join(info['days_updated'])
     for series_id in fetched_data.viewkeys() - series_ids:
         series = Series(id=series_id)
         update_series(series, add_new_chapters=update_all, do_commit=False)
@@ -112,7 +113,8 @@ def _fetch_chapter_data(chapter):
     try:
         data = browser.get_chapter_data(chapter.series.id, chapter.id, tz)
     except:
-        app.logger.error("An error occurred while getting data for chapter #%d of series #%d",
+        app.logger.error(
+            "An error occurred while getting data for chapter #%d of series #%d",
             chapter.id, chapter.series.id, exc_info=True)
         return False
     if data.get('not_found'):

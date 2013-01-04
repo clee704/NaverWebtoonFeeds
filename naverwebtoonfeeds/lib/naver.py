@@ -80,7 +80,7 @@ class NaverBrowser(object):
             raise RuntimeError("Cannot log in to naver.com")
         self.app.logger.info('Logged in')
 
-    def get_series_list(self):
+    def get_issues(self):
         doc, response = self.get(URL['series_by_day'])
         self.app.logger.info('Final URL: %s', response.url)
         for a in doc.xpath('//*[@class="list_area daily_all"]//li/*[@class="thumb"]/a'):
@@ -88,7 +88,7 @@ class NaverBrowser(object):
             m = re.search(r'titleId=(?P<id>\d+)&weekday=(?P<day>[a-z]+)', url)
             series_id, day = int(m.group('id')), m.group('day')
             updated = len(a.xpath('em[@class="ico_updt"]')) > 0
-            yield {'id': series_id, 'day': day, 'updated': updated}
+            yield {'id': series_id, 'day': day, 'days_updated': day if updated else False}
 
     def get_series_data(self, series_id):
         url = URL['last_chapter'].format(series_id=series_id)

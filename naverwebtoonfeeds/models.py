@@ -15,7 +15,7 @@ class Series(db.Model):
     update_days = db.Column(db.Text)
 
     new_chapters_available = db.Column(db.Boolean, default=False)
-    last_update_status = db.Column(db.Boolean, default=False)
+    last_update_status = db.Column(db.Text, nullable=False, default='')
 
 
 class Chapter(db.Model):
