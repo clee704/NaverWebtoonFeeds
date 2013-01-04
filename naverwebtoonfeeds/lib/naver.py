@@ -83,12 +83,14 @@ class NaverBrowser(object):
     def get_issues(self):
         doc, response = self.get(URL['series_by_day'])
         self.app.logger.info('Final URL: %s', response.url)
+        retval = []
         for a in doc.xpath('//*[@class="list_area daily_all"]//li/*[@class="thumb"]/a'):
             url = a.attrib['href']
             m = re.search(r'titleId=(?P<id>\d+)&weekday=(?P<day>[a-z]+)', url)
             series_id, day = int(m.group('id')), m.group('day')
             updated = len(a.xpath('em[@class="ico_updt"]')) > 0
-            yield {'id': series_id, 'day': day, 'days_updated': day if updated else False}
+            retval.append({'id': series_id, 'day': day, 'days_updated': day if updated else False})
+        return retval
 
     def get_series_data(self, series_id):
         url = URL['last_chapter'].format(series_id=series_id)
