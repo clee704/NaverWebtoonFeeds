@@ -3,16 +3,16 @@ from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
 import pytz
 
-from naverwebtoonfeeds import app, cache, db, tz
+from naverwebtoonfeeds import app, cache, db
 from naverwebtoonfeeds.models import Series, Chapter
-from naverwebtoonfeeds.lib.naver import NaverBrowser
+from naverwebtoonfeeds.lib.naver import NAVER_TIMEZONE, NaverBrowser
 
 
 # Used to set a permanent cache.
 CACHE_PERMANENT = 86400 * 365 * 10
 
 
-browser = NaverBrowser(app)
+__browser__ = NaverBrowser(app)
 
 
 def update_series_list(update_all=False):
@@ -27,7 +27,7 @@ def _series_stats_update_interval():
     # The longer this interval, the fewer HTTP requests will be made to Naver.
     # 30 min to 1 hour would be a good choice.
     # Should be shorter than 1 day.
-    naver_time = pytz.utc.localize(datetime.utcnow()).astimezone(tz)
+    naver_time = pytz.utc.localize(datetime.utcnow()).astimezone(NAVER_TIMEZONE)
     hour = naver_time.hour
     if 23 <= hour or hour < 1:
         return timedelta(minutes=15)
@@ -40,7 +40,7 @@ def _series_stats_update_interval():
 def _fetch_series_list(update_all):
     fetched_data = {}
     try:
-        issues = browser.get_issues()
+        issues = __browser__.get_issues()
     except:
         app.logger.error("An error occurred while getting series list",
                 exc_info=True)
@@ -91,7 +91,7 @@ def _commit():
 
 def _fetch_series_data(series):
     try:
-        data = browser.get_series_data(series.id)
+        data = __browser__.get_series_data(series.id)
     except:
         app.logger.error("An error occurred while getting data for series #%d",
                 series.id, exc_info=True)
@@ -111,7 +111,7 @@ def _fetch_series_data(series):
 
 def _fetch_chapter_data(chapter):
     try:
-        data = browser.get_chapter_data(chapter.series.id, chapter.id, tz)
+        data = __browser__.get_chapter_data(chapter.series.id, chapter.id)
     except:
         app.logger.error("An error occurred while getting data for chapter #%d of series #%d",
                 chapter.id, chapter.series.id, exc_info=True)

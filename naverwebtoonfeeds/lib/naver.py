@@ -26,6 +26,7 @@ HEADERS = {
     'Accept-Language': 'ko-kr,ko;q=0.8,en-us;q=0.5,en;q=0.3',
     'Connection': 'keep-alive',
 }
+NAVER_TIMEZONE = pytz.timezone('Asia/Seoul')
 
 
 class NaverBrowser(object):
@@ -85,11 +86,11 @@ class NaverBrowser(object):
         doc, response = self.get(URL['series_by_day'])
         self.app.logger.info('Final URL: %s', response.url)
         retval = []
-        for a in doc.xpath('//*[@class="list_area daily_all"]//li/*[@class="thumb"]/a'):
-            url = a.attrib['href']
-            m = re.search(r'titleId=(?P<id>\d+)&weekday=(?P<day>[a-z]+)', url)
-            series_id, day = int(m.group('id')), m.group('day')
-            updated = len(a.xpath('em[@class="ico_updt"]')) > 0
+        for a_elem in doc.xpath('//*[@class="list_area daily_all"]//li/*[@class="thumb"]/a'):
+            url = a_elem.attrib['href']
+            match = re.search(r'titleId=(?P<id>\d+)&weekday=(?P<day>[a-z]+)', url)
+            series_id, day = int(match.group('id')), match.group('day')
+            updated = len(a_elem.xpath('em[@class="ico_updt"]')) > 0
             retval.append({'id': series_id, 'day': day, 'days_updated': day if updated else False})
         return retval
 
@@ -116,7 +117,7 @@ class NaverBrowser(object):
             self.app.logger.error(response.url + '\n' + response.text, exc_info=True)
             raise
 
-    def get_chapter_data(self, series_id, chapter_id, tz):
+    def get_chapter_data(self, series_id, chapter_id):
         url = URL['chapter'].format(series_id=series_id, chapter_id=chapter_id)
         doc, response = self.get(url)
         self.app.logger.info('Final URL: %s', response.url)
@@ -127,11 +128,12 @@ class NaverBrowser(object):
         naive_dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
         data = {
             'title': doc.xpath('//meta[@property="og:description"]/@content')[0],
-            'pubdate': tz.localize(naive_dt).astimezone(pytz.utc).replace(tzinfo=None),
+            'pubdate': NAVER_TIMEZONE.localize(naive_dt).astimezone(pytz.utc).replace(tzinfo=None),
             'thumbnail_url': doc.xpath('//*[@id="comic_move"]//*[@class="on"]/img/@src')[0],
         }
         if '{0}/{1}'.format(series_id, chapter_id) not in data['thumbnail_url']:
-            self.app.logger.error('Thumbnail URL looks strange: thumbnail_url=%s, series_id=%d, chapter_id=%d', data['thumbnail_url'], series_id, chapter_id)
+            self.app.logger.error('Thumbnail URL looks strange: thumbnail_url=%s, series_id=%d, chapter_id=%d',
+                    data['thumbnail_url'], series_id, chapter_id)
         return data
 
 
@@ -158,5 +160,4 @@ def inner_html(element):
 def get_public_ip():
     """Get the public IP of the server where this app is running."""
     data = requests.get('http://checkip.dyndns.com/').text
-    # data = '<html><head><title>Current IP Check</title></head><body>Current IP Address: 65.96.168.198</body></html>\r\n'
     return re.search(r'Address: (\d+\.\d+\.\d+\.\d+)', data).group(1)

@@ -35,4 +35,4 @@ def utility_processor():
         else:
             key = 'chapter'
         return naver.URL[key].format(series_id=series_id, chapter_id=chapter_id)
-    return locals()
+    return {'naver_url': naver_url}

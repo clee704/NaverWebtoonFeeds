@@ -2,8 +2,9 @@ from flask import Response, render_template, request, redirect, url_for
 from sqlalchemy.orm import joinedload
 import pytz
 
-from naverwebtoonfeeds import app, cache, tz
+from naverwebtoonfeeds import app, cache
 from naverwebtoonfeeds.models import Series
+from naverwebtoonfeeds.lib.naver import NAVER_TIMEZONE
 from naverwebtoonfeeds.lib.updater import update_series_list, update_series
 
 
@@ -44,7 +45,7 @@ def feed_show(series_id):
     chapters = []
     for chapter in series.chapters:
         # pubdate_with_tz is used in templates to correct time zone
-        pubdate_with_tz = pytz.utc.localize(chapter.pubdate).astimezone(tz)
+        pubdate_with_tz = pytz.utc.localize(chapter.pubdate).astimezone(NAVER_TIMEZONE)
         chapter.pubdate_with_tz = pubdate_with_tz
         chapters.append(chapter)
     xml = render_template('feed_show.xml', series=series, chapters=chapters)
@@ -52,5 +53,5 @@ def feed_show(series_id):
 
 
 @app.errorhandler(500)
-def internal_server_error(error):
+def internal_server_error(_):
     return render_template('500.html'), 500
