@@ -19,6 +19,13 @@ URL = {
     'series': BASE_URL + '/list.nhn?titleId={series_id}',
     'series_by_day': BASE_URL + '/weekday.nhn',
 }
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 6.1; ko; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Encoding': 'gzip,deflate',
+    'Accept-Language': 'ko-kr,ko;q=0.8,en-us;q=0.5,en;q=0.3',
+    'Connection': 'keep-alive',
+}
 
 
 class NaverBrowser(object):
@@ -26,13 +33,7 @@ class NaverBrowser(object):
     def __init__(self, app, max_retry=3):
         self.app = app
         self.cookies = None
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 6.1; ko; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Encoding': 'gzip,deflate',
-            'Accept-Language': 'ko-kr,ko;q=0.8,en-us;q=0.5,en;q=0.3',
-            'Connection': 'keep-alive',
-        }
+        self.headers = HEADERS.copy()
         self.max_retry = max_retry
 
     def get(self, url):
@@ -47,7 +48,7 @@ class NaverBrowser(object):
                     self.login()
                     continue
                 if response.status_code == 403:
-                    self.app.logger.warning('Forbidden IP: %s', self._get_public_ip())
+                    self.app.logger.warning('Forbidden IP: %s', get_public_ip())
                     raise urllib2.HTTPError(url, 403, 'Forbidden', response.headers, None)
                 return lxml.html.soupparser.fromstring(response.text), response
             except urllib2.URLError:
@@ -74,9 +75,9 @@ class NaverBrowser(object):
             'pw': self.app.config['NAVER_PASSWORD'],
         }
         self.get('http://www.naver.com')   # Get cookies
-        r = requests.post(url, data=data, cookies=self.cookies, headers=headers)
-        self.cookies = r.cookies
-        if 'location.replace' not in r.text[:100]:
+        response = requests.post(url, data=data, cookies=self.cookies, headers=headers)
+        self.cookies = response.cookies
+        if 'location.replace' not in response.text[:100]:
             raise RuntimeError("Cannot log in to naver.com")
         self.app.logger.info('Logged in')
 
@@ -107,7 +108,7 @@ class NaverBrowser(object):
                 'title': comicinfo_dsc.xpath('h2/text()')[0].strip(),
                 'author': comicinfo_dsc.xpath('h2/em')[0].text_content().strip(),
                 'description': inner_html(comicinfo_dsc.xpath('p[@class="txt"]')[0]),
-                'last_chapter': int(re.search('no=(\d+)', permalink).group(1)),
+                'last_chapter': int(re.search(r'no=(\d+)', permalink).group(1)),
                 'is_completed': status == u'완결웹툰',
                 'thumbnail_url': doc.xpath('//meta[@property="og:image"]/@content')[0],
             }
@@ -133,14 +134,9 @@ class NaverBrowser(object):
             self.app.logger.error('Thumbnail URL looks strange: thumbnail_url=%s, series_id=%d, chapter_id=%d', data['thumbnail_url'], series_id, chapter_id)
         return data
 
-    def _get_public_ip(self):
-        data = requests.get('http://checkip.dyndns.com/').text
-        # data = '<html><head><title>Current IP Check</title></head><body>Current IP Address: 65.96.168.198</body></html>\r\n'
-        return re.search('Address: (\d+\.\d+\.\d+\.\d+)', data).group(1)
-
 
 def inner_html(element):
-    """
+    u"""
     Return the string for this HtmlElement, without enclosing start and end
     tags, or an empty string if this is a self-enclosing tag.
 
@@ -157,3 +153,10 @@ def inner_html(element):
     outer = lxml.html.tostring(element, encoding='UTF-8').decode('UTF-8')
     i, j = outer.find('>'), outer.rfind('<')
     return outer[i + 1:j]
+
+
+def get_public_ip():
+    """Get the public IP of the server where this app is running."""
+    data = requests.get('http://checkip.dyndns.com/').text
+    # data = '<html><head><title>Current IP Check</title></head><body>Current IP Address: 65.96.168.198</body></html>\r\n'
+    return re.search(r'Address: (\d+\.\d+\.\d+\.\d+)', data).group(1)

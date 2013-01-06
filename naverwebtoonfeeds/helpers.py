@@ -20,13 +20,19 @@ def via_imgproxy(url):
         url_format = app.config.get('IMGPROXY_URL')
         return url_format.format(url=url) if url_format else url
     pattern = app.config['IMGPROXY_URL_PATTERN']
-    return pattern.format(variable=app.config['IMGPROXY_URL_VARIABLE'](url), url=url)
+    variable = app.config['IMGPROXY_URL_VARIABLE'](url)
+    return pattern.format(variable=variable, url=url)
 
 
 @app.context_processor
 def utility_processor():
     def naver_url(series_id, chapter_id=None, mobile=False):
         """Return appropriate webtoon URL for the given arguments."""
-        key = 'mobile' if mobile else 'series' if chapter_id is None else 'chapter'
+        if mobile:
+            key = 'mobile'
+        elif chapter_id is None:
+            key = 'series'
+        else:
+            key = 'chapter'
         return naver.URL[key].format(series_id=series_id, chapter_id=chapter_id)
     return locals()

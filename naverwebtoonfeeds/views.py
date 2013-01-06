@@ -26,28 +26,31 @@ def redirect_to_canonical_url(view):
 def feed_index():
     app.logger.info('feed_index (GET %s)', url_for('feed_index'))
     update_series_list()
-    series_list = Series.query.filter_by(is_completed=False).order_by(Series.title).all()
-    return render_template('feed_index.html', series_list=series_list)
+    current_series_query = Series.query.filter_by(is_completed=False)
+    sorted_series_list = current_series_query.order_by(Series.title).all()
+    return render_template('feed_index.html', series_list=sorted_series_list)
 
 
 @app.route('/feeds/<int:series_id>.xml')
 @redirect_to_canonical_url
 @cache.cached(timeout=3600)
 def feed_show(series_id):
-    app.logger.info('feed_show, series_id=%d (GET %s)', series_id, url_for('feed_show', series_id=series_id))
+    url = url_for('feed_show', series_id=series_id)
+    app.logger.info('feed_show, series_id=%d (GET %s)', series_id, url)
     update_series_list()
     series = Series.query.options(joinedload('chapters')).get_or_404(series_id)
     if series.new_chapters_available:
         update_series(series)
     chapters = []
-    for c in series.chapters:
-        # _pubdate_tz is used in templates to correct time zone
-        c._pubdate_tz = pytz.utc.localize(c.pubdate).astimezone(tz)
-        chapters.append(c)
+    for chapter in series.chapters:
+        # pubdate_with_tz is used in templates to correct time zone
+        pubdate_with_tz = pytz.utc.localize(chapter.pubdate).astimezone(tz)
+        chapter.pubdate_with_tz = pubdate_with_tz
+        chapters.append(chapter)
     xml = render_template('feed_show.xml', series=series, chapters=chapters)
     return Response(response=xml, content_type='application/atom+xml')
 
 
 @app.errorhandler(500)
-def internal_server_error(e):
+def internal_server_error(error):
     return render_template('500.html'), 500

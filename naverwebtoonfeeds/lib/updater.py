@@ -43,7 +43,7 @@ def _fetch_series_list(update_all):
         issues = browser.get_issues()
     except:
         app.logger.error("An error occurred while getting series list",
-            exc_info=True)
+                exc_info=True)
         return
     for data in issues:
         info = fetched_data.setdefault(data['id'], {})
@@ -94,7 +94,7 @@ def _fetch_series_data(series):
         data = browser.get_series_data(series.id)
     except:
         app.logger.error("An error occurred while getting data for series #%d",
-            series.id, exc_info=True)
+                series.id, exc_info=True)
         return
     if data.get('removed'):
         if not series.is_completed:
@@ -113,9 +113,8 @@ def _fetch_chapter_data(chapter):
     try:
         data = browser.get_chapter_data(chapter.series.id, chapter.id, tz)
     except:
-        app.logger.error(
-            "An error occurred while getting data for chapter #%d of series #%d",
-            chapter.id, chapter.series.id, exc_info=True)
+        app.logger.error("An error occurred while getting data for chapter #%d of series #%d",
+                chapter.id, chapter.series.id, exc_info=True)
         return False
     if data.get('not_found'):
         raise Chapter.DoesNotExist
