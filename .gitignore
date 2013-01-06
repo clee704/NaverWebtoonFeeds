@@ -2,3 +2,4 @@
 .env
 /naverwebtoonfeeds/db/*.db
 /naverwebtoonfeeds/db/*.db-journal
+pylintrc
