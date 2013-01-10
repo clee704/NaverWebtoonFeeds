@@ -26,8 +26,7 @@ def _series_stats_update_interval():
     # The longer this interval, the fewer HTTP requests will be made to Naver.
     # 30 min to 1 hour would be a good choice.
     # Should be shorter than 1 day.
-    naver_time = as_naver_time_zone(datetime.utcnow())
-    hour = naver_time.hour
+    hour = as_naver_time_zone(datetime.utcnow()).hour
     if 23 <= hour or hour < 1:
         return timedelta(minutes=15)
     elif 1 <= hour < 3:
