@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta
 
 from sqlalchemy.exc import IntegrityError
-import pytz
 
 from naverwebtoonfeeds import app, cache, db
 from naverwebtoonfeeds.models import Series, Chapter
-from naverwebtoonfeeds.lib.naver import NAVER_TIMEZONE, NaverBrowser
+from naverwebtoonfeeds.lib.naver import as_naver_time_zone, NaverBrowser
 
 
 # Used to set a permanent cache.
@@ -27,7 +26,7 @@ def _series_stats_update_interval():
     # The longer this interval, the fewer HTTP requests will be made to Naver.
     # 30 min to 1 hour would be a good choice.
     # Should be shorter than 1 day.
-    naver_time = pytz.utc.localize(datetime.utcnow()).astimezone(NAVER_TIMEZONE)
+    naver_time = as_naver_time_zone(datetime.utcnow())
     hour = naver_time.hour
     if 23 <= hour or hour < 1:
         return timedelta(minutes=15)

@@ -161,3 +161,18 @@ def get_public_ip():
     """Get the public IP of the server where this app is running."""
     data = requests.get('http://checkip.dyndns.com/').text
     return re.search(r'Address: (\d+\.\d+\.\d+\.\d+)', data).group(1)
+
+
+def naver_url(series_id, chapter_id=None, mobile=False):
+    """Return appropriate webtoon URL for the given arguments."""
+    if mobile:
+        key = 'mobile'
+    elif chapter_id is None:
+        key = 'series'
+    else:
+        key = 'chapter'
+    return URL[key].format(series_id=series_id, chapter_id=chapter_id)
+
+
+def as_naver_time_zone(datetime):
+    return pytz.utc.localize(datetime).astimezone(NAVER_TIMEZONE)

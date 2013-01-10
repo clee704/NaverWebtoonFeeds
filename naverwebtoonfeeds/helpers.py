@@ -1,7 +1,7 @@
 import urlparse
 
 from naverwebtoonfeeds import app
-from naverwebtoonfeeds.lib import naver
+from naverwebtoonfeeds.lib.naver import naver_url
 
 
 @app.template_filter()
@@ -26,13 +26,4 @@ def via_imgproxy(url):
 
 @app.context_processor
 def utility_processor():
-    def naver_url(series_id, chapter_id=None, mobile=False):
-        """Return appropriate webtoon URL for the given arguments."""
-        if mobile:
-            key = 'mobile'
-        elif chapter_id is None:
-            key = 'series'
-        else:
-            key = 'chapter'
-        return naver.URL[key].format(series_id=series_id, chapter_id=chapter_id)
     return {'naver_url': naver_url}
