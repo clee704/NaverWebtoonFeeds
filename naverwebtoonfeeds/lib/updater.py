@@ -11,11 +11,13 @@ __browser__ = NaverBrowser(app)
 
 
 def update_series_list(update_all=False):
+    updated = False
     fetched = cache.get('series_list_fetched')
     if (update_all or fetched is None or
             fetched + _series_stats_update_interval() < datetime.utcnow()):
-        _fetch_series_list(update_all)
+        updated |= _fetch_series_list(update_all)
         cache.set('series_list_fetched', datetime.utcnow(), CACHE_PERMANENT)
+    return updated
 
 
 def _series_stats_update_interval():
@@ -39,7 +41,7 @@ def _fetch_series_list(update_all):
     except:
         app.logger.error("An error occurred while getting series list",
                 exc_info=True)
-        return
+        return updated
     for data in issues:
         info = fetched_data.setdefault(data['id'], {})
         info.setdefault('update_days', []).append(data['day'])
@@ -97,16 +99,16 @@ def _fetch_series_data(series):
     except:
         app.logger.error("An error occurred while getting data for series #%d",
                 series.id, exc_info=True)
-        return
+        return False
     if data.get('removed'):
         if not series.is_completed:
             app.logger.warning('Series #%d seems removed', series.id)
             series.is_completed = True
             return True
-    else:
-        attributes = ['title', 'author', 'description', 'last_chapter',
-                'is_completed', 'thumbnail_url']
-        return _update_attributes(series, data, attributes)
+        return False
+    attributes = ['title', 'author', 'description', 'last_chapter',
+            'is_completed', 'thumbnail_url']
+    return _update_attributes(series, data, attributes)
 
 
 def _fetch_chapter_data(chapter):
@@ -132,6 +134,7 @@ def _update_attributes(object, data, attribute_names):
 
 
 def _add_new_chapters(series):
+    updated = False
     current_last_chapter = series.chapters[0].id if len(series.chapters) else 0
     start = current_last_chapter + 1
     chapter_ids = range(start, series.last_chapter + 1)
@@ -143,3 +146,5 @@ def _add_new_chapters(series):
             continue
         if success:
             db.session.add(chapter)
+            updated = True
+    return updated

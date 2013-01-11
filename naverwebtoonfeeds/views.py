@@ -44,6 +44,8 @@ def feed_index():
 def feed_show(series_id):
     url = url_for('feed_show', series_id=series_id)
     app.logger.info('feed_show, series_id=%d (GET %s)', series_id, url)
+    # update_series_list with no argument only adds new series.
+    # The current series never gets updated.
     update_series_list()
     series = Series.query.get_or_404(series_id)
     updated = False
