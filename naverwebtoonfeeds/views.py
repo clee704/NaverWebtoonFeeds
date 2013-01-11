@@ -25,9 +25,9 @@ def redirect_to_canonical_url(view):
 @redirect_to_canonical_url
 def feed_index():
     app.logger.info('feed_index (GET %s)', url_for('feed_index'))
-    updated = update_series_list()
+    list_updated, _ = update_series_list()
     cache_key = 'feed_index'
-    if not updated:
+    if not list_updated:
         response = cache.get(cache_key)
         if response:
             app.logger.info('Cache hit')
@@ -50,7 +50,7 @@ def feed_show(series_id):
     series = Series.query.get_or_404(series_id)
     updated = False
     if series.new_chapters_available:
-        updated |= update_series(series)
+        updated = any(update_series(series))
     cache_key = 'feed_show_%d' % series_id
     if not updated:
         response = cache.get(cache_key)

@@ -11,11 +11,13 @@ __browser__ = NaverBrowser(app)
 
 
 def update_series_list(update_all=False):
-    updated = False
+    updated = [False, []]
+    # updated[0]: index view cache should be purged
+    # updated[1]: view cache of series with id in this list should be purged
     fetched = cache.get('series_list_fetched')
     if (update_all or fetched is None or
             fetched + _series_stats_update_interval() < datetime.utcnow()):
-        updated |= _fetch_series_list(update_all)
+        updated = _fetch_series_list(update_all)
         cache.set('series_list_fetched', datetime.utcnow(), CACHE_PERMANENT)
     return updated
 
@@ -34,7 +36,7 @@ def _series_stats_update_interval():
 
 
 def _fetch_series_list(update_all):
-    updated = False
+    updated = [False, []]
     fetched_data = {}
     try:
         issues = __browser__.get_issues()
@@ -53,8 +55,11 @@ def _fetch_series_list(update_all):
     for series in series_list:
         series_ids.add(series.id)
         if update_all:
-            updated |= update_series(series, add_new_chapters=update_all,
-                    do_commit=False)
+            series_updated, chapters_updated = update_series(series,
+                    add_new_chapters=update_all, do_commit=False)
+            updated[0] |= series_updated
+            if chapters_updated:
+                updated[1].append(series.id)
         info = fetched_data.get(series.id)
         if info is None:
             # The series is completed or somehow not showing up in the index
@@ -65,24 +70,28 @@ def _fetch_series_list(update_all):
         series.last_update_status = ','.join(info['days_updated'])
     for series_id in fetched_data.viewkeys() - series_ids:
         series = Series(id=series_id)
-        updated |= update_series(series, add_new_chapters=update_all,
-                do_commit=False)
+        series_updated, chapters_updated = update_series(series,
+                add_new_chapters=update_all, do_commit=False)
+        updated[0] |= series_updated
+        if chapters_updated:
+            updated[1].append(series.id)
     _commit()
     return updated
 
 
 def update_series(series, add_new_chapters=True, do_commit=True):
-    updated = _fetch_series_data(series)
+    series_updated = _fetch_series_data(series)
+    chapters_updated = False
     db.session.add(series)
     if add_new_chapters and series.new_chapters_available:
-        updated |= _add_new_chapters(series)
+        chapters_updated = _add_new_chapters(series)
         series.new_chapters_available = False
         # updated indicates the view cache should be purged.
         # new_chapters_available doesn't affect the view, so it doesn't set
         # updated to True.
     if do_commit:
         _commit()
-    return updated
+    return [series_updated, chapters_updated]
 
 
 def _commit():

@@ -19,8 +19,13 @@ def update(debug=False):
     """Update database by fetching changes from Naver Comics."""
     if debug:
         app.config['DEBUG'] = True
+    from naverwebtoonfeeds import cache
     from naverwebtoonfeeds.lib.updater import update_series_list
-    update_series_list(update_all=True)
+    list_updated, series_updated = update_series_list(update_all=True)
+    if list_updated:
+        cache.delete('feed_index')
+    for series_id in series_updated:
+        cache.delete('feed_show_%d' % series_id)
 
 @manager.command
 def migrate(action):
