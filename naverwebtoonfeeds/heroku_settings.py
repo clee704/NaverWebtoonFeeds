@@ -10,6 +10,9 @@ MAIL_CREDENTIALS = (os.environ['GMAIL_USERNAME'], os.environ['GMAIL_PASSWORD'])
 MAIL_SECURE = ()
 SEND_FILE_MAX_AGE_DEFAULT = int(os.environ['SEND_FILE_MAX_AGE_DEFAULT'])
 
+if os.environ.get('CACHE_MEMCACHED_SERVERS'):
+    CACHE_MEMCACHED_SERVERS = re.split(r'\s*,\s*', os.environ['CACHE_MEMCACHED_SERVERS'])
+
 for key, value in os.environ.items():
     if key not in locals():
         locals()[key] = value

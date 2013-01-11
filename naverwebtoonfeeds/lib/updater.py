@@ -2,13 +2,9 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.exc import IntegrityError
 
-from naverwebtoonfeeds import app, cache, db
+from naverwebtoonfeeds import app, cache, db, CACHE_PERMANENT
 from naverwebtoonfeeds.models import Series, Chapter
 from naverwebtoonfeeds.lib.naver import as_naver_time_zone, NaverBrowser
-
-
-# Used to set a permanent cache.
-CACHE_PERMANENT = 86400 * 365 * 10
 
 
 __browser__ = NaverBrowser(app)
@@ -36,6 +32,7 @@ def _series_stats_update_interval():
 
 
 def _fetch_series_list(update_all):
+    updated = False
     fetched_data = {}
     try:
         issues = __browser__.get_issues()
@@ -54,7 +51,8 @@ def _fetch_series_list(update_all):
     for series in series_list:
         series_ids.add(series.id)
         if update_all:
-            update_series(series, add_new_chapters=update_all, do_commit=False)
+            updated |= update_series(series, add_new_chapters=update_all,
+                    do_commit=False)
         info = fetched_data.get(series.id)
         if info is None:
             # The series is completed or somehow not showing up in the index
@@ -65,18 +63,24 @@ def _fetch_series_list(update_all):
         series.last_update_status = ','.join(info['days_updated'])
     for series_id in fetched_data.viewkeys() - series_ids:
         series = Series(id=series_id)
-        update_series(series, add_new_chapters=update_all, do_commit=False)
+        updated |= update_series(series, add_new_chapters=update_all,
+                do_commit=False)
     _commit()
+    return updated
 
 
 def update_series(series, add_new_chapters=True, do_commit=True):
-    _fetch_series_data(series)
+    updated = _fetch_series_data(series)
     db.session.add(series)
     if add_new_chapters and series.new_chapters_available:
-        _add_new_chapters(series)
+        updated |= _add_new_chapters(series)
         series.new_chapters_available = False
+        # updated indicates the view cache should be purged.
+        # new_chapters_available doesn't affect the view, so it doesn't set
+        # updated to True.
     if do_commit:
         _commit()
+    return updated
 
 
 def _commit():
@@ -98,13 +102,11 @@ def _fetch_series_data(series):
         if not series.is_completed:
             app.logger.warning('Series #%d seems removed', series.id)
             series.is_completed = True
+            return True
     else:
-        series.title = data['title']
-        series.author = data['author']
-        series.description = data['description']
-        series.last_chapter = data['last_chapter']
-        series.is_completed = data['is_completed']
-        series.thumbnail_url = data['thumbnail_url']
+        attributes = ['title', 'author', 'description', 'last_chapter',
+                'is_completed', 'thumbnail_url']
+        return _update_attributes(series, data, attributes)
 
 
 def _fetch_chapter_data(chapter):
@@ -116,10 +118,17 @@ def _fetch_chapter_data(chapter):
         return False
     if data.get('not_found'):
         raise Chapter.DoesNotExist
-    chapter.title = data['title']
-    chapter.pubdate = data['pubdate']
-    chapter.thumbnail_url = data['thumbnail_url']
-    return True
+    attributes = ['title', 'pubdate', 'thumbnail_url']
+    return _update_attributes(chapter, data, attributes)
+
+
+def _update_attributes(object, data, attribute_names):
+    updated = False
+    for attribute_name in attribute_names:
+        if getattr(object, attribute_name) != data[attribute_name]:
+            updated = True
+            setattr(object, attribute_name, data[attribute_name])
+    return updated
 
 
 def _add_new_chapters(series):

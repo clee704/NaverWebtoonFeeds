@@ -13,5 +13,10 @@ cache = Cache(app)
 if app.config.get('GZIP'):
     gzip = Gzip(app)
 
+# Used to set a permanent cache.
+CACHE_PERMANENT = 86400 * 365 * 10   # It works with Redis.
+if app.config.get('CACHE_TYPE') == 'memcached':
+    CACHE_PERMANENT = 0
+
 import naverwebtoonfeeds.views
 import naverwebtoonfeeds.helpers
