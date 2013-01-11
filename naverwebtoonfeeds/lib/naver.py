@@ -42,7 +42,8 @@ class NaverBrowser(object):
         delay = 1
         while True:
             try:
-                self.app.logger.info('Requesting GET %s', url)
+                # Requests to Naver should be carefully monitored.
+                self.app.logger.warning('Requesting GET %s', url)
                 response = requests.get(url, cookies=self.cookies, headers=self.headers)
                 self.cookies = response.cookies
                 if self.login_required(response):
