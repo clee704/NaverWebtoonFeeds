@@ -3,10 +3,10 @@ import os
 import re
 
 if os.environ.get('LOG_LEVEL'):
-    LOG_LEVEL = getattr(logging, os.environ['LOG_LEVEL'])
+    LOG_LEVEL = getattr(logging, os.environ['LOG_LEVEL'].upper())
 
 if os.environ.get('EMAIL_LEVEL'):
-    EMAIL_LEVEL = getattr(logging, os.environ['EMAIL_LEVEL'])
+    EMAIL_LEVEL = getattr(logging, os.environ['EMAIL_LEVEL'].upper())
 
 MAIL_HOST = ('smtp.gmail.com', 587)
 
