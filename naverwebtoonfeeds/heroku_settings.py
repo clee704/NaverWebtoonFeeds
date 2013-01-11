@@ -2,13 +2,24 @@ import logging
 import os
 import re
 
-LOG_LEVEL = getattr(logging, os.environ['LOG_LEVEL'])
-EMAIL_LEVEL = getattr(logging, os.environ['EMAIL_LEVEL'])
+if os.environ.get('LOG_LEVEL'):
+    LOG_LEVEL = getattr(logging, os.environ['LOG_LEVEL'])
+
+if os.environ.get('EMAIL_LEVEL'):
+    EMAIL_LEVEL = getattr(logging, os.environ['EMAIL_LEVEL'])
+
 MAIL_HOST = ('smtp.gmail.com', 587)
-MAIL_TOADDRS = re.split(r'\s*;\s*', os.environ['MAIL_TOADDRS'])
-MAIL_CREDENTIALS = (os.environ['GMAIL_USERNAME'], os.environ['GMAIL_PASSWORD'])
+
+if os.environ.get('MAIL_TOADDRS'):
+    MAIL_TOADDRS = re.split(r'\s*;\s*', os.environ['MAIL_TOADDRS'])
+
+if os.environ.get('GMAIL_USERNAME') and os.environ.get('GMAIL_PASSWORD'):
+    MAIL_CREDENTIALS = (os.environ['GMAIL_USERNAME'], os.environ['GMAIL_PASSWORD'])
+
 MAIL_SECURE = ()
-SEND_FILE_MAX_AGE_DEFAULT = int(os.environ['SEND_FILE_MAX_AGE_DEFAULT'])
+
+if os.environ.get('SEND_FILE_MAX_AGE_DEFAULT'):
+    SEND_FILE_MAX_AGE_DEFAULT = int(os.environ['SEND_FILE_MAX_AGE_DEFAULT'])
 
 if os.environ.get('CACHE_MEMCACHED_SERVERS'):
     CACHE_MEMCACHED_SERVERS = re.split(r'\s*,\s*', os.environ['CACHE_MEMCACHED_SERVERS'])
