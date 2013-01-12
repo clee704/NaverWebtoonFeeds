@@ -26,16 +26,15 @@ def redirect_to_canonical_url(view):
 def feed_index():
     app.logger.info('feed_index (GET %s)', url_for('feed_index'))
     list_updated, _ = update_series_list()
-    cache_key = 'feed_index'
     if not list_updated:
-        response = cache.get(cache_key)
+        response = cache.get('feed_index')
         if response:
             app.logger.info('Cache hit')
             return response
     current_series_query = Series.query.filter_by(is_completed=False)
     sorted_series_list = current_series_query.order_by(Series.title).all()
     response = render_template('feed_index.html', series_list=sorted_series_list)
-    cache.set(cache_key, response, CACHE_PERMANENT)
+    cache.set('feed_index', response, CACHE_PERMANENT)
     return response
 
 
@@ -51,9 +50,8 @@ def feed_show(series_id):
     updated = False
     if series.new_chapters_available:
         updated = any(update_series(series))
-    cache_key = 'feed_show_%d' % series_id
     if not updated:
-        response = cache.get(cache_key)
+        response = cache.get('feed_show_%d' % series_id)
         if response:
             app.logger.info('Cache hit')
             return response
@@ -65,7 +63,7 @@ def feed_show(series_id):
         chapters.append(chapter)
     xml = render_template('feed_show.xml', series=series, chapters=chapters)
     response = Response(response=xml, content_type='application/atom+xml')
-    cache.set(cache_key, response, CACHE_PERMANENT)
+    cache.set('feed_show_%d' % series_id, response, CACHE_PERMANENT)
     return response
 
 
