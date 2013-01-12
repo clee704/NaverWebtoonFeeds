@@ -34,7 +34,7 @@ def _series_stats_update_interval():
     # Should be shorter than 1 day.
     hour = as_naver_time_zone(datetime.utcnow()).hour
     if 23 <= hour or hour < 1:
-        return timedelta(minutes=15)
+        return timedelta(minutes=10)
     elif 1 <= hour < 3:
         return timedelta(minutes=30)
     else:
