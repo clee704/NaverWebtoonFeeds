@@ -79,13 +79,21 @@ def _fetch_series_list(update_all):
         if any(day not in series.last_update_status for day in info['days_updated']):
             series.new_chapters_available = True
         series.last_update_status = ','.join(info['days_updated'])
-    for series_id in fetched_data.viewkeys() - series_ids:
+    new_series_ids = fetched_data.viewkeys() - series_ids
+    if new_series_ids:
+        updated[0] = True
+    for series_id in new_series_ids:
         series = Series(id=series_id)
         series_updated, chapters_updated = update_series(series,
                 add_new_chapters=update_all, do_commit=False)
-        updated[0] |= series_updated
         if chapters_updated:
             updated[1].append(series.id)
+        info = fetched_data[series.id]
+        update_days = ','.join(info['update_days'])
+        if series.update_days != update_days:
+            series.update_days = update_days
+        series.new_chapters_available = True
+        series.last_update_status = ','.join(info['days_updated'])
     _commit()
     return updated
 
