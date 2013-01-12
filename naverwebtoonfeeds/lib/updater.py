@@ -65,7 +65,12 @@ def _fetch_series_list(update_all):
         if info is None:
             # The series is completed or somehow not showing up in the index
             continue
-        series.update_days = ','.join(info['update_days'])
+        update_days = ','.join(info['update_days'])
+        if series.update_days != update_days:
+            series.update_days = update_days
+            updated[0] = True
+        # updated[0] is not changed below because new_chapters_available and
+        # last_update_stattus don't affect the view.
         if any(day not in series.last_update_status for day in info['days_updated']):
             series.new_chapters_available = True
         series.last_update_status = ','.join(info['days_updated'])
