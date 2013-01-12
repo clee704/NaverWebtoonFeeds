@@ -18,8 +18,13 @@ def update_series_list(update_all=False):
     interval = _series_stats_update_interval()
     fetched = cache.get('series_list_fetched')
     if (update_all or fetched is None or fetched + interval < now):
-        updated = _fetch_series_list(update_all)
+        # Update the fetched time ASAP to prevent duplicate requests
         cache.set('series_list_fetched', now, CACHE_PERMANENT)
+        try:
+            updated = _fetch_series_list(update_all)
+        except:
+            cache.set('series_list_fetched', fetched, CACHE_PERMANENT)
+            raise
     return updated
 
 
