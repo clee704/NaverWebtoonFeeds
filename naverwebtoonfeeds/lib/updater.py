@@ -14,11 +14,12 @@ def update_series_list(update_all=False):
     updated = [False, []]
     # updated[0]: index view cache should be purged
     # updated[1]: view cache of series with id in this list should be purged
+    now = datetime.utcnow()
+    interval = _series_stats_update_interval()
     fetched = cache.get('series_list_fetched')
-    if (update_all or fetched is None or
-            fetched + _series_stats_update_interval() < datetime.utcnow()):
+    if (update_all or fetched is None or fetched + interval < now):
         updated = _fetch_series_list(update_all)
-        cache.set('series_list_fetched', datetime.utcnow(), CACHE_PERMANENT)
+        cache.set('series_list_fetched', now, CACHE_PERMANENT)
     return updated
 
 
