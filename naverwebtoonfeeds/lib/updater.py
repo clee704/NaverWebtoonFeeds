@@ -32,6 +32,21 @@ def update_series_list(update_all=False):
     return updated
 
 
+def update_series(series, add_new_chapters=True, do_commit=True):
+    series_updated = _fetch_series_data(series)
+    chapters_updated = False
+    db.session.add(series)
+    if add_new_chapters and series.new_chapters_available:
+        chapters_updated = _add_new_chapters(series)
+        series.new_chapters_available = False
+        # updated indicates the view cache should be purged.
+        # new_chapters_available doesn't affect the view, so it doesn't set
+        # updated to True.
+    if do_commit:
+        _commit()
+    return [series_updated, chapters_updated]
+
+
 def _series_stats_update_interval():
     # The longer this interval, the fewer HTTP requests will be made to Naver.
     # 30 min to 1 hour would be a good choice.
@@ -113,21 +128,6 @@ def _add_new_series(new_series_ids, fetched_data, update_all, updated):
             series.update_days = update_days
         series.new_chapters_available = True
         series.last_update_status = ','.join(info['days_updated'])
-
-
-def update_series(series, add_new_chapters=True, do_commit=True):
-    series_updated = _fetch_series_data(series)
-    chapters_updated = False
-    db.session.add(series)
-    if add_new_chapters and series.new_chapters_available:
-        chapters_updated = _add_new_chapters(series)
-        series.new_chapters_available = False
-        # updated indicates the view cache should be purged.
-        # new_chapters_available doesn't affect the view, so it doesn't set
-        # updated to True.
-    if do_commit:
-        _commit()
-    return [series_updated, chapters_updated]
 
 
 def _commit():
