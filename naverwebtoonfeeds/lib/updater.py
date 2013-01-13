@@ -19,12 +19,14 @@ def update_series_list(update_all=False):
     fetched = Config.query.get('series_list_fetched')
     if (update_all or fetched is None or fetched.value + interval < now):
         # Update the fetched time ASAP to prevent duplicate requests
+        last_fetched_date = None
         if fetched is None:
             fetched = Config(key='series_list_fetched', value=now)
             db.session.add(fetched)
         else:
+            last_fetched_date = fetched.value
             fetched.value = now
-        _fetch_series_list(update_all, updated)
+        _fetch_series_list(update_all, last_fetched_date, updated)
         # We don't have to revert the value of series_list_fetched since
         # if the above call fails, it will not change since it's not commited.
     return updated
@@ -43,7 +45,7 @@ def _series_stats_update_interval():
         return timedelta(hours=1)
 
 
-def _fetch_series_list(update_all, updated):
+def _fetch_series_list(update_all, last_fetched_date, updated):
     fetched_data = {}
     try:
         issues = __browser__.get_issues()
@@ -56,17 +58,25 @@ def _fetch_series_list(update_all, updated):
         days_updated = info.setdefault('days_updated', [])
         if data['days_updated']:
             days_updated.append(data['days_updated'])
-    existing_series_ids = _update_existing_series(fetched_data, update_all, updated)
+    series_list = _update_existing_series(fetched_data, update_all, updated)
+    existing_series_ids = set(series.id for series in series_list)
     new_series_ids = fetched_data.viewkeys() - existing_series_ids
     _add_new_series(new_series_ids, fetched_data, update_all, updated)
+    now = datetime.utcnow()
+    if last_fetched_date is None or last_fetched_date < now - timedelta(hours=3):
+        # The last time the series list is fetched is too far in the past.
+        # It can happen if the app is not very popular.  Mark all series as
+        # 'new chapters available' since we might have missed the update
+        # badges for some series.
+        for series in series_list:
+            series.new_chapters_available = True
     _commit()
+    return series_list
 
 
 def _update_existing_series(fetched_data, update_all, updated):
     series_list = Series.query.all()
-    series_ids = set()
     for series in series_list:
-        series_ids.add(series.id)
         if update_all:
             series_updated, chapters_updated = update_series(series, update_all, False)
             updated[0] |= series_updated
@@ -85,7 +95,7 @@ def _update_existing_series(fetched_data, update_all, updated):
         if any(day not in series.last_update_status for day in info['days_updated']):
             series.new_chapters_available = True
         series.last_update_status = ','.join(info['days_updated'])
-    return series_ids
+    return series_list
 
 
 def _add_new_series(new_series_ids, fetched_data, update_all, updated):
