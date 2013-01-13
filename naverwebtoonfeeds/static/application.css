@@ -68,7 +68,10 @@ input.feed-url {
   overflow: hidden;
 }
 
-.filtered .media {
+.completed,
+.filtered .media,
+.filtered .media.completed,
+.filtered .media.show.completed {
   display: none;
 }
 
@@ -76,19 +79,32 @@ input.feed-url {
   display: block;
 }
 
-.form-search .span4 {
+.show-completed .completed,
+.show-completed .filtered .media.show.completed {
+  display: block;
+}
+
+form .row:first-child {
+  margin-bottom: 10px;
+}
+
+form .span4 {
   position: relative;
 }
 
-.form-search .search-query {
+form .search-query {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
 }
 
-.form-search .close {
+form .close {
   position: absolute;
   top: 5px;
   right: 10px;
+}
+
+form label.checkbox {
+  margin-bottom: 0;
 }
 
 .nav {

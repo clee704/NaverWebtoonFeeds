@@ -58,14 +58,21 @@ $(function () {
 
   // Store normalized text for search.
   // Add copied media elements to day tabs.
-  $('.media').each(function () {
+  $completed = $('#completed');
+  $('#all .media').each(function () {
     var $this = $(this),
-        updateDays = $this.data('update_days').split(',');
+        updateDays = $this.data('update_days').split(','),
+        isCompleted = $this.data('is_completed');
     $this.data('title', normalize($this.find('.title').text()));
     $this.data('author', normalize($this.find('.author').text()));
     $this.data('description', normalize($this.find('.description').text()));
-    for (var i = 0; i < updateDays.length; i++) {
-      $('#' + updateDays[i]).append($this.clone(true));
+    if (isCompleted) {
+      $completed.append($this.clone(true));
+    }
+    else {
+      for (var i = 0; i < updateDays.length; i++) {
+        $('#' + updateDays[i]).append($this.clone(true));
+      }
     }
   });
 
@@ -75,7 +82,7 @@ $(function () {
   $tabContentTabPane = $tabContent.find('.tab-pane');
   $searchQuery = $('.search-query');
   $searchQuery.on('keyup', function (e) {
-    var query = normalize($(this).val());
+    var query = normalize($searchQuery.val());
     $navTabsLi.removeClass('empty');
     $tabContentTabPane.removeClass('empty');
     if (query.length == 0) {
@@ -104,11 +111,26 @@ $(function () {
       $navTabsLi.first().find('a').tab('show');
     }
   }).trigger('keyup');
-  $('.form-search').on('submit', function (e) {
+  $('form').on('submit', function (e) {
     $searchQuery.trigger('keyup').blur();
     return false;
   }).find('.close').on('click', function (e) {
     $searchQuery.val('').trigger('keyup').focus();
     return false;
   });
+
+  // Show or hide completed series.
+  $body = $('body');
+  $showCompleted = $('#show-completed');
+  $showCompleted.on('click custom', function (e) {
+    if ($showCompleted.is(':checked')) {
+      $body.addClass('show-completed');
+    }
+    else {
+      $body.removeClass('show-completed');
+      if ($navTabsLi.slice(1).is('.active.completed')) {
+        $navTabsLi.first().find('a').tab('show');
+      }
+    }
+  }).trigger('custom');
 });

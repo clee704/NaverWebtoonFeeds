@@ -30,9 +30,8 @@ def feed_index():
         if response:
             app.logger.info('Cache hit')
             return response
-    current_series_query = Series.query.filter_by(is_completed=False)
-    sorted_series_list = current_series_query.order_by(Series.title).all()
-    response = render_template('feed_index.html', series_list=sorted_series_list)
+    series_list = Series.query.order_by(Series.title).all()
+    response = render_template('feed_index.html', series_list=series_list)
     cache.set('feed_index', response, CACHE_PERMANENT)
     return response
 
