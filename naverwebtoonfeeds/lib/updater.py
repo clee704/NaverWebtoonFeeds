@@ -46,8 +46,7 @@ def _fetch_series_list(update_all, updated):
     try:
         issues = __browser__.get_issues()
     except:
-        app.logger.error("An error occurred while getting series list",
-                exc_info=True)
+        app.logger.error("An error occurred while getting series list", exc_info=True)
         return
     for data in issues:
         info = fetched_data.setdefault(data['id'], {})
@@ -67,8 +66,7 @@ def _update_existing_series(fetched_data, update_all, updated):
     for series in series_list:
         series_ids.add(series.id)
         if update_all:
-            series_updated, chapters_updated = update_series(series,
-                    add_new_chapters=update_all, do_commit=False)
+            series_updated, chapters_updated = update_series(series, update_all, False)
             updated[0] |= series_updated
             if chapters_updated:
                 updated[1].append(series.id)
@@ -94,8 +92,7 @@ def _add_new_series(new_series_ids, fetched_data, update_all, updated):
     updated[0] = True
     for series_id in new_series_ids:
         series = Series(id=series_id)
-        series_updated, chapters_updated = update_series(series,
-                add_new_chapters=update_all, do_commit=False)
+        series_updated, chapters_updated = update_series(series, update_all, False)
         if chapters_updated:
             updated[1].append(series.id)
         info = fetched_data[series.id]
@@ -133,8 +130,7 @@ def _fetch_series_data(series):
     try:
         data = __browser__.get_series_data(series.id)
     except:
-        app.logger.error("An error occurred while getting data for series #%d",
-                series.id, exc_info=True)
+        app.logger.error("An error occurred while getting data for series #%d", series.id, exc_info=True)
         return False
     if data.get('removed'):
         if not series.is_completed:
@@ -142,8 +138,7 @@ def _fetch_series_data(series):
             series.is_completed = True
             return True
         return False
-    attributes = ['title', 'author', 'description', 'last_chapter',
-            'is_completed', 'thumbnail_url']
+    attributes = ['title', 'author', 'description', 'last_chapter', 'is_completed', 'thumbnail_url']
     return _update_attributes(series, data, attributes)
 
 
