@@ -28,3 +28,8 @@ class Chapter(db.Model):
 
     class DoesNotExist(Exception):
         pass
+
+
+class Config(db.Model):
+    key = db.Column(db.String(255), primary_key=True)
+    value = db.Column(db.PickleType)

@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.exc import IntegrityError
 
-from naverwebtoonfeeds import app, cache, db, CACHE_PERMANENT
-from naverwebtoonfeeds.models import Series, Chapter
+from naverwebtoonfeeds import app, db
+from naverwebtoonfeeds.models import Series, Chapter, Config
 from naverwebtoonfeeds.lib.naver import as_naver_time_zone, NaverBrowser
 
 
@@ -16,15 +16,17 @@ def update_series_list(update_all=False):
     # updated[1]: view cache of series with id in this list should be purged
     now = datetime.utcnow()
     interval = _series_stats_update_interval()
-    fetched = cache.get('series_list_fetched')
-    if (update_all or fetched is None or fetched + interval < now):
+    fetched = Config.query.get('series_list_fetched')
+    if (update_all or fetched is None or fetched.value + interval < now):
         # Update the fetched time ASAP to prevent duplicate requests
-        cache.set('series_list_fetched', now, CACHE_PERMANENT)
-        try:
-            _fetch_series_list(update_all, updated)
-        except:
-            cache.set('series_list_fetched', fetched, CACHE_PERMANENT)
-            raise
+        if fetched is None:
+            fetched = Config(key='series_list_fetched', value=now)
+            db.session.add(fetched)
+        else:
+            fetched.value = now
+        _fetch_series_list(update_all, updated)
+        # We don't have to revert the value of series_list_fetched since
+        # if the above call fails, it will not change since it's not commited.
     return updated
 
 
