@@ -152,12 +152,12 @@ def _fetch_chapter_data(chapter):
     return _update_attributes(chapter, data, attributes)
 
 
-def _update_attributes(object, data, attribute_names):
+def _update_attributes(obj, data, attribute_names):
     updated = False
     for attribute_name in attribute_names:
-        if getattr(object, attribute_name) != data[attribute_name]:
+        if getattr(obj, attribute_name) != data[attribute_name]:
             updated = True
-            setattr(object, attribute_name, data[attribute_name])
+            setattr(obj, attribute_name, data[attribute_name])
     return updated
 
 
