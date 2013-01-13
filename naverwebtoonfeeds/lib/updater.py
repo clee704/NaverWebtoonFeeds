@@ -184,10 +184,12 @@ def _add_new_chapters(series):
     for chapter_id in chapter_ids:
         chapter = Chapter(series=series, id=chapter_id)
         try:
-            success = _fetch_chapter_data(chapter)
+            if _fetch_chapter_data(chapter):
+                # No need to call db.session.add(chapter)
+                # It is already in a pending state since series is set.
+                # However, it doesn't hurt to do so.
+                db.session.add(chapter)
+                updated = True
         except Chapter.DoesNotExist:
-            continue
-        if success:
-            db.session.add(chapter)
-            updated = True
+            db.session.expunge(chapter)
     return updated
