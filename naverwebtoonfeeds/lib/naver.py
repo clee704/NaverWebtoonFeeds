@@ -18,6 +18,7 @@ URL = {
     'mobile': MOBILE_BASE_URL + '/detail.nhn?titleId={series_id}&no={chapter_id}',
     'series': BASE_URL + '/list.nhn?titleId={series_id}',
     'series_by_day': BASE_URL + '/weekday.nhn',
+    'completed_series': BASE_URL + '/finish.nhn',
 }
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 6.1; ko; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3',
@@ -93,6 +94,17 @@ class NaverBrowser(object):
             series_id, day = int(match.group('id')), match.group('day')
             updated = len(a_elem.xpath('em[@class="ico_updt"]')) > 0
             retval.append({'id': series_id, 'day': day, 'days_updated': day if updated else False})
+        return retval
+
+    def get_completed_series(self):
+        doc, response = self.get(URL['completed_series'])
+        self.app.logger.info('Final URL: %s', response.url)
+        retval = []
+        for a_elem in doc.xpath('//*[@class="list_area"]//li/*[@class="thumb"]/a'):
+            url = a_elem.attrib['href']
+            match = re.search(r'titleId=(?P<id>\d+)', url)
+            series_id = int(match.group('id'))
+            retval.append({'id': series_id})
         return retval
 
     def get_series_data(self, series_id):
