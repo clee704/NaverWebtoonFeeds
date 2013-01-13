@@ -12,12 +12,9 @@ for logger in loggers:
     logger.addHandler(stream_handler)
 if app.config.get('SEND_EMAIL'):
     from logging.handlers import SMTPHandler
-    smtp_handler = SMTPHandler(app.config['MAIL_HOST'],
-                               app.config['MAIL_FROMADDR'],
-                               app.config['MAIL_TOADDRS'],
-                               app.config['MAIL_SUBJECT'],
-                               app.config['MAIL_CREDENTIALS'],
-                               app.config['MAIL_SECURE'])
+    mail_options = 'HOST FROMADDR TOADDRS SUBJECT CREDENTIALS SECURE'
+    mail_config = (app.config['MAIL_' + x] for x in mail_options.split())
+    smtp_handler = SMTPHandler(*mail_config)
     smtp_handler.setLevel(app.config['EMAIL_LEVEL'])
     smtp_handler.setFormatter(formatter)
     for logger in loggers:
