@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask.ext.cache import Cache
 from flask.ext.gzip import Gzip
@@ -6,7 +8,8 @@ from naverwebtoonfeeds.models import db
 
 app = Flask(__name__)
 app.config.from_object('naverwebtoonfeeds.default_settings')
-app.config.from_envvar('NAVERWEBTOONFEEDS_SETTINGS')
+if os.environ.get('NAVERWEBTOONFEEDS_SETTINGS'):
+    app.config.from_envvar('NAVERWEBTOONFEEDS_SETTINGS')
 
 db.init_app(app)
 cache = Cache(app)
