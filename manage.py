@@ -5,14 +5,22 @@ from naverwebtoonfeeds import app
 manager = Manager(app)
 
 @manager.command
-def resetdb():
-    """Delete all tables (if any) in the database and recreate them."""
+def db_create_all():
+    """
+    Create database tables. First check for the existence of each individual
+    table, and if not found will issue the CREATE statements.
+
+    """
     from naverwebtoonfeeds import db
+    db.create_all()
+
+@manager.command
+def db_drop_all():
+    """Drop all database tables."""
     try:
         db.drop_all()
     except:
         pass
-    db.create_all()
 
 @manager.command
 def update(debug=False):
