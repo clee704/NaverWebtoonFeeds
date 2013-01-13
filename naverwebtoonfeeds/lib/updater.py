@@ -94,7 +94,7 @@ def _add_new_series(new_series_ids, fetched_data, update_all, updated):
     updated[0] = True
     for series_id in new_series_ids:
         series = Series(id=series_id)
-        series_updated, chapters_updated = update_series(series, update_all, False)
+        _, chapters_updated = update_series(series, update_all, False)
         if chapters_updated:
             updated[1].append(series.id)
         info = fetched_data[series.id]
