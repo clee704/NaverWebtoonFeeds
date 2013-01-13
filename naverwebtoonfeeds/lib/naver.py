@@ -175,5 +175,5 @@ def naver_url(series_id, chapter_id=None, mobile=False):
     return URL[key].format(series_id=series_id, chapter_id=chapter_id)
 
 
-def as_naver_time_zone(datetime):
-    return pytz.utc.localize(datetime).astimezone(NAVER_TIMEZONE)
+def as_naver_time_zone(datetime_obj):
+    return pytz.utc.localize(datetime_obj).astimezone(NAVER_TIMEZONE)
