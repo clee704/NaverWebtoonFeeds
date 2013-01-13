@@ -21,7 +21,7 @@ def update_series_list(update_all=False):
         # Update the fetched time ASAP to prevent duplicate requests
         cache.set('series_list_fetched', now, CACHE_PERMANENT)
         try:
-            updated = _fetch_series_list(update_all)
+            _fetch_series_list(update_all, updated)
         except:
             cache.set('series_list_fetched', fetched, CACHE_PERMANENT)
             raise
@@ -41,21 +41,27 @@ def _series_stats_update_interval():
         return timedelta(hours=1)
 
 
-def _fetch_series_list(update_all):
-    updated = [False, []]
+def _fetch_series_list(update_all, updated):
     fetched_data = {}
     try:
         issues = __browser__.get_issues()
     except:
         app.logger.error("An error occurred while getting series list",
                 exc_info=True)
-        return updated
+        return
     for data in issues:
         info = fetched_data.setdefault(data['id'], {})
         info.setdefault('update_days', []).append(data['day'])
         days_updated = info.setdefault('days_updated', [])
         if data['days_updated']:
             days_updated.append(data['days_updated'])
+    existing_series_ids = _update_existing_series(fetched_data, update_all, updated)
+    new_series_ids = fetched_data.viewkeys() - existing_series_ids
+    _add_new_series(new_series_ids, fetched_data, update_all, updated)
+    _commit()
+
+
+def _update_existing_series(fetched_data, update_all, updated):
     series_list = Series.query.all()
     series_ids = set()
     for series in series_list:
@@ -79,9 +85,13 @@ def _fetch_series_list(update_all):
         if any(day not in series.last_update_status for day in info['days_updated']):
             series.new_chapters_available = True
         series.last_update_status = ','.join(info['days_updated'])
-    new_series_ids = fetched_data.viewkeys() - series_ids
-    if new_series_ids:
-        updated[0] = True
+    return series_ids
+
+
+def _add_new_series(new_series_ids, fetched_data, update_all, updated):
+    if not new_series_ids:
+        return
+    updated[0] = True
     for series_id in new_series_ids:
         series = Series(id=series_id)
         series_updated, chapters_updated = update_series(series,
@@ -94,8 +104,6 @@ def _fetch_series_list(update_all):
             series.update_days = update_days
         series.new_chapters_available = True
         series.last_update_status = ','.join(info['days_updated'])
-    _commit()
-    return updated
 
 
 def update_series(series, add_new_chapters=True, do_commit=True):
