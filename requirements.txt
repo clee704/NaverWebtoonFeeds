@@ -10,6 +10,7 @@ SQLAlchemy==0.8.0b2
 Werkzeug==0.8.3
 argparse==1.2.1
 gunicorn==0.16.1
+ipython==0.13.1
 lxml==3.1beta1
 pytz==2012h
 redis==2.7.2
