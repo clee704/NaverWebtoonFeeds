@@ -1,5 +1,4 @@
 from flask import Response, render_template, request, redirect, url_for
-from sqlalchemy.orm import joinedload
 import pytz
 
 from naverwebtoonfeeds import app, cache, CACHE_PERMANENT
