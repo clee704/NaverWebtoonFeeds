@@ -1,6 +1,6 @@
 $ ->
 
-  # Used to work with Lazy Load.
+  # Used to load lazy images when they become visible not by user's scrolling.
   $body = $('body')
   triggerLazyLoad = ->
     setTimeout ->
@@ -45,7 +45,7 @@ $ ->
   $('.tab-pane').on 'click', '.feed-url', (e) -> this.select()
 
   # Store normalized text for search.
-  # Add copied media elements to day tabs.
+  # Copy media elements to corresponding day tabs.
   $completed = $('#completed')
   $('#all .media').each ->
     $this = $(this)
@@ -66,13 +66,17 @@ $ ->
   $searchQuery = $('.search-query')
   $searchQuery.on 'keyup', (e) ->
     query = normalize($searchQuery.val())
+    # Mark all tabs as not empty.
     $navTabsLi.removeClass('empty')
     $tabContentTabPane.removeClass('empty')
     if query.length == 0
+      # Quit the filtered state.
       $tabContent.removeClass('filtered')
       triggerLazyLoad()
       return
+    # Enter the filtered state.
     $tabContent.addClass('filtered')
+    # Mark media as visible if it matches the query string.
     $tabContent.find('.media').each ->
       $this = $(this)
       data = $this.data()
@@ -81,11 +85,13 @@ $ ->
           data.author.indexOf(query) >= 0 ||
           data.description.indexOf(query) >= 0
         $this.addClass('show')
+    # Hide empty tabs.
     $tabContentTabPane.each (i) ->
       $this = $(this)
       if $this.find('.media.show').length == 0
         $navTabsLi.eq(i).addClass('empty')
         $this.addClass('empty')
+    # If the current tab is empty, select the first tab (#all).
     if $navTabsLi.slice(1).is('.active.empty')
       $navTabsLi.first().find('a').tab('show')
     triggerLazyLoad()
