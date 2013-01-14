@@ -77,8 +77,26 @@ def _fetch_series_list(update_all, last_fetched_date, updated):
     existing_series_ids = set(series.id for series in series_list)
     new_series_ids = fetched_data.viewkeys() - existing_series_ids
     _add_new_series(new_series_ids, fetched_data, update_all, updated)
+
+    # Update badges are cleared at the midnight and generated when the
+    # series has been updated today.
+    #
+    # If offset is too long, say 3 hours, and a series is updated at 10pm,
+    # and there was no request to the app until right after the midnight,
+    # then we'll miss the update badge for the series.
+    #
+    # If offset is too short, say 1 minute, then all series will be marked
+    # as 'new chapters available' however frequent requests are, since
+    # the minimum interval to fetch series list is 15 minutes or so. It will
+    # increase the rate of requests to Naver and slow the page loading
+    # (1 per series per day).
+    #
+    # If the requests to the app is frequent enough, setting it to just
+    # above the minimum fetch interval will be fine.
     now = datetime.utcnow()
-    if last_fetched_date is None or last_fetched_date < now - timedelta(hours=3):
+    last_midnight = as_naver_time_zone(now).replace(hour=0, minute=0, second=0, microsecond=0)
+    offset = timedelta(minutes=30)
+    if last_fetched_date is None or as_naver_time_zone(last_fetched_date) < last_midnight - offset:
         # The last time the series list is fetched is too far in the past.
         # It can happen if the app is not very popular.  Mark all series as
         # 'new chapters available' since we might have missed the update
