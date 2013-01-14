@@ -30,7 +30,7 @@ assets.register('css_all',
     Bundle('bootstrap/css/bootstrap.min.css',
         'bootstrap/css/bootstrap-responsive.min.css',
         filters='cssrewrite'),
-    Bundle('application.css', filters='yui_css'),
+    Bundle('application.css.scss', filters='scss,yui_css'),
     output='gen/packed.%(version)s.css'
 )
 
