@@ -19,19 +19,18 @@ if app.config.get('GZIP'):
     gzip = Gzip(app)
 
 assets = Environment(app)
-js = Bundle(
-    'bootstrap.js',
-    'application.js',
-    filters='yui_js', output='gen/packed.js'
+assets.register('js_all',
+    'bootstrap/js/bootstrap.min.js',
+    Bundle('application.js', filters='yui_js'),
+    output='gen/packed.js'
 )
-assets.register('js_all', js)
-css = Bundle(
-    'bootstrap.css',
-    'bootstrap-responsive.css',
-    'application.css',
-    filters='yui_css', output='gen/packed.css'
+assets.register('css_all',
+    Bundle('bootstrap/css/bootstrap.min.css',
+        'bootstrap/css/bootstrap-responsive.min.css',
+        filters='cssrewrite'),
+    Bundle('application.css', filters='yui_css'),
+    output='gen/packed.css'
 )
-assets.register('css_all', css)
 
 # Used to set a permanent cache.
 CACHE_PERMANENT = 86400 * 365 * 10   # It works for Redis.
