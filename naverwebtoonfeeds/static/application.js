@@ -1,5 +1,15 @@
 $(function () {
 
+  // Used to work with Lazy Load.
+  $body = $('body');
+  function bodyTriggerScroll() {
+    setTimeout(function () {
+      // This should be run asynchronously or images don't get loaded
+      // after clicking a tab.
+      $body.trigger('scroll');
+    }, 0);
+  }
+
   // Normalize the string for search.
   function normalize(str) {
     return decompose(str.trim().toLowerCase());
@@ -87,6 +97,7 @@ $(function () {
     $tabContentTabPane.removeClass('empty');
     if (query.length == 0) {
       $tabContent.removeClass('filtered');
+      bodyTriggerScroll();
       return;
     }
     $tabContent.addClass('filtered');
@@ -110,6 +121,7 @@ $(function () {
     if ($navTabsLi.slice(1).is('.active.empty')) {
       $navTabsLi.first().find('a').tab('show');
     }
+    bodyTriggerScroll();
   }).trigger('keyup');
   $('form').on('submit', function (e) {
     $searchQuery.trigger('keyup').blur();
@@ -120,7 +132,6 @@ $(function () {
   });
 
   // Show or hide completed series.
-  $body = $('body');
   $showCompleted = $('#show-completed');
   $showCompleted.on('click custom', function (e) {
     if ($showCompleted.is(':checked')) {
@@ -132,5 +143,14 @@ $(function () {
         $navTabsLi.first().find('a').tab('show');
       }
     }
+    bodyTriggerScroll();
   }).trigger('custom');
+
+  // Use Lazy Load
+  $('img.lazy').lazyload({
+    effect: 'fadeIn',
+    threshold: 200
+  });
+  $navTabsLi.find('a').on('click', bodyTriggerScroll);
+  $showCompleted.on('click', bodyTriggerScroll);
 });

@@ -50,6 +50,11 @@ header h1 a:hover {
   margin-bottom: 0;
 }
 
+img.media-object {
+  width: 217px;
+  height: 165px;
+}
+
 input.feed-url {
   color: inherit;
   background: transparent;

@@ -33,7 +33,7 @@
 	  {% for series in series_list %}
 	    <article class="media {{ "completed" if series.is_completed }}" data-update_days="{{ series.update_days if not series.is_completed }}" data-is_completed="{{ 1 if series.is_completed }}">
 	      <span class="pull-left">
-		<img class="media-object" src="{{ series.thumbnail_url|via_imgproxy }}" alt="" width="217" height="165" />
+		<img class="media-object lazy" data-original="{{ series.thumbnail_url|via_imgproxy }}" src="/static/img/grey.gif" alt="" width="217" height="165" />
 	      </span>
 	      <div class="media-body">
 		<header>
