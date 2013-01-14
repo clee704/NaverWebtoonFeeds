@@ -19,11 +19,11 @@ $ ->
 
   # Prevent submitting the form.
   $form.on 'submit', ->
-    $searchBar.triggerHandler('input').blur()
+    $searchBar.blur().triggerHandler('input')
     false
   # Empty the search bar and focus it when the close button is clicked.
   .find('.close').on 'click', ->
-    $searchBar.val('').triggerHandler('input').focus()
+    $searchBar.focus().val('').triggerHandler('input')
     false
 
   # Normalize the string for search.
