@@ -37,7 +37,7 @@ def update():
 @manager.command
 def add_completed_series():
     """Add completed series."""
-    from naverwebtoonfeeds import db
+    from naverwebtoonfeeds import cache, db
     from naverwebtoonfeeds.models import Series
     from naverwebtoonfeeds.lib.updater import __browser__, update_series
     completed_series_ids = set(data['id'] for data in __browser__.get_completed_series())
