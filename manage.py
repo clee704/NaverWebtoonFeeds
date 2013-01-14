@@ -49,6 +49,20 @@ def add_completed_series():
     cache.delete('feed_index')
 
 @manager.command
+def delete_cache(target='index'):
+    """
+    Delete specified view cache. Call with the ID of the series to delete
+    the view cache. If the target is not present or it is 'index', then the
+    index view cache will be deleted.
+
+    """
+    from naverwebtoonfeeds import cache
+    if target == 'index':
+        cache.delete('feed_index')
+    else:
+        cache.delete('feed_show_%s' % target)
+
+@manager.command
 def migrate(action):
     from flask.ext.evolution import Evolution
     evolution = Evolution(app)
