@@ -13,9 +13,17 @@
   </head>
   <body>
     {% block body %}{% endblock %}
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-    {% assets "js_all" %}
-      <script src="{{ ASSET_URL }}"></script>
-    {% endassets %}
+    <script>
+      function script_async(src) {
+        var node = document.createElement('script');
+        node.type = 'text/javascript';
+        node.async = true;
+        node.src = src;
+        document.body.appendChild(node);
+      }
+      {% assets "js_all" %}
+        script_async("{{ ASSET_URL }}");
+      {% endassets %}
+    </script>
   </body>
 </html>

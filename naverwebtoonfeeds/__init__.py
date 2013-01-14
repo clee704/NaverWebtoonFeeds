@@ -20,6 +20,7 @@ if app.config.get('GZIP'):
 
 assets = Environment(app)
 assets.register('js_all',
+    'jquery.min.js',
     'bootstrap/js/bootstrap.min.js',
     'jquery.lazyload.min.js',
     Bundle('application.js', filters='yui_js'),
