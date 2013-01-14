@@ -12,10 +12,10 @@ class Series(db.Model):
     last_chapter = db.Column(db.Integer, nullable=False)
     is_completed = db.Column(db.Boolean, nullable=False, default=False, index=True)
     thumbnail_url = db.Column(db.String(255))
-    update_days = db.Column(db.String(31))
+    upload_days = db.Column(db.String(31))
 
     new_chapters_available = db.Column(db.Boolean, default=False)
-    last_update_status = db.Column(db.String(31), nullable=False, default='')
+    last_upload_status = db.Column(db.String(31), nullable=False, default='')
 
 
 class Chapter(db.Model):

@@ -71,7 +71,7 @@ $(function () {
   $completed = $('#completed');
   $('#all .media').each(function () {
     var $this = $(this),
-        updateDays = $this.data('update_days').split(','),
+        uploadDays = $this.data('upload_days').split(','),
         isCompleted = $this.data('is_completed');
     $this.data('title', normalize($this.find('.title').text()));
     $this.data('author', normalize($this.find('.author').text()));
@@ -80,8 +80,8 @@ $(function () {
       $completed.append($this.clone(true));
     }
     else {
-      for (var i = 0; i < updateDays.length; i++) {
-        $('#' + updateDays[i]).append($this.clone(true));
+      for (var i = 0; i < uploadDays.length; i++) {
+        $('#' + uploadDays[i]).append($this.clone(true));
       }
     }
   });

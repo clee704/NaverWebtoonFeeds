@@ -92,8 +92,8 @@ class NaverBrowser(object):
             url = a_elem.attrib['href']
             match = re.search(r'titleId=(?P<id>\d+)&weekday=(?P<day>[a-z]+)', url)
             series_id, day = int(match.group('id')), match.group('day')
-            updated = len(a_elem.xpath('em[@class="ico_updt"]')) > 0
-            retval.append({'id': series_id, 'day': day, 'days_updated': day if updated else False})
+            uploaded = len(a_elem.xpath('em[@class="ico_updt"]')) > 0
+            retval.append({'id': series_id, 'day': day, 'days_uploaded': day if uploaded else False})
         return retval
 
     def get_completed_series(self):

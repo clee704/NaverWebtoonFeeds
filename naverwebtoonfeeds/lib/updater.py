@@ -69,21 +69,21 @@ def _fetch_series_list(update_all, last_fetched_date, updated):
         return
     for data in issues:
         info = fetched_data.setdefault(data['id'], {})
-        info.setdefault('update_days', []).append(data['day'])
-        days_updated = info.setdefault('days_updated', [])
-        if data['days_updated']:
-            days_updated.append(data['days_updated'])
+        info.setdefault('upload_days', []).append(data['day'])
+        days_uploaded = info.setdefault('days_uploaded', [])
+        if data['days_uploaded']:
+            days_uploaded.append(data['days_uploaded'])
     series_list = _update_existing_series(fetched_data, update_all, updated)
     existing_series_ids = set(series.id for series in series_list)
     new_series_ids = fetched_data.viewkeys() - existing_series_ids
     _add_new_series(new_series_ids, fetched_data, update_all, updated)
 
-    # Update badges are cleared at the midnight and generated when the
-    # series has been updated today.
+    # Upload badges are cleared at the midnight and generated when the
+    # series has been uploaded today.
     #
-    # If offset is too long, say 3 hours, and a series is updated at 10pm,
+    # If offset is too long, say 3 hours, and a series is uploaded at 10pm,
     # and there was no request to the app until right after the midnight,
-    # then we'll miss the update badge for the series.
+    # then we'll miss the upload badge for the series.
     #
     # If offset is too short, say 1 minute, then all series will be marked
     # as 'new chapters available' however frequent requests are, since
@@ -99,7 +99,7 @@ def _fetch_series_list(update_all, last_fetched_date, updated):
     if last_fetched_date is None or as_naver_time_zone(last_fetched_date) < last_midnight - offset:
         # The last time the series list is fetched is too far in the past.
         # It can happen if the app is not very popular.  Mark all series as
-        # 'new chapters available' since we might have missed the update
+        # 'new chapters available' since we might have missed the upload
         # badges for some series.
         for series in series_list:
             series.new_chapters_available = True
@@ -119,15 +119,15 @@ def _update_existing_series(fetched_data, update_all, updated):
         if info is None:
             # The series is completed or somehow not showing up in the index
             continue
-        update_days = ','.join(info['update_days'])
-        if series.update_days != update_days:
-            series.update_days = update_days
+        upload_days = ','.join(info['upload_days'])
+        if series.upload_days != upload_days:
+            series.upload_days = upload_days
             updated[0] = True
         # updated[0] is not changed below because new_chapters_available and
         # last_update_stattus don't affect the view.
-        if any(day not in series.last_update_status for day in info['days_updated']):
+        if any(day not in series.last_upload_status for day in info['days_uploaded']):
             series.new_chapters_available = True
-        series.last_update_status = ','.join(info['days_updated'])
+        series.last_upload_status = ','.join(info['days_uploaded'])
     return series_list
 
 
@@ -141,11 +141,11 @@ def _add_new_series(new_series_ids, fetched_data, update_all, updated):
         if chapters_updated:
             updated[1].append(series.id)
         info = fetched_data[series.id]
-        update_days = ','.join(info['update_days'])
-        if series.update_days != update_days:
-            series.update_days = update_days
+        upload_days = ','.join(info['upload_days'])
+        if series.upload_days != upload_days:
+            series.upload_days = upload_days
         series.new_chapters_available = True
-        series.last_update_status = ','.join(info['days_updated'])
+        series.last_upload_status = ','.join(info['days_uploaded'])
 
 
 def _commit():
