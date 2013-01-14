@@ -24,7 +24,7 @@ body {
   .no-results {
     display: none;
   }
-  .empty .no-results {
+  &.empty .no-results {
     display: block;
     margin-top: 15px;
   }
@@ -86,17 +86,36 @@ body {
   }
 }
 
-.completed,
-.filtered .media,
-.filtered .media.completed,
-.filtered .media.matched.completed {
+.media.completed {
   display: none;
 }
 
-.filtered .media.matched,
-.show-completed .completed,
-.show-completed .filtered .media.matched.completed {
+.show-completed .media.completed,
+.show-matched .media.matched {
   display: block;
+}
+
+$day-list: mon tue wed thu fri sat sun completed;
+
+@each $day1 in $day-list {
+  @each $day2 in $day-list {
+    @if $day1 != $day2 {
+      .show-day-#{$day1} .media.#{$day2} {
+        display: none;
+      }
+    }
+  }
+}
+
+@each $day in $day-list {
+  .show-day-#{$day} .media.#{$day} {
+    display: block;
+  }
+}
+
+.hide-completed .media.completed,
+.show-matched .media.unmatched {
+  display: none;
 }
 
 form {

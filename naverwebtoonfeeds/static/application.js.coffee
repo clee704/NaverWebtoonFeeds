@@ -1,19 +1,30 @@
 $ ->
 
-  # Used to load lazy images when they become visible not by user's scrolling.
+  # jQuery collections that are used often.
   $body = $('body')
-  triggerLazyLoad = ->
-    setTimeout ->
-      # The line below should be run asynchronously or images don't get loaded
-      # after clicking a tab.
-      $body.trigger('scroll')
-    , 0
+  $form = $('form')
+  $searchBar = $form.find('input[type=search]')
+  $checkbox = $form.find('input[type=checkbox]')
+  $tabs = $('.nav-tabs li')
+  $tabContent = $('.tab-content')
+  $mediaElements = $tabContent.find('.media')
 
-  # If the current tab is empty, select the first tab (#all).
-  $navTabsLi = $('.nav-tabs li')
-  selectFirstTabIfCurrentTabIsInvisible = ->
-    if not $navTabsLi.slice(1).filter('.active').is(':visible')
-      $navTabsLi.first().find('a').tab('show')
+  # Use Lazy Load.
+  $('img.lazy').lazyload
+    effect: 'fadeIn'
+    threshold: 200
+
+  # Select the whole feed URL when it is clicked.
+  $tabContent.on 'click', '.feed-url', -> this.select()
+
+  # Prevent submitting the form.
+  $form.on 'submit', ->
+    $searchBar.triggerHandler('keyup').blur()
+    false
+  # Empty the search bar and focus it when the close button is clicked.
+  .find('.close').on 'click', ->
+    $searchBar.val('').triggerHandler('keyup').focus()
+    false
 
   # Normalize the string for search.
   normalize = do ->
@@ -47,84 +58,82 @@ $ ->
       temp.join('')
     (str) -> decompose(str.trim().toLowerCase())
 
-  # Select the feed URL when clicked.
-  $('.tab-pane').on 'click', '.feed-url', (e) -> this.select()
-
   # Store normalized text for search.
-  # Copy media elements to corresponding day tabs.
-  $completed = $('#completed')
-  $('#all .media').each ->
+  tuples = {}
+  $mediaElements.each ->
+    attrs = ['title', 'author', 'description']
     $this = $(this)
-    uploadDays = $this.data('upload_days').split(',')
-    isCompleted = $this.data('is_completed')
-    keys = ['title', 'author', 'description']
-    $this.data(key, normalize($this.find(".#{key}").text())) for key in keys
-    if isCompleted
-      $completed.append($this.clone(true))
-    else
-      for uploadDay in uploadDays
-        $("##{uploadDay}").append($this.clone(true))
+    tuple = (normalize($this.find(".#{attr}").text()) for attr in attrs)
+    tuples[$this.attr('id')] = tuple
 
-  # Filter media elements by the query string.
-  $tabContent = $('.tab-content')
-  $tabContentTabPane = $tabContent.find('.tab-pane')
-  $searchQuery = $('.search-query')
-  $searchQuery.on 'keyup', (e) ->
-    query = normalize($searchQuery.val())
-    # Mark all tabs as not empty.
-    $navTabsLi.removeClass('empty')
-    $tabContentTabPane.removeClass('empty')
-    if query.length == 0
-      # Quit the filtered state.
-      $tabContent.removeClass('filtered')
-      triggerLazyLoad()
-      return
-    # Enter the filtered state.
-    $tabContent.addClass('filtered')
-    # Mark media as matched if they match the query string.
-    $tabContent.find('.media').each ->
-      $this = $(this)
-      data = $this.data()
-      $this.removeClass('matched')
-      if data.title.indexOf(query) >= 0 ||
-          data.author.indexOf(query) >= 0 ||
-          data.description.indexOf(query) >= 0
-        $this.addClass('matched')
-    # Mark tabs as empty if they have no matched media.
-    $tabContentTabPane.each (i) ->
-      $this = $(this)
-      if $this.find('.media.matched').length == 0
-        $navTabsLi.eq(i).addClass('empty')
-        $this.addClass('empty')
-    selectFirstTabIfCurrentTabIsInvisible()
-    triggerLazyLoad()
-  # Reflect the current status of the search bar.
-  .trigger('keyup')
-
-  # Prevent submitting the form.
-  $('form').on 'submit', (e) ->
-    $searchQuery.trigger('keyup').blur()
-    false
-  # Empty the search bar and focus it when the close button is clicked.
-  .find('.close').on 'click', (e) ->
-    $searchQuery.val('').trigger('keyup').focus()
-    false
-
-  # Show or hide completed series.
-  $showCompleted = $('#show-completed')
-  $showCompleted.on 'click custom', (e) ->
-    if $showCompleted.is(':checked')
+  toggleCompletedSeries = ->
+    $body.removeClass('show-completed hide-completed')
+    if $checkbox.is(':checked')
       $body.addClass('show-completed')
     else
-      $body.removeClass('show-completed')
-      selectFirstTabIfCurrentTabIsInvisible()
-    triggerLazyLoad()
-  # Reflect the current status of the checkbox.
-  .trigger('custom')
+      $body.addClass('hide-completed')
+    organizeTabs()
+    loadLazyImagesInCurrentViewport()
 
-  # Use Lazy Load
-  $('img.lazy').lazyload
-    effect: 'fadeIn'
-    threshold: 200
-  $navTabsLi.find('a').on('click', triggerLazyLoad)
-  $showCompleted.on('click', triggerLazyLoad)
+  toggleMatchedSeries = ->
+    $body.removeClass('show-all show-matched')
+    $mediaElements.removeClass('matched')
+    key = normalize($searchBar.val())
+    if key.length == 0
+      $body.addClass('show-all')
+    else
+      $body.addClass('show-matched')
+      $mediaElements.each ->
+        $this = $(this)
+        $this.removeClass('matched unmatched')
+        tuple = tuples[$this.attr('id')]
+        if (tuple[i].indexOf(key) >= 0 for i in [0..2]).some((x) -> x)
+          $this.addClass('matched')
+        else
+          $this.addClass('unmatched')
+    organizeTabs()
+    loadLazyImagesInCurrentViewport()
+
+  $tabs.each ->
+    $(this).data('day', $(this).find('a').attr('href')[1..])
+
+  DAYS = 'all mon tue wed thu fri sat sun completed'.split(' ')
+  DAY_CLASSES = ("show-day-#{day}" for day in DAYS).join(' ')
+  toggleSelectedUploadDaySeries = ->
+    $tab = $(this).parent()
+    $body.removeClass(DAY_CLASSES)
+    $body.addClass("show-day-#{$tab.data('day')}")
+    $tabs.removeClass('active')
+    $tab.addClass('active')
+    loadLazyImagesInCurrentViewport()
+    # Prevent the hash from appearing at the address bar.
+    false
+
+  organizeTabs = ->
+    # Compute the number of visible media elements and hide empty tabs.
+    $tabs.removeClass('empty')
+    $tabContent.removeClass('empty')
+    $tabs.each ->
+      $this = $(this)
+      day = $this.data('day')
+      $e = $mediaElements
+      $e = $e.filter(".#{day}") if day != 'all'
+      $e = $e.filter('.matched') if $body.hasClass('show-matched')
+      $e = $e.filter(':not(.completed)') if $body.hasClass('hide-completed')
+      if $e.length == 0
+        $this.addClass('empty')
+    # Select the first tab if the current tab become empty.
+    if $tabs.slice(1).is('.active.empty')
+      $tabs.first().find('a').triggerHandler('click')
+    # Mark the tab content as empty if the first tab is empty.
+    if $tabs.first().is('.empty')
+      $tabContent.addClass('empty')
+
+  loadLazyImagesInCurrentViewport = ->
+    # Load lazy images currently visible in the viewport.
+    $body.trigger('scroll')
+
+  $checkbox.on('click', toggleCompletedSeries).triggerHandler('click')
+  $searchBar.on('keyup', toggleMatchedSeries).triggerHandler('keyup')
+  $tabs.find('a').on('click', toggleSelectedUploadDaySeries)
+  $tabs.filter('.active').find('a').triggerHandler('click')

@@ -11,65 +11,55 @@
       <div class="row">
         <div class="span4">
           <label class="checkbox">
-            <input type="checkbox" id="show-completed" /> 완결 웹툰 보이기
+            <input type="checkbox" /> 완결 웹툰 보이기
           </label>
         </div>
       </div>
     </form>
     {% if series_list %}
       <ul class="nav nav-tabs">
-        <li class="active"><a href="#all" data-toggle="tab">전체</a></li>
-        <li><a href="#mon" data-toggle="tab">월요일</a></li>
-        <li><a href="#tue" data-toggle="tab">화요일</a></li>
-        <li><a href="#wed" data-toggle="tab">수요일</a></li>
-        <li><a href="#thu" data-toggle="tab">목요일</a></li>
-        <li><a href="#fri" data-toggle="tab">금요일</a></li>
-        <li><a href="#sat" data-toggle="tab">토요일</a></li>
-        <li><a href="#sun" data-toggle="tab">일요일</a></li>
-        <li class="completed"><a href="#completed" data-toggle="tab">완결</a></li>
+        <li class="active"><a href="#all">전체</a></li>
+        <li><a href="#mon">월요일</a></li>
+        <li><a href="#tue">화요일</a></li>
+        <li><a href="#wed">수요일</a></li>
+        <li><a href="#thu">목요일</a></li>
+        <li><a href="#fri">금요일</a></li>
+        <li><a href="#sat">토요일</a></li>
+        <li><a href="#sun">일요일</a></li>
+        <li><a href="#completed">완결</a></li>
       </ul>
       <div class="tab-content">
-        <div class="tab-pane active" id="all">
-          {% for series in series_list %}
-            <article class="media {{ "completed" if series.is_completed }}" data-upload_days="{{ series.upload_days if not series.is_completed }}" data-is_completed="{{ 1 if series.is_completed }}">
-              <span class="pull-left">
-                <img class="media-object lazy" data-original="{{ series.thumbnail_url|via_imgproxy }}" src="/static/img/grey.gif" alt="" width="217" height="165" />
-              </span>
-              <div class="media-body">
-                <header>
-                  <h1><a class="title" href="{{ naver_url(series.id) }}">{{ series.title }}</a></h1>
-                  <span class="muted">by <span class="author">{{ series.author }}</span></span>
-                </header>
-                <p class="description">{{ series.description|safe }}</p>
-                <div class="well well-small">
-                  <ul class="unstyled small muted">
-                    <li class="feed-url-wrapper">
-                      <i class="icon-bookmark"></i>
-                      <input class="feed-url span6" value="{{ url_for('feed_show', series_id=series.id)|make_external }}" readonly="readonly" />
-                    </li>
-                    <li>
-                      <i class="icon-globe"></i>
-                      <a href="{{ url_for('feed_show', series_id=series.id)|make_external }}">브라우저에서 보기</a>
-                    </li>
-                    <li>
-                      <i class="icon-plus"></i>
-                      <a href="http://www.google.com/reader/view/feed/{{ url_for('feed_show', series_id=series.id)|make_external }}" target="_blank">Google 리더에서 보기</a>
-                    </li>
-                  </ul>
-                </div>
+        {% for series in series_list %}
+          <article id="series-{{ series.id }}" class="media {{ "completed" if series.is_completed }} {{ ' '.join(series.upload_days.split(',')) if not series.is_completed }}">
+            <span class="pull-left">
+              <img class="media-object lazy" data-original="{{ series.thumbnail_url|via_imgproxy }}" src="/static/img/grey.gif" alt="" width="217" height="165" />
+            </span>
+            <div class="media-body">
+              <header>
+                <h1><a class="title" href="{{ naver_url(series.id) }}">{{ series.title }}</a></h1>
+                <span class="muted">by <span class="author">{{ series.author }}</span></span>
+              </header>
+              <p class="description">{{ series.description|safe }}</p>
+              <div class="well well-small">
+                <ul class="unstyled small muted">
+                  <li class="feed-url-wrapper">
+                    <i class="icon-bookmark"></i>
+                    <input class="feed-url span6" value="{{ url_for('feed_show', series_id=series.id)|make_external }}" readonly="readonly" />
+                  </li>
+                  <li>
+                    <i class="icon-globe"></i>
+                    <a href="{{ url_for('feed_show', series_id=series.id)|make_external }}">브라우저에서 보기</a>
+                  </li>
+                  <li>
+                    <i class="icon-plus"></i>
+                    <a href="http://www.google.com/reader/view/feed/{{ url_for('feed_show', series_id=series.id)|make_external }}" target="_blank">Google 리더에서 보기</a>
+                  </li>
+                </ul>
               </div>
-            </article>
-          {% endfor %}
-          <p class="no-results">검색 결과가 없습니다.</p>
-        </div>
-        <div class="tab-pane" id="mon"></div>
-        <div class="tab-pane" id="tue"></div>
-        <div class="tab-pane" id="wed"></div>
-        <div class="tab-pane" id="thu"></div>
-        <div class="tab-pane" id="fri"></div>
-        <div class="tab-pane" id="sat"></div>
-        <div class="tab-pane" id="sun"></div>
-        <div class="tab-pane" id="completed"></div>
+            </div>
+          </article>
+        {% endfor %}
+        <p class="no-results">검색 결과가 없습니다.</p>
       </div>
     {% else %}
       <p>구독할 수 있는 웹툰이 없습니다.</p>
