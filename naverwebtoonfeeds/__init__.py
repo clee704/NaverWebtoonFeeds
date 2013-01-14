@@ -29,7 +29,7 @@ css = Bundle(
     'bootstrap.css',
     'bootstrap-responsive.css',
     'application.css',
-    filters='cssmin', output='gen/packed.css'
+    filters='yui_css', output='gen/packed.css'
 )
 assets.register('css_all', css)
 
