@@ -23,14 +23,14 @@ assets.register('js_all',
     'bootstrap/js/bootstrap.min.js',
     'jquery.lazyload.min.js',
     Bundle('application.js', filters='yui_js'),
-    output='gen/packed.js'
+    output='gen/packed.%(version)s.js'
 )
 assets.register('css_all',
     Bundle('bootstrap/css/bootstrap.min.css',
         'bootstrap/css/bootstrap-responsive.min.css',
         filters='cssrewrite'),
     Bundle('application.css', filters='yui_css'),
-    output='gen/packed.css'
+    output='gen/packed.%(version)s.css'
 )
 
 # Used to set a permanent cache.
