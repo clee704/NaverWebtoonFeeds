@@ -23,7 +23,9 @@ assets.register('js_all',
     'jquery.min.js',
     'bootstrap/js/bootstrap.min.js',
     'jquery.lazyload.min.js',
-    Bundle('application.js.coffee', filters='coffeescript,yui_js'),
+    Bundle('jquery.delayedlast.js.coffee',
+        'application.js.coffee',
+        filters='coffeescript,yui_js'),
     output='gen/packed.%(version)s.js'
 )
 assets.register('css_all',

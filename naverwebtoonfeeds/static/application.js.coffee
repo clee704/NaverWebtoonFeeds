@@ -1,5 +1,9 @@
 $ ->
 
+  # IE 9 doesn't fire input event when the value is changed to blank.
+  # Didn't tested IE 10; just use the old keyup event.
+  searchBarEventType = if $.browser.msie then 'keyup' else 'input'
+
   # jQuery collections that are used often.
   $body = $('body')
   $form = $('form')
@@ -19,11 +23,12 @@ $ ->
 
   # Prevent submitting the form.
   $form.on 'submit', ->
-    $searchBar.blur().triggerHandler('input')
+    $searchBar.blur().triggerHandler(searchBarEventType)
     false
   # Empty the search bar and focus it when the close button is clicked.
   .find('.close').on 'click', ->
-    $searchBar.focus().val('').triggerHandler('input')
+    $searchBar.val('')
+    $searchBar.focus().triggerHandler(searchBarEventType)
     false
 
   # Normalize the string for search.
@@ -134,6 +139,7 @@ $ ->
     $body.trigger('scroll')
 
   $checkbox.on('click', toggleCompletedSeries).triggerHandler('click')
-  $searchBar.on('input', toggleMatchedSeries).triggerHandler('input')
+  $searchBar.delayedLast(searchBarEventType, delay: 200, toggleMatchedSeries)
+  $searchBar.triggerHandler(searchBarEventType)
   $tabs.find('a').on('click', toggleSelectedUploadDaySeries)
   $tabs.filter('.active').find('a').triggerHandler('click')
