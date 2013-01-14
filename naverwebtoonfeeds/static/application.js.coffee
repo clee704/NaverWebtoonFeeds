@@ -81,7 +81,7 @@ $ ->
       return
     # Enter the filtered state.
     $tabContent.addClass('filtered')
-    # Mark media as matched if it matches the query string.
+    # Mark media as matched if they match the query string.
     $tabContent.find('.media').each ->
       $this = $(this)
       data = $this.data()
@@ -90,7 +90,7 @@ $ ->
           data.author.indexOf(query) >= 0 ||
           data.description.indexOf(query) >= 0
         $this.addClass('matched')
-    # Hide empty tabs.
+    # Mark tabs as empty if they have no matched media.
     $tabContentTabPane.each (i) ->
       $this = $(this)
       if $this.find('.media.matched').length == 0
