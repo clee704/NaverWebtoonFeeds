@@ -3,3 +3,5 @@
 /naverwebtoonfeeds/db/*.db
 /naverwebtoonfeeds/db/*.db-journal
 pylintrc
+/naverwebtoonfeeds/static/gen/
+/naverwebtoonfeeds/static/.webassets-cache/
