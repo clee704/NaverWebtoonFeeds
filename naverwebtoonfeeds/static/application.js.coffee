@@ -19,11 +19,11 @@ $ ->
 
   # Prevent submitting the form.
   $form.on 'submit', ->
-    $searchBar.triggerHandler('keyup').blur()
+    $searchBar.triggerHandler('input').blur()
     false
   # Empty the search bar and focus it when the close button is clicked.
   .find('.close').on 'click', ->
-    $searchBar.val('').triggerHandler('keyup').focus()
+    $searchBar.val('').triggerHandler('input').focus()
     false
 
   # Normalize the string for search.
@@ -134,6 +134,6 @@ $ ->
     $body.trigger('scroll')
 
   $checkbox.on('click', toggleCompletedSeries).triggerHandler('click')
-  $searchBar.on('keyup', toggleMatchedSeries).triggerHandler('keyup')
+  $searchBar.on('input', toggleMatchedSeries).triggerHandler('input')
   $tabs.find('a').on('click', toggleSelectedUploadDaySeries)
   $tabs.filter('.active').find('a').triggerHandler('click')
