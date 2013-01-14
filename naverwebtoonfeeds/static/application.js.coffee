@@ -76,19 +76,19 @@ $ ->
       return
     # Enter the filtered state.
     $tabContent.addClass('filtered')
-    # Mark media as visible if it matches the query string.
+    # Mark media as matched if it matches the query string.
     $tabContent.find('.media').each ->
       $this = $(this)
       data = $this.data()
-      $this.removeClass('show')
+      $this.removeClass('matched')
       if data.title.indexOf(query) >= 0 ||
           data.author.indexOf(query) >= 0 ||
           data.description.indexOf(query) >= 0
-        $this.addClass('show')
+        $this.addClass('matched')
     # Hide empty tabs.
     $tabContentTabPane.each (i) ->
       $this = $(this)
-      if $this.find('.media.show').length == 0
+      if $this.find('.media.matched').length == 0
         $navTabsLi.eq(i).addClass('empty')
         $this.addClass('empty')
     # If the current tab is empty, select the first tab (#all).

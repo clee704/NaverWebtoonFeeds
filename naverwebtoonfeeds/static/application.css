@@ -74,16 +74,16 @@ input.feed-url {
 .completed,
 .filtered .media,
 .filtered .media.completed,
-.filtered .media.show.completed {
+.filtered .media.matched.completed {
   display: none;
 }
 
-.filtered .media.show {
+.filtered .media.matched {
   display: block;
 }
 
 .show-completed .completed,
-.show-completed .filtered .media.show.completed {
+.show-completed .filtered .media.matched.completed {
   display: block;
 }
 
