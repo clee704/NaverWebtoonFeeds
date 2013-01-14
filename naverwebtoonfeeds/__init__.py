@@ -4,6 +4,7 @@ import os
 from flask import Flask
 from flask.ext.cache import Cache
 from flask.ext.gzip import Gzip
+from flask.ext.assets import Environment, Bundle
 
 from naverwebtoonfeeds.models import db
 
@@ -16,6 +17,21 @@ db.init_app(app)
 cache = Cache(app)
 if app.config.get('GZIP'):
     gzip = Gzip(app)
+
+assets = Environment(app)
+js = Bundle(
+    'bootstrap/js/bootstrap.js',
+    'application.js',
+    filters='jsmin', output='gen/packed.js'
+)
+assets.register('js_all', js)
+css = Bundle(
+    'bootstrap/css/bootstrap.css',
+    'bootstrap/css/bootstrap-responsive.css',
+    'application.css',
+    filters='cssmin', output='gen/packed.css'
+)
+assets.register('css_all', css)
 
 # Used to set a permanent cache.
 CACHE_PERMANENT = 86400 * 365 * 10   # It works for Redis.
