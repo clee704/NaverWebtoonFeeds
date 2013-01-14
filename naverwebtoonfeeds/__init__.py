@@ -20,14 +20,14 @@ if app.config.get('GZIP'):
 
 assets = Environment(app)
 js = Bundle(
-    'bootstrap/js/bootstrap.js',
+    'bootstrap.js',
     'application.js',
-    filters='jsmin', output='gen/packed.js'
+    filters='yui_js', output='gen/packed.js'
 )
 assets.register('js_all', js)
 css = Bundle(
-    'bootstrap/css/bootstrap.css',
-    'bootstrap/css/bootstrap-responsive.css',
+    'bootstrap.css',
+    'bootstrap-responsive.css',
     'application.css',
     filters='cssmin', output='gen/packed.css'
 )

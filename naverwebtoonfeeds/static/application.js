@@ -42,10 +42,10 @@ $(function () {
             finalCode = v % 28,
             initial = initials[initialCode],
             medial = medials[medialCode],
-            final = finals[finalCode];
+            final_ = finals[finalCode];
         temp.push(initial in doubles ? doubles[initial] : initial);
         temp.push(medial in doubles ? doubles[medial] : medial);
-        temp.push(final in doubles ? doubles[final] : final);
+        temp.push(final_ in doubles ? doubles[final_] : final_);
       }
     }
     return temp.join('');

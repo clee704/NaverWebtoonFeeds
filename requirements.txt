@@ -13,10 +13,10 @@ argparse==1.2.1
 cssmin==0.1.4
 gunicorn==0.16.1
 ipython==0.13.1
-jsmin==2.0.2
 lxml==3.1beta1
 pytz==2012h
 redis==2.7.2
 requests==1.0.2
 webassets==0.8
 wsgiref==0.1.2
+yuicompressor==2.4.7
