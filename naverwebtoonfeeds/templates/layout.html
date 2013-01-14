@@ -20,7 +20,8 @@
         node.type = 'text/javascript';
         node.async = true;
         node.src = src;
-        document.body.appendChild(node);
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(node, s);
       }
       {% assets "js_all" %}
         script_async("{{ ASSET_URL }}");
