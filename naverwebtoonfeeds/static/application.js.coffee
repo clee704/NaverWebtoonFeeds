@@ -9,6 +9,12 @@ $ ->
       $body.trigger('scroll')
     , 0
 
+  # If the current tab is empty, select the first tab (#all).
+  $navTabsLi = $('.nav-tabs li')
+  selectFirstTabIfCurrentTabIsInvisible = ->
+    if not $navTabsLi.slice(1).filter('.active').is(':visible')
+      $navTabsLi.first().find('a').tab('show')
+
   # Normalize the string for search.
   normalize = do ->
     JAMO_LIST = [
@@ -60,7 +66,6 @@ $ ->
         $("##{uploadDay}").append($this.clone(true))
 
   # Filter media elements by the query string.
-  $navTabsLi = $('.nav-tabs li')
   $tabContent = $('.tab-content')
   $tabContentTabPane = $tabContent.find('.tab-pane')
   $searchQuery = $('.search-query')
@@ -91,9 +96,7 @@ $ ->
       if $this.find('.media.matched').length == 0
         $navTabsLi.eq(i).addClass('empty')
         $this.addClass('empty')
-    # If the current tab is empty, select the first tab (#all).
-    if $navTabsLi.slice(1).is('.active.empty')
-      $navTabsLi.first().find('a').tab('show')
+    selectFirstTabIfCurrentTabIsInvisible()
     triggerLazyLoad()
   # Reflect the current status of the search bar.
   .trigger('keyup')
@@ -114,8 +117,7 @@ $ ->
       $body.addClass('show-completed')
     else
       $body.removeClass('show-completed')
-      if $navTabsLi.slice(1).is('.active.completed')
-        $navTabsLi.first().find('a').tab('show')
+      selectFirstTabIfCurrentTabIsInvisible()
     triggerLazyLoad()
   # Reflect the current status of the checkbox.
   .trigger('custom')
