@@ -15,8 +15,8 @@ Installation
 
 ### Your Server
 
-* Clone this repository or download this project from
-  [GitHub](https://github.com/clee704/NaverWebtoonFeeds).
+* Clone this repository or download
+  [this project from GitHub](https://github.com/clee704/NaverWebtoonFeeds).
 * Create a virtual environment for the app (optional).
 * Edit `requirements.txt` and save it as `requirements.local.txt` (optional;
   see Dependencies).
@@ -33,8 +33,8 @@ Installation
 
 ### Heroku
 
-* Clone this repository or download this project from
-  [GitHub](https://github.com/clee704/NaverWebtoonFeeds).
+* Clone this repository or download
+  [this project from GitHub](https://github.com/clee704/NaverWebtoonFeeds).
 * Follow steps as described in
   [Deploying with Git](https://devcenter.heroku.com/articles/git#creating-a-heroku-remote)
   at the Heroku Dev Center.
