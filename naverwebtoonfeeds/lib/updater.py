@@ -110,11 +110,6 @@ def _fetch_series_list(update_all, last_fetched_date, updated):
 def _update_existing_series(fetched_data, update_all, updated):
     series_list = Series.query.all()
     for series in series_list:
-        if update_all:
-            series_updated, chapters_updated = update_series(series, update_all, False)
-            updated[0] |= series_updated
-            if chapters_updated:
-                updated[1].append(series.id)
         info = fetched_data.get(series.id)
         if info is None:
             # The series is completed or somehow not showing up in the index
@@ -128,6 +123,11 @@ def _update_existing_series(fetched_data, update_all, updated):
         if any(day not in series.last_upload_status for day in info['days_uploaded']):
             series.new_chapters_available = True
         series.last_upload_status = ','.join(info['days_uploaded'])
+        if update_all:
+            series_updated, chapters_updated = update_series(series, update_all, False)
+            updated[0] |= series_updated
+            if chapters_updated:
+                updated[1].append(series.id)
     return series_list
 
 
