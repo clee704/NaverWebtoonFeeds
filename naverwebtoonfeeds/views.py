@@ -70,3 +70,8 @@ def feed_show(series_id):
 @app.errorhandler(500)
 def internal_server_error(_):
     return render_template('500.html'), 500
+
+
+@app.errorhandler(404)
+def not_found(_):
+    return render_template('404.html'), 404
