@@ -63,17 +63,6 @@ class NaverBrowser(object):
                 time.sleep(delay)
                 delay += 0.5
 
-    def parse_html(self, response):
-        docs = []
-        parsers = [lxml.html.soupparser, lxml.html]
-        for parser in parsers:
-            try:
-                docs.append(parser.fromstring(response.text))
-            except:
-                self.app.logger.warning('%s failed to parse html for %s',
-                        parser.__name__, response.url)
-        return docs
-
     def login_required(self, response):
         return 'login' in response.url
 
@@ -96,9 +85,10 @@ class NaverBrowser(object):
         self.app.logger.info('Logged in')
 
     def _parse(self, response, method, *args):
-        docs = self.parse_html(response)
-        for doc in docs:
+        parsers = [lxml.html.soupparser, lxml.html]
+        for parser in parsers:
             try:
+                doc = parser.fromstring(response.text)
                 return getattr(self, method)(doc, *args)
             except:
                 self.app.logger.warning('An error occurred while parsing data for %s',

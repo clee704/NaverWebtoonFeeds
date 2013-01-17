@@ -208,11 +208,11 @@ def _add_new_chapters(series):
     chapter_ids = range(start, series.last_chapter + 1)
     for chapter_id in chapter_ids:
         chapter = Chapter(series=series, id=chapter_id)
+        # chapter is in a pending state, probably because of the series
+        # attribute. But I couldn't find this in the documentation.
         try:
             if _fetch_chapter_data(chapter):
-                # No need to call db.session.add(chapter)
-                # It is already in a pending state since series is set.
-                # However, it doesn't hurt to do so.
+                # Not necessary; it doesn't hurt to do so.
                 db.session.add(chapter)
                 updated = True
             else:
