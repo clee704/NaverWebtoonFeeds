@@ -3,7 +3,6 @@ import os
 
 from flask import Flask
 from flask.ext.cache import Cache
-from flask.ext.gzip import Gzip
 from flask.ext.assets import Environment, Bundle
 
 from naverwebtoonfeeds.models import db
@@ -13,9 +12,31 @@ app.config.from_object('naverwebtoonfeeds.default_settings')
 if os.environ.get('NAVERWEBTOONFEEDS_SETTINGS'):
     app.config.from_envvar('NAVERWEBTOONFEEDS_SETTINGS')
 
+# Logging settings
+loggers = [app.logger, logging.getLogger('sqlalchemy.engine')]
+formatter = logging.Formatter('%(asctime)s [%(name)s] [%(levelname)s] %(message)s')
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.DEBUG)
+stream_handler.setFormatter(formatter)
+for logger in loggers:
+    logger.setLevel(app.config['LOG_LEVEL'])
+    logger.addHandler(stream_handler)
+if app.config.get('SEND_EMAIL'):
+    from logging.handlers import SMTPHandler
+    mail_options = 'HOST FROMADDR TOADDRS SUBJECT CREDENTIALS SECURE'
+    mail_config = (app.config['MAIL_' + x] for x in mail_options.split())
+    smtp_handler = SMTPHandler(*mail_config)
+    smtp_handler.setLevel(app.config['EMAIL_LEVEL'])
+    smtp_handler.setFormatter(formatter)
+    for logger in loggers:
+        logger.addHandler(smtp_handler)
+
 db.init_app(app)
+
 cache = Cache(app)
+
 if app.config.get('GZIP'):
+    from flask.ext.gzip import Gzip
     gzip = Gzip(app)
 
 assets = Environment(app)
@@ -40,25 +61,6 @@ assets.register('css_all',
 CACHE_PERMANENT = 86400 * 365 * 10   # It works for Redis.
 if app.config.get('CACHE_TYPE') == 'memcached':
     CACHE_PERMANENT = 0
-
-# Logging settings
-loggers = [app.logger, logging.getLogger('sqlalchemy.engine')]
-formatter = logging.Formatter('%(asctime)s [%(name)s] [%(levelname)s] %(message)s')
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.DEBUG)
-stream_handler.setFormatter(formatter)
-for logger in loggers:
-    logger.setLevel(app.config['LOG_LEVEL'])
-    logger.addHandler(stream_handler)
-if app.config.get('SEND_EMAIL'):
-    from logging.handlers import SMTPHandler
-    mail_options = 'HOST FROMADDR TOADDRS SUBJECT CREDENTIALS SECURE'
-    mail_config = (app.config['MAIL_' + x] for x in mail_options.split())
-    smtp_handler = SMTPHandler(*mail_config)
-    smtp_handler.setLevel(app.config['EMAIL_LEVEL'])
-    smtp_handler.setFormatter(formatter)
-    for logger in loggers:
-        logger.addHandler(smtp_handler)
 
 import naverwebtoonfeeds.views
 import naverwebtoonfeeds.helpers
