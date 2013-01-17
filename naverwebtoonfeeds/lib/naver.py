@@ -86,6 +86,11 @@ class NaverBrowser(object):
 
     def _parse(self, response, method, *args):
         parsers = [lxml.html.soupparser, lxml.html]
+        # lxml.html.soupparser.fromstring is generally more tolerant than
+        # lxml.html.fromstring, so it can parse HTML with unescaped brackets
+        # (<, >) which appear often. But there are some cases where
+        # lxml.html.soupparser.fromstring misbehaves while lxml.html.fromstring
+        # works.
         for parser in parsers:
             try:
                 doc = parser.fromstring(response.text)
