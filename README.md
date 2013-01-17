@@ -30,6 +30,8 @@ Installation
   hours.
 * Run `gunicorn app:app` from the root directory of the project.
 
+Sass and CoffeeScript binaries are required separately.
+
 
 ### Heroku
 
