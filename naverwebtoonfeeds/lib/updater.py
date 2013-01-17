@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
 
 from naverwebtoonfeeds import app, db
+from naverwebtoonfeeds.view_helpers import render_and_cache_feed_index, render_and_cache_feed_show
 from naverwebtoonfeeds.models import Series, Chapter, Config
 from naverwebtoonfeeds.lib.naver import as_naver_time_zone, NaverBrowser
 
@@ -10,7 +11,7 @@ from naverwebtoonfeeds.lib.naver import as_naver_time_zone, NaverBrowser
 __browser__ = NaverBrowser(app)
 
 
-def update_series_list(update_all=False):
+def update_series_list(update_all=False, background=False):
     updated = [False, []]
     # updated[0]: index view cache should be purged
     # updated[1]: view cache of series with id in this list should be purged
@@ -29,6 +30,12 @@ def update_series_list(update_all=False):
         _fetch_series_list(update_all, last_fetched_date, updated)
         # We don't have to revert the value of series_list_fetched since
         # if the above call fails, it will not change since it's not commited.
+    if background:
+        if updated[0]:
+            render_and_cache_feed_index()
+        for series in Series.query.filter_by(new_chapters_available=True):
+            update_series(series)
+            render_and_cache_feed_show(series)
     return updated
 
 

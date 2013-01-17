@@ -60,6 +60,9 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///db/naverwebtoonfeeds.db'
 #CACHE_KEY_PREFIX = 'naverwebtoonfeeds'
 #CACHE_MEMCACHED_SERVERS = ['127.0.0.1:11211']
 
+# Use Redis Queue to update the database in background tasks.
+#USE_REDIS_QUEUE = True
+
 # Naver login information is needed to access some adult-only series.
 #NAVER_USERNAME = ''
 #NAVER_PASSWORD = ''

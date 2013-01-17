@@ -39,6 +39,15 @@ if app.config.get('GZIP'):
     from flask.ext.gzip import Gzip
     gzip = Gzip(app)
 
+if app.config.get('USE_REDIS_QUEUE'):
+    from redis import Redis
+    from rq import Queue
+    host = app.config['CACHE_REDIS_HOST']
+    port = app.config['CACHE_REDIS_PORT']
+    password = app.config['CACHE_REDIS_PASSWORD']
+    connection = Redis(host=host, port=port, password=password)
+    queue = Queue(connection=connection)
+
 assets = Environment(app)
 assets.register('js_all',
     'jquery.min.js',

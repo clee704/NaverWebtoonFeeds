@@ -76,5 +76,15 @@ def addcompletedseries():
         update_series(series)
     cache.delete('feed_index')
 
+@manager.command
+def runworker():
+    """Run the worker that fetches data from Naver and update the database."""
+    import rq
+    from rq import Connection
+    from naverwebtoonfeeds import connection
+    with Connection(connection=connection):
+        w = rq.Worker([rq.Queue()])
+        w.work()
+
 if __name__ == '__main__':
     manager.run()

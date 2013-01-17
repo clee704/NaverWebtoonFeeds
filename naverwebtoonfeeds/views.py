@@ -1,39 +1,27 @@
-from flask import Response, render_template, request, redirect, url_for
-import pytz
+from flask import render_template, url_for
 
-from naverwebtoonfeeds import app, cache, CACHE_PERMANENT
+from naverwebtoonfeeds import app, cache, queue
+from naverwebtoonfeeds.view_helpers import redirect_to_canonical_url, render_and_cache_feed_index, render_and_cache_feed_show
 from naverwebtoonfeeds.models import Series
-from naverwebtoonfeeds.lib.naver import NAVER_TIMEZONE
 from naverwebtoonfeeds.lib.updater import update_series_list, update_series
-
-
-def redirect_to_canonical_url(view):
-    def new_view(*args, **kwargs):
-        path = request.environ['RAW_URI']
-        canonical_url = app.config['URL_ROOT'] + path
-        if app.config.get('FORCE_REDIRECT') and request.url != canonical_url:
-            return redirect(canonical_url, 301)
-        else:
-            return view(*args, **kwargs)
-    new_view.__name__ = view.__name__
-    new_view.__doc__ = view.__doc__
-    return new_view
 
 
 @app.route('/')
 @redirect_to_canonical_url
 def feed_index():
     app.logger.info('feed_index (GET %s)', url_for('feed_index'))
-    list_updated, _ = update_series_list()
-    if not list_updated:
+    if app.config.get('USE_REDIS_QUEUE'):
+        queue.enqueue_call(func=update_series_list, kwargs={'background': True}, result_ttl=0, timeout=3600)
+        invalidate_cache = False
+    else:
+        list_updated, _ = update_series_list()
+        invalidate_cache = list_updated
+    if not invalidate_cache:
         response = cache.get('feed_index')
         if response:
             app.logger.info('Cache hit')
             return response
-    series_list = Series.query.order_by(Series.title).all()
-    response = render_template('feed_index.html', series_list=series_list)
-    cache.set('feed_index', response, CACHE_PERMANENT)
-    return response
+    return render_and_cache_feed_index()
 
 
 @app.route('/feeds/<int:series_id>.xml')
@@ -41,30 +29,29 @@ def feed_index():
 def feed_show(series_id):
     url = url_for('feed_show', series_id=series_id)
     app.logger.info('feed_show, series_id=%d (GET %s)', series_id, url)
-    # update_series_list with no argument only adds new series.
-    # The current series never gets updated.
-    list_updated, _ = update_series_list()
-    if list_updated:
-        cache.delete('feed_index')
-    series = Series.query.get_or_404(series_id)
-    updated = False
-    if series.new_chapters_available:
-        updated = any(update_series(series))
-    if not updated:
+    series = None
+    if app.config.get('USE_REDIS_QUEUE'):
+        queue.enqueue_call(func=update_series_list, kwargs={'background': True}, result_ttl=0, timeout=3600)
+        invalidate_cache = False
+    else:
+        # update_series_list with no argument only adds new series.
+        # The current series never gets updated.
+        list_updated, _ = update_series_list()
+        if list_updated:
+            cache.delete('feed_index')
+        series = Series.query.get_or_404(series_id)
+        updated = False
+        if series.new_chapters_available:
+            updated = any(update_series(series))
+        invalidate_cache = updated
+    if not invalidate_cache:
         response = cache.get('feed_show_%d' % series_id)
         if response:
             app.logger.info('Cache hit')
             return response
-    chapters = []
-    for chapter in series.chapters:
-        # pubdate_with_tz is used in templates to correct time zone
-        pubdate_with_tz = pytz.utc.localize(chapter.pubdate).astimezone(NAVER_TIMEZONE)
-        chapter.pubdate_with_tz = pubdate_with_tz
-        chapters.append(chapter)
-    xml = render_template('feed_show.xml', series=series, chapters=chapters)
-    response = Response(response=xml, content_type='application/atom+xml')
-    cache.set('feed_show_%d' % series_id, response, CACHE_PERMANENT)
-    return response
+    if series is None:
+        series = Series.query.get_or_404(series_id)
+    return render_and_cache_feed_show(series)
 
 
 @app.errorhandler(500)
