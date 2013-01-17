@@ -155,14 +155,6 @@ def _add_new_series(new_series_ids, fetched_data, update_all, updated):
         series.last_upload_status = ','.join(info['days_uploaded'])
 
 
-def _commit():
-    try:
-        db.session.commit()
-    except IntegrityError:
-        app.logger.error('IntegrityError', exc_info=True)
-        db.session.rollback()
-
-
 def _fetch_series_data(series):
     try:
         data = __browser__.get_series_data(series.id)
@@ -177,6 +169,27 @@ def _fetch_series_data(series):
         return False
     attributes = ['title', 'author', 'description', 'last_chapter', 'is_completed', 'thumbnail_url']
     return _update_attributes(series, data, attributes)
+
+
+def _add_new_chapters(series):
+    updated = False
+    current_last_chapter = series.chapters[0].id if len(series.chapters) else 0
+    start = current_last_chapter + 1
+    chapter_ids = range(start, series.last_chapter + 1)
+    for chapter_id in chapter_ids:
+        chapter = Chapter(series=series, id=chapter_id)
+        # chapter is in a pending state, probably because of the series
+        # attribute. But I couldn't find this in the documentation.
+        try:
+            if _fetch_chapter_data(chapter):
+                # Not necessary; it doesn't hurt to do so.
+                db.session.add(chapter)
+                updated = True
+            else:
+                db.session.expunge(chapter)
+        except Chapter.DoesNotExist:
+            db.session.expunge(chapter)
+    return updated
 
 
 def _fetch_chapter_data(chapter):
@@ -201,22 +214,9 @@ def _update_attributes(obj, data, attribute_names):
     return updated
 
 
-def _add_new_chapters(series):
-    updated = False
-    current_last_chapter = series.chapters[0].id if len(series.chapters) else 0
-    start = current_last_chapter + 1
-    chapter_ids = range(start, series.last_chapter + 1)
-    for chapter_id in chapter_ids:
-        chapter = Chapter(series=series, id=chapter_id)
-        # chapter is in a pending state, probably because of the series
-        # attribute. But I couldn't find this in the documentation.
-        try:
-            if _fetch_chapter_data(chapter):
-                # Not necessary; it doesn't hurt to do so.
-                db.session.add(chapter)
-                updated = True
-            else:
-                db.session.expunge(chapter)
-        except Chapter.DoesNotExist:
-            db.session.expunge(chapter)
-    return updated
+def _commit():
+    try:
+        db.session.commit()
+    except IntegrityError:
+        app.logger.error('IntegrityError', exc_info=True)
+        db.session.rollback()
