@@ -5,3 +5,5 @@
 pylintrc
 /naverwebtoonfeeds/static/gen/
 /naverwebtoonfeeds/static/.webassets-cache/
+requirements.local.txt
+/naverwebtoonfeeds/default_settings.local.py
