@@ -215,6 +215,8 @@ def _add_new_chapters(series):
                 # However, it doesn't hurt to do so.
                 db.session.add(chapter)
                 updated = True
+            else:
+                db.session.expunge(chapter)
         except Chapter.DoesNotExist:
             db.session.expunge(chapter)
     return updated

@@ -53,7 +53,7 @@ class NaverBrowser(object):
                 if response.status_code == 403:
                     self.app.logger.warning('Forbidden IP: %s', get_public_ip())
                     raise urllib2.HTTPError(url, 403, 'Forbidden', response.headers, None)
-                return lxml.html.soupparser.fromstring(response.text), response
+                return response
             except urllib2.URLError:
                 self.app.logger.info('A URLError occurred', exc_info=True)
                 errors += 1
@@ -62,6 +62,17 @@ class NaverBrowser(object):
                 self.app.logger.info('Waiting for %d seconds before reconnecting', delay)
                 time.sleep(delay)
                 delay += 0.5
+
+    def parse_html(self, response):
+        docs = []
+        parsers = [lxml.html.soupparser, lxml.html]
+        for parser in parsers:
+            try:
+                docs.append(parser.fromstring(response.text))
+            except:
+                self.app.logger.warning('%s failed to parse html for %s',
+                        parser.__name__, response.url)
+        return docs
 
     def login_required(self, response):
         return 'login' in response.url
@@ -84,9 +95,22 @@ class NaverBrowser(object):
             raise RuntimeError("Cannot log in to naver.com")
         self.app.logger.info('Logged in')
 
+    def _parse(self, response, method, *args):
+        docs = self.parse_html(response)
+        for doc in docs:
+            try:
+                return getattr(self, method)(doc, *args)
+            except:
+                self.app.logger.warning('An error occurred while parsing data for %s',
+                        response.url, exc_info=True)
+        raise self.ResponseUnparsable(response.url)
+
     def get_issues(self):
-        doc, response = self.get(URL['series_by_day'])
+        response = self.get(URL['series_by_day'])
         self.app.logger.info('Final URL: %s', response.url)
+        return self._parse(response, '_parse_issues')
+
+    def _parse_issues(self, doc):
         retval = []
         for a_elem in doc.xpath('//*[@class="list_area daily_all"]//li/*[@class="thumb"]/a'):
             url = a_elem.attrib['href']
@@ -97,8 +121,11 @@ class NaverBrowser(object):
         return retval
 
     def get_completed_series(self):
-        doc, response = self.get(URL['completed_series'])
+        response = self.get(URL['completed_series'])
         self.app.logger.info('Final URL: %s', response.url)
+        return self._parse(response, '_parse_completed_series')
+
+    def _parse_completed_series(self, doc):
         retval = []
         for a_elem in doc.xpath('//*[@class="list_area"]//li/*[@class="thumb"]/a'):
             url = a_elem.attrib['href']
@@ -109,31 +136,33 @@ class NaverBrowser(object):
 
     def get_series_data(self, series_id):
         url = URL['last_chapter'].format(series_id=series_id)
-        doc, response = self.get(url)
+        response = self.get(url)
         self.app.logger.info('Final URL: %s', response.url)
         if response.url != url:
             return {'removed': True}
-        try:
-            self.app.logger.debug('Parsing data for series #%d', series_id)
-            comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
-            permalink = doc.xpath('//meta[@property="og:url"]/@content')[0]
-            status = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
-            return {
-                'title': comicinfo_dsc.xpath('h2/text()')[0].strip(),
-                'author': comicinfo_dsc.xpath('h2/em')[0].text_content().strip(),
-                'description': inner_html(comicinfo_dsc.xpath('p[@class="txt"]')[0]),
-                'last_chapter': int(re.search(r'no=(\d+)', permalink).group(1)),
-                'is_completed': status == u'완결웹툰',
-                'thumbnail_url': doc.xpath('//meta[@property="og:image"]/@content')[0],
-            }
-        except:
-            self.app.logger.error(response.url + '\n' + response.text, exc_info=True)
-            raise
+        return self._parse(response, '_parse_series_data', series_id)
+
+    def _parse_series_data(self, doc, series_id): 
+        self.app.logger.debug('Parsing data for series #%d', series_id)
+        comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
+        permalink = doc.xpath('//meta[@property="og:url"]/@content')[0]
+        status = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
+        return {
+            'title': comicinfo_dsc.xpath('h2/text()')[0].strip(),
+            'author': comicinfo_dsc.xpath('h2/em')[0].text_content().strip(),
+            'description': inner_html(comicinfo_dsc.xpath('p[@class="txt"]')[0]),
+            'last_chapter': int(re.search(r'no=(\d+)', permalink).group(1)),
+            'is_completed': status == u'완결웹툰',
+            'thumbnail_url': doc.xpath('//meta[@property="og:image"]/@content')[0],
+        }
 
     def get_chapter_data(self, series_id, chapter_id):
         url = URL['chapter'].format(series_id=series_id, chapter_id=chapter_id)
-        doc, response = self.get(url)
+        response = self.get(url)
         self.app.logger.info('Final URL: %s', response.url)
+        return self._parse(response, '_parse_chapter_data', series_id, chapter_id, url)
+
+    def _parse_chapter_data(self, doc, series_id, chapter_id, url):
         if url != doc.xpath('//meta[@property="og:url"]/@content')[0]:
             return {'not_found': True}
         self.app.logger.debug('Parsing data for chapter #%d of series #%d', chapter_id, series_id)
@@ -148,6 +177,9 @@ class NaverBrowser(object):
             self.app.logger.error('Thumbnail URL looks strange: thumbnail_url=%s, series_id=%d, chapter_id=%d',
                     data['thumbnail_url'], series_id, chapter_id)
         return data
+
+    class ResponseUnparsable(Exception):
+        pass
 
 
 def inner_html(element):
