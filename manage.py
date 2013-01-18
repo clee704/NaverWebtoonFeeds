@@ -79,7 +79,7 @@ def runworker(burst=False):
     from naverwebtoonfeeds import redis_connection
     from naverwebtoonfeeds.view_helpers import heroku_scale
     with Connection(connection=redis_connection):
-        w = rq.Worker([rq.Queue()])
+        w = rq.Worker([rq.Queue()], exc_handler=lambda job, *exc_info: False)
         w.work(burst=burst)
         if burst and app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
             heroku_scale('worker', 0)
