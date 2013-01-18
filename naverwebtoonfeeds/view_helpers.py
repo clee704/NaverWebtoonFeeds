@@ -44,7 +44,7 @@ def enqueue_job(func):
     if app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
         heroku_scale('worker', 1)
     redis_queue.enqueue_call(func=func,
-            kwargs={'background': True},
+            kwargs=dict(background=True),
             result_ttl=0,
             timeout=3600)
 
@@ -53,4 +53,4 @@ def heroku_scale(process_name, qty):
     cloud = heroku.from_key(app.config['HEROKU_API_KEY'])
     cloud._http_resource(method='POST',
         resource=('apps', app.config['HEROKU_APP_NAME'], 'ps', 'scale'),
-        data={'type': process_name, 'qty': qty})
+        data=dict(type=process_name, qty=qty))

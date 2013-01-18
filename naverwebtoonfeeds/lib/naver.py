@@ -74,7 +74,7 @@ class NaverBrowser(object):
         if not self.app.config.get('NAVER_USERNAME'):
             return
         url = 'https://nid.naver.com/nidlogin.login'
-        headers = {'Referer': 'http://static.nid.naver.com/login.nhn'}
+        headers = dict(Referer='http://static.nid.naver.com/login.nhn')
         headers.update(self.headers)
         data = {
             'enctp': '2',
@@ -116,7 +116,7 @@ class NaverBrowser(object):
             match = re.search(r'titleId=(?P<id>\d+)&weekday=(?P<day>[a-z]+)', url)
             series_id, day = int(match.group('id')), match.group('day')
             uploaded = len(a_elem.xpath('em[@class="ico_updt"]')) > 0
-            retval.append({'id': series_id, 'day': day, 'days_uploaded': day if uploaded else False})
+            retval.append(dict(id=series_id, day=day, days_uploaded=day if uploaded else False))
         return retval
 
     def get_completed_series(self):
@@ -130,14 +130,14 @@ class NaverBrowser(object):
             url = a_elem.attrib['href']
             match = re.search(r'titleId=(?P<id>\d+)', url)
             series_id = int(match.group('id'))
-            retval.append({'id': series_id})
+            retval.append(dict(id=series_id))
         return retval
 
     def get_series_data(self, series_id):
         url = URL['last_chapter'].format(series_id=series_id)
         response = self.get(url)
         if response.url != url:
-            return {'removed': True}
+            return dict(removed=True)
         return self._parse(response, '_parse_series_data', series_id)
 
     def _parse_series_data(self, doc, series_id): 
@@ -162,7 +162,7 @@ class NaverBrowser(object):
     def _parse_chapter_data(self, doc, series_id, chapter_id, url):
         __logger__.debug('Parsing data for chapter #%d of series #%d', chapter_id, series_id)
         if url != doc.xpath('//meta[@property="og:url"]/@content')[0]:
-            return {'not_found': True}
+            return dict(not_found=True)
         date_str = doc.xpath('//form[@name="reportForm"]/input[@name="itemDt"]/@value')[0]
         naive_dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
         data = {

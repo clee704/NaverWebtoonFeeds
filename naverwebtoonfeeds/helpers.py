@@ -26,4 +26,4 @@ def via_imgproxy(url):
 
 @app.context_processor
 def utility_processor():
-    return {'naver_url': naver_url}
+    return dict(naver_url=naver_url)
