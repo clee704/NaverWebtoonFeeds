@@ -79,12 +79,15 @@ def addcompletedseries():
 @manager.command
 def runworker(burst=False):
     """Run the worker that fetches data from Naver and update the database."""
-    import rq
     from rq import Connection
+    import rq
     from naverwebtoonfeeds import redis_connection
+    from naverwebtoonfeeds.view_helpers import heroku_scale
     with Connection(connection=redis_connection):
         w = rq.Worker([rq.Queue()])
         w.work(burst=burst)
+        if burst and app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
+            heroku_scale('worker', 0)
 
 if __name__ == '__main__':
     manager.run()

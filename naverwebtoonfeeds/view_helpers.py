@@ -1,7 +1,8 @@
 from flask import Response, render_template, request, redirect
 import pytz
+import heroku
 
-from naverwebtoonfeeds import app, cache, CACHE_PERMANENT
+from naverwebtoonfeeds import app, cache, redis_queue, CACHE_PERMANENT
 from naverwebtoonfeeds.models import Series
 from naverwebtoonfeeds.lib.naver import NAVER_TIMEZONE
 
@@ -37,3 +38,19 @@ def render_and_cache_feed_show(series):
     response = Response(response=xml, content_type='application/atom+xml')
     cache.set('feed_show_%d' % series.id, response, CACHE_PERMANENT)
     return response
+
+
+def enqueue_job(func):
+    redis_queue.enqueue_call(func=func,
+            kwargs={'background': True},
+            result_ttl=0,
+            timeout=3600)
+    if app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
+        heroku_scale('worker', 1)
+
+
+def heroku_scale(process_name, qty):
+    cloud = heroku.from_key(app.config['HEROKU_API_KEY'])
+    cloud._http_resource(method='POST',
+        resource=('apps', app.config['HEROKU_APP_NAME'], 'ps', 'scale'),
+        data={'type': 'worker', 'qty': qty})

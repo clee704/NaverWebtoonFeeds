@@ -64,6 +64,12 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///db/naverwebtoonfeeds.db'
 # You should use Redis as a cache (see above).
 #USE_REDIS_QUEUE = True
 
+# While deploying in Heroku, run the worker process only when needed.
+# Useful if you are on a budget.
+#REDIS_QUEUE_BURST_MODE_IN_HEROKU = True
+#HEROKU_API_KEY = ''
+#HEROKU_APP_NAME = ''
+
 # Naver login information is needed to access some adult-only series.
 #NAVER_USERNAME = ''
 #NAVER_PASSWORD = ''

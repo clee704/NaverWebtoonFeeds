@@ -12,9 +12,10 @@ SQLAlchemy==0.8.0b2
 Werkzeug==0.8.3
 argparse==1.2.1
 gunicorn==0.16.1
+heroku==0.1.2
 ipython==0.13.1
 lxml==3.1beta1
-python-dateutil==2.1
+python-dateutil==1.5
 pytz==2012h
 redis==2.7.2
 requests==1.0.2

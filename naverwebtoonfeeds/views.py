@@ -1,7 +1,7 @@
 from flask import render_template, url_for
 
-from naverwebtoonfeeds import app, cache, redis_queue
-from naverwebtoonfeeds.view_helpers import redirect_to_canonical_url
+from naverwebtoonfeeds import app, cache
+from naverwebtoonfeeds.view_helpers import redirect_to_canonical_url, enqueue_job
 from naverwebtoonfeeds.view_helpers import render_and_cache_feed_index, render_and_cache_feed_show
 from naverwebtoonfeeds.models import Series
 from naverwebtoonfeeds.lib.updater import series_list_needs_fetching, update_series_list, update_series
@@ -14,10 +14,7 @@ def feed_index():
     invalidate_cache = False
     if series_list_needs_fetching():
         if app.config.get('USE_REDIS_QUEUE'):
-            redis_queue.enqueue_call(func=update_series_list,
-                    kwargs={'background': True},
-                    result_ttl=0,
-                    timeout=3600)
+            enqueue_job(update_series_list)
         else:
             list_updated, _ = update_series_list()
             invalidate_cache = list_updated
@@ -38,10 +35,7 @@ def feed_show(series_id):
     invalidate_cache = False
     if series_list_needs_fetching():
         if app.config.get('USE_REDIS_QUEUE'):
-            redis_queue.enqueue_call(func=update_series_list,
-                    kwargs={'background': True},
-                    result_ttl=0,
-                    timeout=3600)
+            enqueue_job(update_series_list)
         else:
             # update_series_list with no argument only adds new series.
             # The current series never gets updated.
