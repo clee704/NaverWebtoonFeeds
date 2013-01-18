@@ -3,7 +3,6 @@ from datetime import datetime
 import logging
 import re
 import time
-import urllib2
 
 import lxml.html
 import lxml.html.soupparser
@@ -45,26 +44,30 @@ class NaverBrowser(object):
         errors = 0
         delay = 1
         while True:
+            response = None
             try:
                 # Requests to Naver should be carefully monitored.
                 __logger__.warning('Requesting GET %s', url)
                 response = requests.get(url, cookies=self.cookies, headers=self.headers)
                 self.cookies = response.cookies
-                if response.status_code == 403:
-                    __logger__.warning('Forbidden IP: %s', get_public_ip())
-                    raise urllib2.HTTPError(url, 403, 'Forbidden', response.headers, None)
+                response.raise_for_status()
                 if self.login_required(response):
                     self.login()
                     continue
                 return response
-            except urllib2.URLError:
-                __logger__.info('A URLError occurred', exc_info=True)
-                errors += 1
-                if errors > self.max_retry:
+            except requests.exceptions.HTTPError as e:
+                __logger__.info('A HTTP error occurred while requesting %s: %s', url, e)
+                if response is not None and response.status_code == 403:
+                    __logger__.warning('Forbidden IP: %s', get_public_ip())
                     raise
-                __logger__.info('Waiting for %d seconds before reconnecting', delay)
-                time.sleep(delay)
-                delay += 0.5
+            except:
+                __logger__.info('An error occurred while requesting %s', url, exc_info=True)
+            errors += 1
+            if errors > self.max_retry:
+                raise
+            __logger__.info('Waiting for %.1f seconds before reconnecting', delay)
+            time.sleep(delay)
+            delay += 0.5
 
     def login_required(self, response):
         __logger__.info('Checking the URL: %s', response.url)
