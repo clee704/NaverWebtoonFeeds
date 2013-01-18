@@ -18,11 +18,11 @@ Installation
 * Clone this repository or download
   [this project from GitHub](https://github.com/clee704/NaverWebtoonFeeds).
 * Create a virtual environment for the app (optional).
-* Edit `requirements.txt` and save it as `requirements.local.txt` (optional;
-  see Dependencies).
-* Run `pip install -r requirements.txt`.
-* Edit `naverwebtoonfeeds/default_settings.py` and save it as
-  `naverwebtoonfeeds/default_settings.local.py`.
+* Install required packages by running `pip install -r requirements.txt`.
+  If you are going to use a database engine other than MySQL or a cache backend
+  other than Redis, then you should install the packages for them yourself.
+* Configure the app in `naverwebtoonfeeds/default_settings.local.py`.
+  You can copy config options from `naverwebtoonfeeds/default_settings.py`.
 * Set an environment variable `NAVERWEBTOONFEEDS_SETTINGS` to the path to your
   settings file
   (`/path/to/the/app/naverwebtoonfeeds/default_settings.local.py`).
@@ -47,25 +47,3 @@ running `heroku config:set NAVERWEBTOONFEEDS_SETTINGS=heroku_settings.py`.
 
 For other variables, see the comments in
 `naverwebtoonfeeds/default_settings.py`.
-
-
-Dependencies
-------------
-
-You can install the required packages by running
-`pip install -r requirements.txt`. It will also install ipython, which is
-optional, and MySQL-python and redis which can be replaced by other packages.
-
-To use a database engine other than MySQL, replace the line starting with
-`MySQL-python` with the following:
-
-* PostgreSQL: psycopg2
-* Oracle: cx\_oracle
-* Microsoft SQL Server: pyodbc
-* SQLite (not recommended for production): no required packages
-
-For more information, see [the SQLAlchemy documentation on database URLs]
-(http://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls).
-
-To use Memcached instead of Redis, change the line starting with `redis` to
-`python-memcached`.
