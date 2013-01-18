@@ -22,6 +22,9 @@ for key in os.environ:
 if os.environ.get('LOG_LEVEL'):
     LOGGING['loggers']['naverwebtoonfeeds']['level'] = os.environ['LOG_LEVEL']
 
+if os.environ.get('WORKER_LOG_LEVEL'):
+    LOGGING['loggers']['rq.worker']['level'] = os.environ['WORKER_LOG_LEVEL']
+
 if all(os.environ.get(x) for x in ['GMAIL_USERNAME', 'GMAIL_PASSWORD', 'MAIL_TOADDRS']):
     smtp_handler = LOGGING['handlers']['mail_admins']
     smtp_handler['toaddrs'] = MAIL_TOADDRS
