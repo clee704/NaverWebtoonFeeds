@@ -12,24 +12,25 @@ app.config.from_object('naverwebtoonfeeds.default_settings')
 if os.environ.get('NAVERWEBTOONFEEDS_SETTINGS'):
     app.config.from_envvar('NAVERWEBTOONFEEDS_SETTINGS')
 
-# Logging settings
-loggers = [app.logger, logging.getLogger('sqlalchemy.engine')]
-formatter = logging.Formatter('%(asctime)s [%(name)s] [%(levelname)s] %(message)s')
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.DEBUG)
-stream_handler.setFormatter(formatter)
-for logger in loggers:
-    logger.setLevel(app.config['LOG_LEVEL'])
-    logger.addHandler(stream_handler)
-if app.config.get('SEND_EMAIL'):
-    from logging.handlers import SMTPHandler
-    mail_options = 'HOST FROMADDR TOADDRS SUBJECT CREDENTIALS SECURE'
-    mail_config = (app.config['MAIL_' + x] for x in mail_options.split())
-    smtp_handler = SMTPHandler(*mail_config)
-    smtp_handler.setLevel(app.config['EMAIL_LEVEL'])
-    smtp_handler.setFormatter(formatter)
+def setup_loggers():
+    loggers = [app.logger, logging.getLogger('sqlalchemy.engine')]
+    formatter = logging.Formatter('%(asctime)s [%(name)s] [%(levelname)s] %(message)s')
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.DEBUG)
+    stream_handler.setFormatter(formatter)
     for logger in loggers:
-        logger.addHandler(smtp_handler)
+        logger.setLevel(app.config['LOG_LEVEL'])
+        logger.addHandler(stream_handler)
+    if app.config.get('SEND_EMAIL'):
+        from logging.handlers import SMTPHandler
+        mail_options = 'HOST FROMADDR TOADDRS SUBJECT CREDENTIALS SECURE'
+        mail_config = (app.config['MAIL_' + x] for x in mail_options.split())
+        smtp_handler = SMTPHandler(*mail_config)
+        smtp_handler.setLevel(app.config['EMAIL_LEVEL'])
+        smtp_handler.setFormatter(formatter)
+        for logger in loggers:
+            logger.addHandler(smtp_handler)
+setup_loggers()
 
 db.init_app(app)
 
@@ -42,10 +43,9 @@ if app.config.get('GZIP'):
 if app.config.get('USE_REDIS_QUEUE'):
     from redis import Redis
     from rq import Queue
-    host = app.config['CACHE_REDIS_HOST']
-    port = app.config['CACHE_REDIS_PORT']
-    password = app.config['CACHE_REDIS_PASSWORD']
-    connection = Redis(host=host, port=port, password=password)
+    connection = Redis(host=app.config['CACHE_REDIS_HOST'],
+            port=app.config['CACHE_REDIS_PORT'],
+            password=app.config['CACHE_REDIS_PASSWORD'])
     queue = Queue(connection=connection)
 
 assets = Environment(app)
