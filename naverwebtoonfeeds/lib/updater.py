@@ -60,8 +60,6 @@ def update_series_list(update_all=False, background=False):
 
     _commit()
 
-    # We don't have to revert the value of series_list_fetched since
-    # if the above call fails, it will not change since it's not commited.
     if background:
         if updated[0]:
             render_and_cache_feed_index()
