@@ -1,6 +1,6 @@
 #! /usr/bin/env python
-from flask.ext.script import Manager, prompt_bool
-from naverwebtoonfeeds import app
+from flask.ext.script import Manager, Shell, prompt_bool
+from naverwebtoonfeeds import app, cache, db
 
 manager = Manager(app)
 
@@ -14,13 +14,11 @@ def create():
     table, and if not found will issue the CREATE statements.
 
     """
-    from naverwebtoonfeeds import db
     db.create_all()
 
 @db_manager.command
 def drop():
     """Drop all database tables."""
-    from naverwebtoonfeeds import db
     try:
         if prompt_bool("Are you sure you want to lose all your data"):
             db.drop_all()
@@ -30,7 +28,6 @@ def drop():
 @db_manager.command
 def fill():
     """Update database by fetching changes from Naver Comics."""
-    from naverwebtoonfeeds import cache
     from naverwebtoonfeeds.lib.updater import update_series_list
     list_updated, series_updated = update_series_list(update_all=True)
     if list_updated:
@@ -50,7 +47,6 @@ def delete(target='index'):
     index view cache will be deleted.
 
     """
-    from naverwebtoonfeeds import cache
     if target == 'index':
         cache.delete('feed_index')
     else:
@@ -65,7 +61,6 @@ def migrate(action):
 @manager.command
 def addcompletedseries():
     """Add completed series."""
-    from naverwebtoonfeeds import cache, db
     from naverwebtoonfeeds.models import Series
     from naverwebtoonfeeds.lib.updater import __browser__, update_series
     completed_series_ids = set(data['id'] for data in __browser__.get_completed_series())
@@ -88,6 +83,11 @@ def runworker(burst=False):
         w.work(burst=burst)
         if burst and app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
             heroku_scale('worker', 0)
+
+@manager.shell
+def make_shell_context():
+    from naverwebtoonfeeds.models import Series, Chapter, Config
+    return dict(app=app, cache=cache, db=db, Series=Series, Chapter=Chapter, Config=Config)
 
 if __name__ == '__main__':
     manager.run()
