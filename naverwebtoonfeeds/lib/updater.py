@@ -11,31 +11,64 @@ from naverwebtoonfeeds.lib.naver import as_naver_time_zone, NaverBrowser
 __browser__ = NaverBrowser(app)
 
 
+def series_list_needs_fetching():
+    now = datetime.utcnow()
+    interval = _series_stats_update_interval()
+    fetched = Config.query.get('series_list_fetched')
+    return fetched is None or fetched.value + interval < now
+
+
 def update_series_list(update_all=False, background=False):
     updated = [False, []]
     # updated[0]: index view cache should be purged
     # updated[1]: view cache of series with id in this list should be purged
-    now = datetime.utcnow()
-    interval = _series_stats_update_interval()
+
+    series_list = _fetch_series_list(update_all, updated)
+
+    # Upload badges are cleared at the midnight and generated when the
+    # series has been uploaded today.
+    #
+    # If offset is too long, say 3 hours, and a series is uploaded at 10pm,
+    # and there was no request to the app until right after the midnight,
+    # then we'll miss the upload badge for the series.
+    #
+    # If offset is too short, say 1 minute, then all series will be marked
+    # as 'new chapters available' however frequent requests are, since
+    # the minimum interval to fetch series list is 15 minutes or so. It will
+    # increase the rate of requests to Naver and slow the page loading
+    # (1 per series per day).
+    #
+    # If the requests to the app is frequent enough, setting it to just
+    # above the minimum fetch interval will be fine.
     fetched = Config.query.get('series_list_fetched')
-    if (update_all or fetched is None or fetched.value + interval < now):
-        # Update the fetched time ASAP to prevent duplicate requests
-        last_fetched_date = None
-        if fetched is None:
-            fetched = Config(key='series_list_fetched', value=now)
-            db.session.add(fetched)
-        else:
-            last_fetched_date = fetched.value
-            fetched.value = now
-        _fetch_series_list(update_all, last_fetched_date, updated)
-        # We don't have to revert the value of series_list_fetched since
-        # if the above call fails, it will not change since it's not commited.
+    now = datetime.utcnow()
+    last_midnight = as_naver_time_zone(now).replace(hour=0, minute=0, second=0, microsecond=0)
+    offset = timedelta(minutes=30)
+    if fetched is None or as_naver_time_zone(fetched.value) < last_midnight - offset:
+        # The last time the series list is fetched is too far in the past.
+        # It can happen if the app is not very popular.  Mark all series as
+        # 'new chapters available' since we might have missed the upload
+        # badges for some series.
+        for series in series_list:
+            series.new_chapters_available = True
+
+    # Update the time when series list was fetched.
+    if fetched is None:
+        db.session.add(Config(key='series_list_fetched', value=now))
+    else:
+        fetched.value = now
+
+    _commit()
+
+    # We don't have to revert the value of series_list_fetched since
+    # if the above call fails, it will not change since it's not commited.
     if background:
         if updated[0]:
             render_and_cache_feed_index()
         for series in Series.query.filter_by(new_chapters_available=True):
             update_series(series)
             render_and_cache_feed_show(series)
+
     return updated
 
 
@@ -67,7 +100,7 @@ def _series_stats_update_interval():
         return timedelta(hours=1)
 
 
-def _fetch_series_list(update_all, last_fetched_date, updated):
+def _fetch_series_list(update_all, updated):
     fetched_data = {}
     try:
         issues = __browser__.get_issues()
@@ -84,33 +117,6 @@ def _fetch_series_list(update_all, last_fetched_date, updated):
     existing_series_ids = set(series.id for series in series_list)
     new_series_ids = fetched_data.viewkeys() - existing_series_ids
     _add_new_series(new_series_ids, fetched_data, update_all, updated)
-
-    # Upload badges are cleared at the midnight and generated when the
-    # series has been uploaded today.
-    #
-    # If offset is too long, say 3 hours, and a series is uploaded at 10pm,
-    # and there was no request to the app until right after the midnight,
-    # then we'll miss the upload badge for the series.
-    #
-    # If offset is too short, say 1 minute, then all series will be marked
-    # as 'new chapters available' however frequent requests are, since
-    # the minimum interval to fetch series list is 15 minutes or so. It will
-    # increase the rate of requests to Naver and slow the page loading
-    # (1 per series per day).
-    #
-    # If the requests to the app is frequent enough, setting it to just
-    # above the minimum fetch interval will be fine.
-    now = datetime.utcnow()
-    last_midnight = as_naver_time_zone(now).replace(hour=0, minute=0, second=0, microsecond=0)
-    offset = timedelta(minutes=30)
-    if last_fetched_date is None or as_naver_time_zone(last_fetched_date) < last_midnight - offset:
-        # The last time the series list is fetched is too far in the past.
-        # It can happen if the app is not very popular.  Mark all series as
-        # 'new chapters available' since we might have missed the upload
-        # badges for some series.
-        for series in series_list:
-            series.new_chapters_available = True
-    _commit()
     return series_list
 
 
