@@ -1,13 +1,5 @@
 import logging
-from naverwebtoonfeeds import app
-
-logger = logging.getLogger('naverwebtoonfeeds')
-
-try:
-    from naverwebtoonfeeds.lib.naver import get_public_ip
-    logger.warning('Current IP: %s', get_public_ip())
-except:
-    pass
+from naverwebtoonfeeds import app, logger
 
 if __name__ == '__main__':
     try:

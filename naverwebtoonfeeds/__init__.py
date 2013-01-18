@@ -15,6 +15,14 @@ if os.environ.get('NAVERWEBTOONFEEDS_SETTINGS'):
 
 logging.config.dictConfig(app.config['LOGGING'])
 
+logger = logging.getLogger(__name__)
+
+try:
+    from naverwebtoonfeeds.lib.naver import get_public_ip
+    logger.warning('Current IP: %s', get_public_ip())
+except:
+    pass
+
 db.init_app(app)
 
 cache = Cache(app)
