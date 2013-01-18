@@ -81,8 +81,8 @@ def runworker():
     """Run the worker that fetches data from Naver and update the database."""
     import rq
     from rq import Connection
-    from naverwebtoonfeeds import connection
-    with Connection(connection=connection):
+    from naverwebtoonfeeds import redis_connection
+    with Connection(connection=redis_connection):
         w = rq.Worker([rq.Queue()])
         w.work()
 

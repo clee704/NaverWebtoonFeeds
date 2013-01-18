@@ -43,10 +43,10 @@ if app.config.get('GZIP'):
 if app.config.get('USE_REDIS_QUEUE'):
     from redis import Redis
     from rq import Queue
-    connection = Redis(host=app.config['CACHE_REDIS_HOST'],
+    redis_connection = Redis(host=app.config['CACHE_REDIS_HOST'],
             port=app.config['CACHE_REDIS_PORT'],
             password=app.config['CACHE_REDIS_PASSWORD'])
-    queue = Queue(connection=connection)
+    redis_queue = Queue(connection=redis_connection)
 
 assets = Environment(app)
 assets.register('js_all',
