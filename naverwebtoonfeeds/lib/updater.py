@@ -31,6 +31,8 @@ def update_series_list(update_all=False, background=False):
     # updated[1]: view cache of series with id in this list should be purged
 
     series_list = _fetch_series_list(update_all, updated)
+    if series_list is None:
+        return updated
 
     # Upload badges are cleared at the midnight and generated when the
     # series has been uploaded today.
