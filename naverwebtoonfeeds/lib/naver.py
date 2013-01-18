@@ -106,6 +106,7 @@ class NaverBrowser(object):
         return self._parse(response, '_parse_issues')
 
     def _parse_issues(self, doc):
+        self.app.logger.debug('Parsing the current series list')
         retval = []
         for a_elem in doc.xpath('//*[@class="list_area daily_all"]//li/*[@class="thumb"]/a'):
             url = a_elem.attrib['href']
@@ -121,6 +122,7 @@ class NaverBrowser(object):
         return self._parse(response, '_parse_completed_series')
 
     def _parse_completed_series(self, doc):
+        self.app.logger.debug('Parsing the completed series list')
         retval = []
         for a_elem in doc.xpath('//*[@class="list_area"]//li/*[@class="thumb"]/a'):
             url = a_elem.attrib['href']
@@ -158,9 +160,9 @@ class NaverBrowser(object):
         return self._parse(response, '_parse_chapter_data', series_id, chapter_id, url)
 
     def _parse_chapter_data(self, doc, series_id, chapter_id, url):
+        self.app.logger.debug('Parsing data for chapter #%d of series #%d', chapter_id, series_id)
         if url != doc.xpath('//meta[@property="og:url"]/@content')[0]:
             return {'not_found': True}
-        self.app.logger.debug('Parsing data for chapter #%d of series #%d', chapter_id, series_id)
         date_str = doc.xpath('//form[@name="reportForm"]/input[@name="itemDt"]/@value')[0]
         naive_dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
         data = {

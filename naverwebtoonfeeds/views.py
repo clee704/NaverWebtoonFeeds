@@ -1,7 +1,8 @@
 from flask import render_template, url_for
 
 from naverwebtoonfeeds import app, cache, redis_queue
-from naverwebtoonfeeds.view_helpers import redirect_to_canonical_url, render_and_cache_feed_index, render_and_cache_feed_show
+from naverwebtoonfeeds.view_helpers import redirect_to_canonical_url
+from naverwebtoonfeeds.view_helpers import render_and_cache_feed_index, render_and_cache_feed_show
 from naverwebtoonfeeds.models import Series
 from naverwebtoonfeeds.lib.updater import series_list_needs_fetching, update_series_list, update_series
 
