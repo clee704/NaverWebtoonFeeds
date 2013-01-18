@@ -108,7 +108,7 @@ def _fetch_series_list(update_all, updated):
     try:
         issues = __browser__.get_issues()
     except:
-        app.logger.error("An error occurred while getting series list", exc_info=True)
+        __logger__.error("An error occurred while getting series list", exc_info=True)
         return
     for data in issues:
         info = fetched_data.setdefault(data['id'], {})
@@ -168,11 +168,11 @@ def _fetch_series_data(series):
     try:
         data = __browser__.get_series_data(series.id)
     except:
-        app.logger.error("An error occurred while getting data for series #%d", series.id, exc_info=True)
+        __logger__.error("An error occurred while getting data for series #%d", series.id, exc_info=True)
         return False
     if data.get('removed'):
         if not series.is_completed:
-            app.logger.warning('Series #%d seems removed', series.id)
+            __logger__.warning('Series #%d seems removed', series.id)
             series.is_completed = True
             return True
         return False
@@ -205,7 +205,7 @@ def _fetch_chapter_data(chapter):
     try:
         data = __browser__.get_chapter_data(chapter.series.id, chapter.id)
     except:
-        app.logger.error("An error occurred while getting data for chapter #%d of series #%d",
+        __logger__.error("An error occurred while getting data for chapter #%d of series #%d",
                 chapter.id, chapter.series.id, exc_info=True)
         return False
     if data.get('not_found'):
@@ -227,5 +227,5 @@ def _commit():
     try:
         db.session.commit()
     except IntegrityError:
-        app.logger.error('IntegrityError', exc_info=True)
+        __logger__.error('IntegrityError', exc_info=True)
         db.session.rollback()

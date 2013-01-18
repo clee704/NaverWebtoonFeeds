@@ -1,8 +1,8 @@
-from naverwebtoonfeeds import app
+from naverwebtoonfeeds import app, logger
 
 try:
     from naverwebtoonfeeds.lib.naver import get_public_ip
-    app.logger.warning('Current IP: %s', get_public_ip())
+    logger.warning('Current IP: %s', get_public_ip())
 except:
     pass
 
@@ -12,4 +12,4 @@ if __name__ == '__main__':
         port = int(app.config.get('PORT', 5000))
         app.run(host='0.0.0.0', port=port)
     except:
-        app.logger.critical('A critical error occurred', exc_info=True)
+        logger.critical('A critical error occurred', exc_info=True)

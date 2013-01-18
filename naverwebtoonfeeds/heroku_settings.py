@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+from naverwebtoonfeeds.default_settings import LOGGING
 
 def guess_type(value):
     if re.match(r'^\d+$', value):
@@ -17,13 +18,17 @@ def guess_type(value):
         return value
 
 for key in os.environ:
-    if key.endswith('_LEVEL'):
-        locals()[key] = getattr(logging, os.environ[key].upper())
-    else:
-        locals()[key] = guess_type(os.environ[key])
+    locals()[key] = guess_type(os.environ[key])
 
-if os.environ.get('GMAIL_USERNAME') and os.environ.get('GMAIL_PASSWORD'):
-    MAIL_CREDENTIALS = (os.environ['GMAIL_USERNAME'], os.environ['GMAIL_PASSWORD'])
+if os.environ.get('LOG_LEVEL'):
+    LOGGING['loggers']['naverwebtoonfeeds']['level'] = os.environ['LOG_LEVEL']
 
-MAIL_HOST = ('smtp.gmail.com', 587)
-MAIL_SECURE = ()
+if all(os.environ.get(x) for x in ['GMAIL_USERNAME', 'GMAIL_PASSWORD', 'MAIL_TOADDRS']):
+    smtp_handler = LOGGING['handlers']['mail_admins']
+    smtp_handler['toaddrs'] = MAIL_TOADDRS
+    smtp_handler['mailhost'] = ('smtp.gmail.com', 587)
+    smtp_handler['credentials'] = (os.environ['GMAIL_USERNAME'], os.environ['GMAIL_PASSWORD'])
+    smtp_handler['secure'] = ()
+    logger = LOGGING['loggers']['naverwebtoonfeeds']
+    if 'mail_admins' not in logger['handlers']:
+        logger['handlers'].append('mail_admins')

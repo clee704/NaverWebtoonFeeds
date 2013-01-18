@@ -22,21 +22,47 @@ URL_ROOT = 'http://example.com'
 # to the corresponding canonical URL.
 #FORCE_REDIRECT = True
 
-LOG_LEVEL = logging.WARNING
-
-# If set, send emails to admins on the specified level of logs.
-#SEND_EMAIL = not DEBUG
-EMAIL_LEVEL = logging.ERROR
-
-# Arguments to logging.handlers.SMTPHandler
-# See http://docs.python.org/2/library/logging.handlers.html#smtphandler
+# Logging settings.
+# See http://docs.python.org/2.7/library/logging.config.html#logging.config.dictConfig
 # for details.
-#MAIL_HOST = 'localhost'
-#MAIL_FROMADDR = 'naverwebtoonfeeds-logger@localhost'
-#MAIL_TOADDRS = ['admin@example.com']
-MAIL_SUBJECT = '[NaverWebtoonFeeds] Logs'
-MAIL_CREDENTIALS = None
-MAIL_SECURE = None
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s [%(name)s] [%(levelname)s] %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'formatter': 'default',
+            'class': 'logging.handlers.SMTPHandler',
+            'toaddrs': ['admin@example.com'],
+            'fromaddr': 'naverwebtoonfeeds-logger@localhost',
+            'subject': '[NaverWebtoonFeeds] Logs',
+            'mailhost': 'localhost',
+        },
+    },
+    'loggers': {
+        'naverwebtoonfeeds': {
+            # Add 'mail_admins' to email error level logs to admins.
+            #'handlers': ['console', 'mail_admins'],
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+        'sqlalchemy.engine': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+    },
+}
 
 # NaverWebtoonFeeds uses Flask-SQLAlchemy to persist data.
 # See the Flask-SQLAlchemy documentation at

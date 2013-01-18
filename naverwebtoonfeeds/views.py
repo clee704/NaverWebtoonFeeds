@@ -1,3 +1,5 @@
+import logging
+
 from flask import render_template, url_for
 
 from naverwebtoonfeeds import app, cache
@@ -7,10 +9,13 @@ from naverwebtoonfeeds.models import Series
 from naverwebtoonfeeds.lib.updater import series_list_needs_fetching, update_series_list, update_series
 
 
+__logger__ = logging.getLogger(__name__)
+
+
 @app.route('/')
 @redirect_to_canonical_url
 def feed_index():
-    app.logger.info('feed_index (GET %s)', url_for('feed_index'))
+    __logger__.info('feed_index (GET %s)', url_for('feed_index'))
     invalidate_cache = False
     if series_list_needs_fetching():
         if app.config.get('USE_REDIS_QUEUE'):
@@ -21,7 +26,7 @@ def feed_index():
     if not invalidate_cache:
         response = cache.get('feed_index')
         if response:
-            app.logger.info('Cache hit')
+            __logger__.info('Cache hit')
             return response
     return render_and_cache_feed_index()
 
@@ -30,7 +35,7 @@ def feed_index():
 @redirect_to_canonical_url
 def feed_show(series_id):
     url = url_for('feed_show', series_id=series_id)
-    app.logger.info('feed_show, series_id=%d (GET %s)', series_id, url)
+    __logger__.info('feed_show, series_id=%d (GET %s)', series_id, url)
     series = None
     invalidate_cache = False
     if series_list_needs_fetching():
@@ -50,7 +55,7 @@ def feed_show(series_id):
     if not invalidate_cache:
         response = cache.get('feed_show_%d' % series_id)
         if response:
-            app.logger.info('Cache hit')
+            __logger__.info('Cache hit')
             return response
     if series is None:
         series = Series.query.get_or_404(series_id)

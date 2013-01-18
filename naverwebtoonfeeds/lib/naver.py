@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from datetime import datetime
+import logging
 import re
 import time
 import urllib2
@@ -8,7 +9,6 @@ import lxml.html
 import lxml.html.soupparser
 import pytz
 import requests
-
 
 BASE_URL = 'http://comic.naver.com/webtoon'
 MOBILE_BASE_URL = 'http://m.comic.naver.com/webtoon'
@@ -30,6 +30,9 @@ HEADERS = {
 NAVER_TIMEZONE = pytz.timezone('Asia/Seoul')
 
 
+__logger__ = logging.getLogger(__name__)
+
+
 class NaverBrowser(object):
 
     def __init__(self, app, max_retry=3):
@@ -44,27 +47,27 @@ class NaverBrowser(object):
         while True:
             try:
                 # Requests to Naver should be carefully monitored.
-                self.app.logger.warning('Requesting GET %s', url)
+                __logger__.warning('Requesting GET %s', url)
                 response = requests.get(url, cookies=self.cookies, headers=self.headers)
                 self.cookies = response.cookies
                 if self.login_required(response):
                     self.login()
                     continue
                 if response.status_code == 403:
-                    self.app.logger.warning('Forbidden IP: %s', get_public_ip())
+                    __logger__.warning('Forbidden IP: %s', get_public_ip())
                     raise urllib2.HTTPError(url, 403, 'Forbidden', response.headers, None)
                 return response
             except urllib2.URLError:
-                self.app.logger.info('A URLError occurred', exc_info=True)
+                __logger__.info('A URLError occurred', exc_info=True)
                 errors += 1
                 if errors > self.max_retry:
                     raise
-                self.app.logger.info('Waiting for %d seconds before reconnecting', delay)
+                __logger__.info('Waiting for %d seconds before reconnecting', delay)
                 time.sleep(delay)
                 delay += 0.5
 
     def login_required(self, response):
-        self.app.logger.info('Checking the URL: %s', response.url)
+        __logger__.info('Checking the URL: %s', response.url)
         return 'login' in response.url
 
     def login(self):
@@ -83,7 +86,7 @@ class NaverBrowser(object):
         self.cookies = response.cookies
         if 'location.replace' not in response.text[:100]:
             raise RuntimeError("Cannot log in to naver.com")
-        self.app.logger.info('Logged in')
+        __logger__.info('Logged in')
 
     def _parse(self, response, method, *args):
         parsers = [lxml.html.soupparser, lxml.html]
@@ -97,7 +100,7 @@ class NaverBrowser(object):
                 doc = parser.fromstring(response.text)
                 return getattr(self, method)(doc, *args)
             except:
-                self.app.logger.warning('An error occurred while parsing data for %s',
+                __logger__.warning('An error occurred while parsing data for %s',
                         response.url, exc_info=True)
         raise self.ResponseUnparsable(response.url)
 
@@ -106,7 +109,7 @@ class NaverBrowser(object):
         return self._parse(response, '_parse_issues')
 
     def _parse_issues(self, doc):
-        self.app.logger.debug('Parsing the current series list')
+        __logger__.debug('Parsing the current series list')
         retval = []
         for a_elem in doc.xpath('//*[@class="list_area daily_all"]//li/*[@class="thumb"]/a'):
             url = a_elem.attrib['href']
@@ -121,7 +124,7 @@ class NaverBrowser(object):
         return self._parse(response, '_parse_completed_series')
 
     def _parse_completed_series(self, doc):
-        self.app.logger.debug('Parsing the completed series list')
+        __logger__.debug('Parsing the completed series list')
         retval = []
         for a_elem in doc.xpath('//*[@class="list_area"]//li/*[@class="thumb"]/a'):
             url = a_elem.attrib['href']
@@ -138,7 +141,7 @@ class NaverBrowser(object):
         return self._parse(response, '_parse_series_data', series_id)
 
     def _parse_series_data(self, doc, series_id): 
-        self.app.logger.debug('Parsing data for series #%d', series_id)
+        __logger__.debug('Parsing data for series #%d', series_id)
         comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
         permalink = doc.xpath('//meta[@property="og:url"]/@content')[0]
         status = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
@@ -157,7 +160,7 @@ class NaverBrowser(object):
         return self._parse(response, '_parse_chapter_data', series_id, chapter_id, url)
 
     def _parse_chapter_data(self, doc, series_id, chapter_id, url):
-        self.app.logger.debug('Parsing data for chapter #%d of series #%d', chapter_id, series_id)
+        __logger__.debug('Parsing data for chapter #%d of series #%d', chapter_id, series_id)
         if url != doc.xpath('//meta[@property="og:url"]/@content')[0]:
             return {'not_found': True}
         date_str = doc.xpath('//form[@name="reportForm"]/input[@name="itemDt"]/@value')[0]
@@ -168,7 +171,7 @@ class NaverBrowser(object):
             'thumbnail_url': doc.xpath('//*[@id="comic_move"]//*[@class="on"]/img/@src')[0],
         }
         if '{0}/{1}'.format(series_id, chapter_id) not in data['thumbnail_url']:
-            self.app.logger.error('Thumbnail URL looks strange: thumbnail_url=%s, series_id=%d, chapter_id=%d',
+            __logger__.error('Thumbnail URL looks strange: thumbnail_url=%s, series_id=%d, chapter_id=%d',
                     data['thumbnail_url'], series_id, chapter_id)
         return data
 
