@@ -64,6 +64,7 @@ class NaverBrowser(object):
                 delay += 0.5
 
     def login_required(self, response):
+        self.app.logger.info('Checking the URL: %s', response.url)
         return 'login' in response.url
 
     def login(self):
@@ -102,7 +103,6 @@ class NaverBrowser(object):
 
     def get_issues(self):
         response = self.get(URL['series_by_day'])
-        self.app.logger.info('Final URL: %s', response.url)
         return self._parse(response, '_parse_issues')
 
     def _parse_issues(self, doc):
@@ -118,7 +118,6 @@ class NaverBrowser(object):
 
     def get_completed_series(self):
         response = self.get(URL['completed_series'])
-        self.app.logger.info('Final URL: %s', response.url)
         return self._parse(response, '_parse_completed_series')
 
     def _parse_completed_series(self, doc):
@@ -134,7 +133,6 @@ class NaverBrowser(object):
     def get_series_data(self, series_id):
         url = URL['last_chapter'].format(series_id=series_id)
         response = self.get(url)
-        self.app.logger.info('Final URL: %s', response.url)
         if response.url != url:
             return {'removed': True}
         return self._parse(response, '_parse_series_data', series_id)
@@ -156,7 +154,6 @@ class NaverBrowser(object):
     def get_chapter_data(self, series_id, chapter_id):
         url = URL['chapter'].format(series_id=series_id, chapter_id=chapter_id)
         response = self.get(url)
-        self.app.logger.info('Final URL: %s', response.url)
         return self._parse(response, '_parse_chapter_data', series_id, chapter_id, url)
 
     def _parse_chapter_data(self, doc, series_id, chapter_id, url):
