@@ -61,6 +61,10 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'WARNING',
         },
+        'rq.worker': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
     },
 }
 
