@@ -41,12 +41,12 @@ def render_and_cache_feed_show(series):
 
 
 def enqueue_job(func):
+    if app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
+        heroku_scale('worker', 1)
     redis_queue.enqueue_call(func=func,
             kwargs={'background': True},
             result_ttl=0,
             timeout=3600)
-    if app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
-        heroku_scale('worker', 1)
 
 
 def heroku_scale(process_name, qty):
