@@ -15,8 +15,6 @@ if os.environ.get('NAVERWEBTOONFEEDS_SETTINGS'):
 
 logging.config.dictConfig(app.config['LOGGING'])
 
-logger = logging.getLogger(__name__)
-
 db.init_app(app)
 
 cache = Cache(app)

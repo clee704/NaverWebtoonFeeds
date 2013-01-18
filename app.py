@@ -1,4 +1,7 @@
-from naverwebtoonfeeds import app, logger
+import logging
+from naverwebtoonfeeds import app
+
+logger = logging.getLogger('naverwebtoonfeeds')
 
 try:
     from naverwebtoonfeeds.lib.naver import get_public_ip
