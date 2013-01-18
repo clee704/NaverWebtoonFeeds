@@ -16,7 +16,7 @@ URL = {
     'chapter': BASE_URL + '/detail.nhn?titleId={series_id}&no={chapter_id}',
     'mobile': MOBILE_BASE_URL + '/detail.nhn?titleId={series_id}&no={chapter_id}',
     'series': BASE_URL + '/list.nhn?titleId={series_id}',
-    'series_by_day': BASE_URL + '/weekday.nhn',
+    'series_by_day': BASE_URL + '/weekday.nhn?order=Update',
     'completed_series': BASE_URL + '/finish.nhn',
 }
 HEADERS = {
