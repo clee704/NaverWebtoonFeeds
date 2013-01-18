@@ -13,11 +13,11 @@ gunicorn==0.16.1
 heroku==0.1.2
 ipython==0.13.1
 lxml==3.1beta1
-python-dateutil==1.5
+python-dateutil==2.1
 pytz==2012h
 redis==2.7.2
 requests==1.0.2
-rq==0.3.2
+-e git://github.com/clee704/rq.git@69934ecf99ea49a1728e1431f57df7326c579bbc#egg=rq-dev
 six==1.2.0
 times==0.6
 webassets==0.8
