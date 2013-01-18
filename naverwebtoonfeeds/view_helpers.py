@@ -53,4 +53,4 @@ def heroku_scale(process_name, qty):
     cloud = heroku.from_key(app.config['HEROKU_API_KEY'])
     cloud._http_resource(method='POST',
         resource=('apps', app.config['HEROKU_APP_NAME'], 'ps', 'scale'),
-        data={'type': 'worker', 'qty': qty})
+        data={'type': process_name, 'qty': qty})
