@@ -19,6 +19,11 @@ def series_list_needs_fetching():
 
 
 def update_series_list(update_all=False, background=False):
+    # Check the time when series list was fetched once more if running in
+    # the background.
+    if background and not series_list_needs_fetching():
+        return
+
     updated = [False, []]
     # updated[0]: index view cache should be purged
     # updated[1]: view cache of series with id in this list should be purged
