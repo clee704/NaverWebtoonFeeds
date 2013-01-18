@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import logging
 
 from sqlalchemy.exc import IntegrityError
 
@@ -9,6 +10,7 @@ from naverwebtoonfeeds.lib.naver import as_naver_time_zone, NaverBrowser
 
 
 __browser__ = NaverBrowser(app)
+__logger__ = logging.getLogger(__name__)
 
 
 def series_list_needs_fetching():
