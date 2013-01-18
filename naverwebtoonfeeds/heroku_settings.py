@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 from naverwebtoonfeeds.default_settings import LOGGING

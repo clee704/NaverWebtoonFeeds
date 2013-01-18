@@ -5,7 +5,6 @@
 #
 # Make sure this file is unreadable by others if you've decided to write down
 # your Naver login information here.
-import logging
 
 # Enable or disable Flask debug mode.
 DEBUG = False
