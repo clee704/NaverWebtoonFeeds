@@ -50,12 +50,12 @@ class NaverBrowser(object):
                 __logger__.warning('Requesting GET %s', url)
                 response = requests.get(url, cookies=self.cookies, headers=self.headers)
                 self.cookies = response.cookies
-                if self.login_required(response):
-                    self.login()
-                    continue
                 if response.status_code == 403:
                     __logger__.warning('Forbidden IP: %s', get_public_ip())
                     raise urllib2.HTTPError(url, 403, 'Forbidden', response.headers, None)
+                if self.login_required(response):
+                    self.login()
+                    continue
                 return response
             except urllib2.URLError:
                 __logger__.info('A URLError occurred', exc_info=True)
