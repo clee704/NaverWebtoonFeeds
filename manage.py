@@ -44,11 +44,15 @@ def delete(target='index'):
     """
     Delete specified view cache. Call with the ID of the series to delete
     the view cache. If the target is not present or it is 'index', then the
-    index view cache will be deleted.
+    index view cache will be deleted. If the target is 'all', then all
+    view caches will be deleted.
 
     """
     if target == 'index':
         cache.delete('feed_index')
+    elif target == 'all':
+        for series_id in db.session.query(Series.id):
+            cache.delete('feed_show_%s' % series_id)
     else:
         cache.delete('feed_show_%s' % target)
 
