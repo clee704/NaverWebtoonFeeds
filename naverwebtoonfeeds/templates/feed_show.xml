@@ -12,7 +12,7 @@
   <logo>{{ series.thumbnail_url|via_imgproxy }}</logo>
   <generator>Naver Webtoon Feeds</generator>
   {% for chapter in chapters %}
-    <entry xml:base="{{ request.url }}">
+    <entry>
       <title type="text">{{ chapter.title }}</title>
       <id>{{ naver_url(series.id, chapter.id) }}</id>
       <updated>{{ chapter.pubdate_with_tz.isoformat() }}</updated>
