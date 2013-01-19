@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title type="text">{{ series.title }}</title>
-  <id>{{ request.url }}</id>
+  <id>{{ url_for('feed_show', series_id=series.id)|externalize }}</id>
   <updated>{{ series.chapters[0].pubdate_with_tz.isoformat() }}</updated>
   <link href="{{ naver_url(series.id) }}" />
   <link href="{{ url_for('feed_show', series_id=series.id)|externalize }}" rel="self" />
