@@ -17,7 +17,7 @@
       {% set chapter_url = naver_url(series.id, chapter.id) %}
       {% set pubdate_iso = chapter.pubdate_with_tz.isoformat() %}
       <title type="text">{{ chapter.title }}</title>
-      <id>{{ chapter_url }}</id>
+      <id>{{ chapter.atom_id }}</id>
       <updated>{{ pubdate_iso }}</updated>
       <published>{{ pubdate_iso }}</published>
       <link href="{{ chapter_url }}" />

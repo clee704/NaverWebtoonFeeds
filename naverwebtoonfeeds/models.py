@@ -23,6 +23,7 @@ class Chapter(db.Model):
     title = db.Column(db.String(255), nullable=False)
     pubdate = db.Column(db.DateTime, nullable=False)
     thumbnail_url = db.Column(db.String(255))
+    atom_id = db.Column(db.String(255), nullable=False)
     series_id = db.Column(db.Integer, db.ForeignKey('series.id'), primary_key=True)
     series = db.relationship('Series', backref=db.backref('chapters', order_by=id.desc()))
 

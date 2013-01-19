@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from naverwebtoonfeeds import app, db
 from naverwebtoonfeeds.view_helpers import render_and_cache_feed_index, render_and_cache_feed_show
 from naverwebtoonfeeds.models import Series, Chapter, Config
-from naverwebtoonfeeds.lib.naver import as_naver_time_zone, NaverBrowser
+from naverwebtoonfeeds.lib.naver import as_naver_time_zone, naver_url, NaverBrowser
 
 
 __browser__ = NaverBrowser(app)
@@ -189,6 +189,7 @@ def _add_new_chapters(series):
     chapter_ids = range(start, series.last_chapter + 1)
     for chapter_id in chapter_ids:
         chapter = Chapter(series=series, id=chapter_id)
+        chapter.atom_id = _make_atom_id(chapter)
         # chapter is in a pending state, probably because of the series
         # attribute. But I couldn't find this in the documentation.
         try:
@@ -201,6 +202,10 @@ def _add_new_chapters(series):
         except Chapter.DoesNotExist:
             db.session.expunge(chapter)
     return updated
+
+
+def _make_atom_id(chapter):
+    return naver_url(chapter.series.id, chapter.id)
 
 
 def _fetch_chapter_data(chapter):
