@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from urlparse import urlsplit
 import logging
 
 from sqlalchemy.exc import IntegrityError
@@ -189,11 +190,11 @@ def _add_new_chapters(series):
     chapter_ids = range(start, series.last_chapter + 1)
     for chapter_id in chapter_ids:
         chapter = Chapter(series=series, id=chapter_id)
-        chapter.atom_id = _make_atom_id(chapter)
         # chapter is in a pending state, probably because of the series
         # attribute. But I couldn't find this in the documentation.
         try:
             if _fetch_chapter_data(chapter):
+                chapter.atom_id = _make_atom_id(chapter)
                 # Not necessary; it doesn't hurt to do so.
                 db.session.add(chapter)
                 updated = True
@@ -205,7 +206,12 @@ def _add_new_chapters(series):
 
 
 def _make_atom_id(chapter):
-    return naver_url(chapter.series.id, chapter.id)
+    date = datetime.utcnow().strftime('%Y-%m-%d')
+    tagging_entity = app.config['AUTHORITY_NAME'] + ',' + date
+    specific_list = ['generator=naverwebtoonfeeds']
+    specific_list.append('series={0}'.format(chapter.series.id))
+    specific_list.append('chapter={0}'.format(chapter.id))
+    return 'tag:' + tagging_entity + ':' + ';'.join(specific_list)
 
 
 def _fetch_chapter_data(chapter):

@@ -13,7 +13,14 @@ DEBUG = False
 # at the root, not below the root like http://example.com/myapp/.
 URL_ROOT = 'http://example.com'
 
-# The app listens to the port 5000 by default.
+# A domain name or an email address you own.
+# This is used to make unique Atom IDs for feed entries.
+# See http://www.taguri.org/ and http://www.faqs.org/rfcs/rfc4151.html for more.
+AUTHORITY_NAME = 'yourdomain.com'
+# or
+#AUTHORITY_NAME = 'youremail@example.com'
+
+# The app listens to the port 8000 by default when run by Gunicorn.
 # Uncomment to change the port to 80.
 #PORT = 80
 
