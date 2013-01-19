@@ -4,7 +4,7 @@
   <id>{{ request.url }}</id>
   <updated>{{ series.chapters[0].pubdate_with_tz.isoformat() }}</updated>
   <link href="{{ naver_url(series.id) }}" />
-  <link href="{{ request.url }}" rel="self" />
+  <link href="{{ url_for('feed_show', series_id=series.id)|make_external }}" rel="self" />
   <author>
     <name>{{ series.author }}</name>
   </author>
