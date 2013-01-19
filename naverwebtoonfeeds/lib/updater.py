@@ -132,8 +132,17 @@ def _update_existing_series(fetched_data, update_all, updated):
     for series in series_list:
         info = fetched_data.get(series.id)
         if info is None:
-            # The series is completed or somehow not showing up in the index
+            # The series is not on the list.
+            if not series.is_completed:
+                # The series is now completed.
+                series.is_completed = True
+                updated[0] = True
             continue
+        else:
+            if series.is_completed:
+                # The series is on the list and it was marked as completed.
+                series.is_completed = False
+                updated[0] = True
         upload_days = ','.join(info['upload_days'])
         if series.upload_days != upload_days:
             series.upload_days = upload_days
