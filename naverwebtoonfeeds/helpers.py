@@ -5,7 +5,7 @@ from naverwebtoonfeeds.lib.naver import naver_url
 
 
 @app.template_filter()
-def make_external(url):
+def externalize(url):
     """
     Externalize the given internal URL path like /foo/bar to
     http://myserver.com/foo/bar so that it can be used in feeds.
