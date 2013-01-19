@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
+  {% set feed_url = url_for('feed_show', series_id=series.id)|externalize %}
   <title type="text">{{ series.title }}</title>
-  <id>{{ url_for('feed_show', series_id=series.id)|externalize }}</id>
+  <id>{{ feed_url }}</id>
   <updated>{{ series.chapters[0].pubdate_with_tz.isoformat() }}</updated>
   <link href="{{ naver_url(series.id) }}" />
-  <link href="{{ url_for('feed_show', series_id=series.id)|externalize }}" rel="self" />
+  <link href="{{ feed_url }}" rel="self" />
   <author>
     <name>{{ series.author }}</name>
   </author>
@@ -13,13 +14,15 @@
   <generator>Naver Webtoon Feeds</generator>
   {% for chapter in chapters %}
     <entry>
+      {% set chapter_url = naver_url(series.id, chapter.id) %}
+      {% set pubdate_iso = chapter.pubdate_with_tz.isoformat() %}
       <title type="text">{{ chapter.title }}</title>
-      <id>{{ naver_url(series.id, chapter.id) }}</id>
-      <updated>{{ chapter.pubdate_with_tz.isoformat() }}</updated>
-      <published>{{ chapter.pubdate_with_tz.isoformat() }}</published>
-      <link href="{{ naver_url(series.id, chapter.id) }}" />
+      <id>{{ chapter_url }}</id>
+      <updated>{{ pubdate_iso }}</updated>
+      <published>{{ pubdate_iso }}</published>
+      <link href="{{ chapter_url }}" />
       <content type="html"><![CDATA[
-        <a href="{{ naver_url(series.id, chapter.id) }}">PC</a>
+        <a href="{{ chapter_url }}">PC</a>
         <a href="{{ naver_url(series.id, chapter.id, mobile=True) }}">모바일</a>
         <img src="{{ chapter.thumbnail_url|via_imgproxy }}" alt="" style="vertical-align: top" />
       ]]></content>
