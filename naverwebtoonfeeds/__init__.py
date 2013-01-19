@@ -21,7 +21,7 @@ try:
     from naverwebtoonfeeds.lib.naver import get_public_ip
     logger.warning('Current IP: %s', get_public_ip())
 except:
-    pass
+    logger.warning('Failed to get the public IP')
 
 db.init_app(app)
 
