@@ -97,7 +97,7 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///db/naverwebtoonfeeds.db'
 #CACHE_MEMCACHED_SERVERS = ['127.0.0.1:11211']
 
 # Use Redis Queue to update the database by background workers.
-# You should use Redis as a cache (see above).
+# You must use Redis as a cache (see above).
 #USE_REDIS_QUEUE = True
 
 # While deploying in Heroku, run the worker process only when needed.
