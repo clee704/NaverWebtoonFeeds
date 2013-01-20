@@ -52,9 +52,13 @@ class NaverBrowser(object):
                 self.cookies = response.cookies
                 response.raise_for_status()
                 if self.login_required(response):
-                    self.login()
+                    if not self.login():
+                        raise self.UnauthorizedRequest()
                     continue
                 return response
+            except self.UnauthorizedRequest:
+                __logger__.warning('Failed to login to Naver')
+                raise
             except requests.exceptions.HTTPError as e:
                 __logger__.info('A HTTP error occurred while requesting %s: %s', url, e)
                 if response is not None and response.status_code == 403:
@@ -74,8 +78,12 @@ class NaverBrowser(object):
         return 'login' in response.url
 
     def login(self):
+        """
+        Try to login to Naver and return True if logged in and False if failed.
+
+        """
         if not self.app.config.get('NAVER_USERNAME'):
-            return
+            return False
         url = 'https://nid.naver.com/nidlogin.login'
         headers = dict(Referer='http://static.nid.naver.com/login.nhn')
         headers.update(self.headers)
@@ -88,8 +96,9 @@ class NaverBrowser(object):
         response = requests.post(url, data=data, cookies=self.cookies, headers=headers)
         self.cookies = response.cookies
         if 'location.replace' not in response.text[:100]:
-            raise RuntimeError("Cannot log in to naver.com")
+            return False
         __logger__.info('Logged in')
+        return True
 
     def _parse(self, response, method, *args):
         parsers = [lxml.html.soupparser, lxml.html]
@@ -179,6 +188,9 @@ class NaverBrowser(object):
         return data
 
     class ResponseUnparsable(Exception):
+        pass
+
+    class UnauthorizedRequest(Exception):
         pass
 
 
