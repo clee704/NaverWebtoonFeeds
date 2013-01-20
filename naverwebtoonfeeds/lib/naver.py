@@ -60,16 +60,16 @@ class NaverBrowser(object):
                 __logger__.warning('Failed to login to Naver')
                 raise
             except requests.exceptions.HTTPError as e:
-                __logger__.info('A HTTP error occurred while requesting %s: %s', url, e)
+                __logger__.warning('A HTTP error occurred while requesting %s: %s', url, e)
                 if response is not None and response.status_code == 403:
                     __logger__.warning('Forbidden IP: %s', get_public_ip())
                     raise
             except:
-                __logger__.info('An error occurred while requesting %s', url, exc_info=True)
+                __logger__.warning('An error occurred while requesting %s', url, exc_info=True)
             errors += 1
             if errors > self.max_retry:
                 raise
-            __logger__.info('Waiting for %.1f seconds before reconnecting', delay)
+            __logger__.warning('Waiting for %.1f seconds before reconnecting', delay)
             time.sleep(delay)
             delay += 0.5
 
