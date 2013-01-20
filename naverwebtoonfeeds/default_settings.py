@@ -1,7 +1,8 @@
 # Default settings file for NaverWebtoonFeeds.
 #
-# The only option you should override is URL_ROOT. Make a settings file and
-# set NAVERWEBTOONFEEDS_SETTINGS environment variable to point to it.
+# You should override at least URL_ROOT and AUTHORITY_NAME.
+# Edit this file or make a separate settings file and set
+# NAVERWEBTOONFEEDS_SETTINGS environment variable to point to it.
 #
 # Make sure this file is unreadable by others if you've decided to write down
 # your Naver login information here.
