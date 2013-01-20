@@ -79,7 +79,7 @@ def update_series_list(update_all=False, background=False):
     return updated
 
 
-def update_series(series, add_new_chapters=True, do_commit=True):
+def update_series(series, add_new_chapters=True, do_commit=True, background=False):
     series_updated = _fetch_series_data(series)
     chapters_updated = False
     db.session.add(series)
