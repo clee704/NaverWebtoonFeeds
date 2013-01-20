@@ -7,9 +7,6 @@
 # Make sure this file is unreadable by others if you've decided to write down
 # your Naver login information here.
 
-# Enable or disable Flask debug mode.
-DEBUG = False
-
 # Root URL of the web server where the app is hosted. It should be served
 # at the root, not below the root like http://example.com/myapp/.
 URL_ROOT = 'http://example.com'
@@ -21,59 +18,12 @@ AUTHORITY_NAME = 'yourdomain.com'
 # or
 #AUTHORITY_NAME = 'youremail@example.com'
 
-# The app listens to the port 8000 by default when run by Gunicorn.
-# Uncomment to change the port to 80.
-#PORT = 80
-
 # If set, requests from different hosts other than URL_ROOT will be redirected
 # to the corresponding canonical URL.
 #FORCE_REDIRECT = True
 
-# Logging settings.
-# See http://docs.python.org/2.7/library/logging.config.html#logging.config.dictConfig
-# for details.
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': True,
-    'formatters': {
-        'default': {
-            'format': '%(asctime)s [%(name)s] [%(levelname)s] %(message)s',
-            'datefmt': '%Y-%m-%d %H:%M:%S',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'default',
-        },
-        'mail_admins': {
-            'level': 'ERROR',
-            'formatter': 'default',
-            'class': 'logging.handlers.SMTPHandler',
-            'toaddrs': ['admin@example.com'],
-            'fromaddr': 'naverwebtoonfeeds-logger@localhost',
-            'subject': '[NaverWebtoonFeeds] Logs',
-            'mailhost': 'localhost',
-        },
-    },
-    'loggers': {
-        'naverwebtoonfeeds': {
-            # Add 'mail_admins' to email error level logs to admins.
-            #'handlers': ['console', 'mail_admins'],
-            'handlers': ['console'],
-            'level': 'WARNING',
-        },
-        'sqlalchemy.engine': {
-            'handlers': ['console'],
-            'level': 'WARNING',
-        },
-        'rq.worker': {
-            'handlers': ['console'],
-            'level': 'WARNING',
-        },
-    },
-}
+# Enable or disable Flask debug mode.
+DEBUG = False
 
 # NaverWebtoonFeeds uses Flask-SQLAlchemy to persist data.
 # See the Flask-SQLAlchemy documentation at
@@ -83,7 +33,7 @@ LOGGING = {
 # directory of the file, is readable and writable by the server process.
 SQLALCHEMY_DATABASE_URI = 'sqlite:///db/naverwebtoonfeeds.db'
 
-# Record SQL queries for debugging. It should be unset on the production
+# Record SQL queries for debugging. It should be disabled on the production
 # environment.
 #SQLALCHEMY_RECORD_QUERIES = True
 
@@ -134,6 +84,52 @@ IMGPROXY_URL_VARIABLE = lambda url: hash(url) % 3
 
 # Enable Gzip compression
 #GZIP = True
+
+# Logging settings.
+# See http://docs.python.org/2.7/library/logging.config.html#logging.config.dictConfig
+# for details.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s [%(name)s] [%(levelname)s] %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'formatter': 'default',
+            'class': 'logging.handlers.SMTPHandler',
+            'toaddrs': ['admin@example.com'],
+            'fromaddr': 'naverwebtoonfeeds-logger@localhost',
+            'subject': '[NaverWebtoonFeeds] Logs',
+            'mailhost': 'localhost',
+        },
+    },
+    'loggers': {
+        'naverwebtoonfeeds': {
+            # Add 'mail_admins' to email error level logs to admins.
+            #'handlers': ['console', 'mail_admins'],
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+        'sqlalchemy.engine': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+        'rq.worker': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+    },
+}
 
 # Additional Flask configurations can be found at
 # http://flask.pocoo.org/docs/config/
