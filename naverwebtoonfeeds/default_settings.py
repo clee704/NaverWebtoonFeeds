@@ -93,9 +93,20 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///db/naverwebtoonfeeds.db'
 # Generated HTML and XML pages can be cached.
 # See the Flask-Cache documentation at
 # http://packages.python.org/Flask-Cache/ for configuration details.
-#CACHE_TYPE = 'memcached'
+CACHE_TYPE = 'simple'
 #CACHE_KEY_PREFIX = 'naverwebtoonfeeds'
+#
+# Memcached
+#
+#CACHE_TYPE = 'memcached'
 #CACHE_MEMCACHED_SERVERS = ['127.0.0.1:11211']
+#
+# Redis
+#
+#CACHE_TYPE = 'redis'
+#CACHE_REDIS_HOST = 'localhost'
+#CACHE_REDIS_PORT = 6379
+#CACHE_REDIS_PASSWORD = ''
 
 # Use Redis Queue to update the database by background workers.
 # You must use Redis as a cache (see above).
