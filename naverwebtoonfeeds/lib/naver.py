@@ -39,8 +39,14 @@ class NaverBrowser(object):
         self.cookies = None
         self.headers = HEADERS.copy()
         self.max_retry = max_retry
+        self.forbidden_ip_addresses = set()
 
     def get(self, url):
+        if self.forbidden_ip_addresses:
+            public_ip = get_public_ip()
+            if public_ip in self.forbidden_ip_addresses:
+                __logger__.warning('Your IP address %s is forbidden', public_ip)
+                raise self.AccessDenied()
         errors = 0
         delay = 1
         while True:
@@ -62,7 +68,9 @@ class NaverBrowser(object):
             except requests.exceptions.HTTPError as e:
                 __logger__.warning('A HTTP error occurred while requesting %s: %s', url, e)
                 if response is not None and response.status_code == 403:
-                    __logger__.warning('Forbidden IP: %s', get_public_ip())
+                    public_ip = get_public_ip()
+                    __logger__.warning('Forbidden IP: %s', public_ip)
+                    self.forbidden_ip_addresses.add(public_ip)
                     raise
             except:
                 __logger__.warning('An error occurred while requesting %s', url, exc_info=True)
@@ -196,6 +204,9 @@ class NaverBrowser(object):
         pass
 
     class UnauthorizedRequest(Exception):
+        pass
+
+    class AccessDenied(Exception):
         pass
 
 
