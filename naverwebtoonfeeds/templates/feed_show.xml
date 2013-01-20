@@ -3,7 +3,9 @@
   {% set feed_url = url_for('feed_show', series_id=series.id)|externalize %}
   <title type="text">{{ series.title }}</title>
   <id>{{ feed_url }}</id>
-  <updated>{{ series.chapters[0].pubdate_with_tz.isoformat() }}</updated>
+  {% if series.chapters %}
+    <updated>{{ series.chapters[0].pubdate_with_tz.isoformat() }}</updated>
+  {% endif %}
   <link href="{{ naver_url(series.id) }}" />
   <link href="{{ feed_url }}" rel="self" />
   <author>
