@@ -13,15 +13,13 @@ app.config.from_object('naverwebtoonfeeds.default_settings')
 if os.environ.get('NAVERWEBTOONFEEDS_SETTINGS'):
     app.config.from_envvar('NAVERWEBTOONFEEDS_SETTINGS')
 
+app.logger   # Make sure the logger is created.
 logging.config.dictConfig(app.config['LOGGING'])
-
-logger = logging.getLogger(__name__)
-
 try:
     from naverwebtoonfeeds.lib.naver import get_public_ip
-    logger.warning('Current IP: %s', get_public_ip())
+    app.logger.warning('Current IP: %s', get_public_ip())
 except:
-    logger.warning('Failed to get the public IP')
+    app.logger.warning('Failed to get the public IP')
 
 db.init_app(app)
 
