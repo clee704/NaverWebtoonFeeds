@@ -26,7 +26,7 @@ def feed_index():
     if not invalidate_cache:
         response = cache.get('feed_index')
         if response:
-            __logger__.info('Cache hit')
+            __logger__.debug('Cache hit')
             return response
     return render_and_cache_feed_index()
 
@@ -56,7 +56,7 @@ def feed_show(series_id):
     if not invalidate_cache:
         response = cache.get('feed_show_%d' % series_id)
         if response:
-            __logger__.info('Cache hit')
+            __logger__.debug('Cache hit')
             return response
     return render_and_cache_feed_show(series)
 
