@@ -57,10 +57,5 @@ assets.register('css_all',
     output='gen/packed.%(version)s.css'
 )
 
-# Used to set a permanent cache.
-CACHE_PERMANENT = 86400 * 365 * 10   # It works for Redis.
-if app.config.get('CACHE_TYPE') == 'memcached':
-    CACHE_PERMANENT = 0
-
 import naverwebtoonfeeds.views
 import naverwebtoonfeeds.helpers

@@ -5,9 +5,15 @@ from flask import Response, render_template, request, redirect
 import pytz
 import heroku
 
-from naverwebtoonfeeds import app, cache, CACHE_PERMANENT
+from naverwebtoonfeeds import app, cache
 from naverwebtoonfeeds.models import Series
 from naverwebtoonfeeds.lib.naver import NAVER_TIMEZONE
+
+
+# Used to set a permanent cache.
+CACHE_PERMANENT = 86400 * 365 * 10   # It works for Redis.
+if app.config.get('CACHE_TYPE') == 'memcached':
+    CACHE_PERMANENT = 0
 
 
 __logger__ = logging.getLogger(__name__)
