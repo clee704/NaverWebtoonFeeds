@@ -1,3 +1,5 @@
+import logging
+
 from flask import Response, render_template, request, redirect
 import pytz
 import heroku
@@ -7,8 +9,12 @@ from naverwebtoonfeeds.models import Series
 from naverwebtoonfeeds.lib.naver import NAVER_TIMEZONE
 
 
+__logger__ = logging.getLogger(__name__)
+
+
 def redirect_to_canonical_url(view):
     def new_view(*args, **kwargs):
+        __logger__.debug('request.url=%s', request.url)
         path = request.environ['RAW_URI']
         canonical_url = app.config['URL_ROOT'] + path
         if app.config.get('FORCE_REDIRECT') and request.url != canonical_url:
