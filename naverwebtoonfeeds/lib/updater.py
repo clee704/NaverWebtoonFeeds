@@ -67,14 +67,14 @@ def update_series_list(update_all=False, background=False):
     else:
         fetched.value = now
 
+    _commit()
+
     if background:
         for series in Series.query.filter_by(new_chapters_available=True):
-            update_series(series, do_commit=False)
+            update_series(series)
             render_and_cache_feed_show(series)
         if updated[0]:
             render_and_cache_feed_index()
-
-    _commit()
 
     return updated
 
