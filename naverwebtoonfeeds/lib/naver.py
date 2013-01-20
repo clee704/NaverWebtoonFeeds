@@ -96,7 +96,7 @@ class NaverBrowser(object):
             'id': self.app.config['NAVER_USERNAME'],
             'pw': self.app.config['NAVER_PASSWORD'],
         }
-        self.get('http://www.naver.com')   # Get cookies
+        self.get('http://www.naver.com/')   # Get cookies
         response = requests.post(url, data=data, cookies=self.cookies, headers=headers)
         self.cookies = response.cookies
         if 'location.replace' not in response.text[:100]:
