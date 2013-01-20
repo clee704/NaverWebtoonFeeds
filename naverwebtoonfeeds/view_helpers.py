@@ -70,6 +70,8 @@ def enqueue_job(func, args=None):
 
 
 def heroku_scale(process_name, qty):
+    # Currently it's not possible to scale processes between 0 and 1 using the
+    # public API. Below is a quick-and-dirty workaround for that issue.
     cloud = heroku.from_key(app.config['HEROKU_API_KEY'])
     cloud._http_resource(method='POST',
         resource=('apps', app.config['HEROKU_APP_NAME'], 'ps', 'scale'),
