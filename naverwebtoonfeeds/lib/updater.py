@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from urlparse import urlsplit
 import logging
 
 from sqlalchemy.exc import IntegrityError
@@ -7,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from naverwebtoonfeeds import app, db
 from naverwebtoonfeeds.view_helpers import render_and_cache_feed_index, render_and_cache_feed_show
 from naverwebtoonfeeds.models import Series, Chapter, Config
-from naverwebtoonfeeds.lib.naver import as_naver_time_zone, naver_url, NaverBrowser
+from naverwebtoonfeeds.lib.naver import as_naver_time_zone, NaverBrowser
 
 
 __browser__ = NaverBrowser(app)
