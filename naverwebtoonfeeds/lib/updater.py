@@ -59,7 +59,8 @@ def update_series_list(update_all=False, background=False):
         # 'new chapters available' since we might have missed the upload
         # badges for some series.
         for series in series_list:
-            series.new_chapters_available = True
+            if not series.is_completed:
+                series.new_chapters_available = True
 
     # Update the time when series list was fetched.
     if fetched is None:
