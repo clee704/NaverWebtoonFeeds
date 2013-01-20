@@ -47,18 +47,17 @@ def feed_show(series_id):
             list_updated, _ = update_series_list()
             if list_updated:
                 cache.delete('feed_index')
-            series = Series.query.get_or_404(series_id)
-            updated = False
-            if series.new_chapters_available:
-                updated = any(update_series(series))
-            invalidate_cache = updated
+    series = Series.query.get_or_404(series_id)
+    if series.new_chapters_available:
+        if app.config.get('USE_REDIS_QUEUE'):
+            enqueue_job(update_series, args=(series,))
+        else:
+            invalidate_cache = any(update_series(series))
     if not invalidate_cache:
         response = cache.get('feed_show_%d' % series_id)
         if response:
             __logger__.info('Cache hit')
             return response
-    if series is None:
-        series = Series.query.get_or_404(series_id)
     return render_and_cache_feed_show(series)
 
 
