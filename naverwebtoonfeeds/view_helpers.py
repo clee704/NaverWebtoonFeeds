@@ -1,4 +1,5 @@
 import logging
+import urlparse
 
 from flask import Response, render_template, request, redirect
 import pytz
@@ -14,16 +15,27 @@ __logger__ = logging.getLogger(__name__)
 
 def redirect_to_canonical_url(view):
     def new_view(*args, **kwargs):
-        __logger__.debug('request.url=%s', request.url)
-        path = request.environ['RAW_URI']
+        path = request.environ['RAW_URI'] if 'RAW_URI' in request.environ else urlpath(request.url)
         canonical_url = app.config['URL_ROOT'] + path
+        __logger__.debug('request.url=%s, canonical_url=%s', request.url, canonical_url)
         if app.config.get('FORCE_REDIRECT') and request.url != canonical_url:
+            __logger__.info('Redirecting to the canonical URL')
             return redirect(canonical_url, 301)
         else:
             return view(*args, **kwargs)
     new_view.__name__ = view.__name__
     new_view.__doc__ = view.__doc__
     return new_view
+
+
+def urlpath(url):
+    parts = urlparse.urlsplit(url)
+    path = parts.path
+    if parts.query:
+        path += '?' + parts.query
+    if parts.fragment:
+        path += '#' + parts.fragment
+    return path
 
 
 def render_and_cache_feed_index():
