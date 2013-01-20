@@ -38,4 +38,7 @@ heroku==0.1.2
 #
 yolk==0.4.3
 ipython==0.13.1
+pylint==0.26.0
+logilab-common==0.58.3
+logilab-astng==0.24.1
 
