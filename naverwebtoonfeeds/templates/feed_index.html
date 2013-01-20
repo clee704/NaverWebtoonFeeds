@@ -30,6 +30,7 @@
       </ul>
       <div class="tab-content">
         {% for series in series_list %}
+          {% set feed_url = url_for('feed_show', series_id=series.id)|externalize %}
           <article id="series-{{ series.id }}" class="media {{ "completed" if series.is_completed }} {{ ' '.join(series.upload_days.split(',')) if not series.is_completed }}">
             <span class="pull-left">
               <img class="media-object lazy" data-original="{{ series.thumbnail_url|via_imgproxy }}" src="/static/img/grey.gif" alt="" width="217" height="165" />
@@ -44,15 +45,15 @@
                 <ul class="unstyled small muted">
                   <li class="feed-url-wrapper">
                     <i class="icon-bookmark"></i>
-                    <input class="feed-url span6" value="{{ url_for('feed_show', series_id=series.id)|externalize }}" readonly="readonly" />
+                    <input class="feed-url span6" value="{{ feed_url }}" readonly="readonly" />
                   </li>
                   <li>
                     <i class="icon-globe"></i>
-                    <a href="{{ url_for('feed_show', series_id=series.id)|externalize }}">브라우저에서 보기</a>
+                    <a href="{{ feed_url }}">브라우저에서 보기</a>
                   </li>
                   <li>
                     <i class="icon-plus"></i>
-                    <a href="http://www.google.com/reader/view/feed/{{ url_for('feed_show', series_id=series.id)|externalize }}" target="_blank">Google 리더에서 보기</a>
+                    <a href="http://www.google.com/reader/view/feed/{{ feed_url }}" target="_blank">Google 리더에서 보기</a>
                   </li>
                 </ul>
               </div>
