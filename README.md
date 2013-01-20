@@ -47,3 +47,10 @@ running `heroku config:set NAVERWEBTOONFEEDS_SETTINGS=heroku_settings.py`.
 
 For other variables, see the comments in
 `naverwebtoonfeeds/default_settings.py`.
+
+
+License
+-------
+
+Naver Webtoon Feeds is licensed under [GNU Affero General Public License, version 3](http://www.gnu.org/licenses/agpl-3.0.html).
+See `GNU-AGPL-v3.txt` for more information.
