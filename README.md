@@ -28,7 +28,7 @@ Installation
   (`/path/to/the/app/naverwebtoonfeeds/default_settings.local.py`).
 * Run `python manage.py db fill` to fill the database in. It may take a few
   hours.
-* Run `gunicorn app:app` from the root directory of the project.
+* Run `gunicorn web:app` from the root directory of the project.
 
 Sass and CoffeeScript binaries are required separately.
 
