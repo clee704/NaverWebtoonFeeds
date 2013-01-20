@@ -168,7 +168,13 @@ def _add_new_series(new_series_ids, fetched_data, update_all, updated):
     updated[0] = True
     for series_id in new_series_ids:
         series = Series(id=series_id)
-        _, chapters_updated = update_series(series, update_all, False)
+        series_updated, chapters_updated = update_series(series, update_all, False)
+        if not series_updated:
+            # It failed to fetch data for the series.
+            # It may happen when it failed to login to Naver and the series
+            # requires login to view.
+            db.session.expunge(series)
+            continue
         if chapters_updated:
             updated[1].append(series.id)
         info = fetched_data[series.id]
