@@ -73,10 +73,6 @@ class NaverBrowser(object):
             time.sleep(delay)
             delay += 0.5
 
-    def login_required(self, response):
-        __logger__.info('Checking the URL: %s', response.url)
-        return 'login' in response.url
-
     def login(self):
         """
         Try to login to Naver and return True if logged in and False if failed.
@@ -100,6 +96,26 @@ class NaverBrowser(object):
         __logger__.info('Logged in')
         return True
 
+    def get_issues(self):
+        response = self.get(URL['series_by_day'])
+        return self._parse(response, '_parse_issues')
+
+    def get_completed_series(self):
+        response = self.get(URL['completed_series'])
+        return self._parse(response, '_parse_completed_series')
+
+    def get_series_data(self, series_id):
+        url = URL['last_chapter'].format(series_id=series_id)
+        response = self.get(url)
+        if response.url != url:
+            return dict(removed=True)
+        return self._parse(response, '_parse_series_data', series_id)
+
+    def get_chapter_data(self, series_id, chapter_id):
+        url = URL['chapter'].format(series_id=series_id, chapter_id=chapter_id)
+        response = self.get(url)
+        return self._parse(response, '_parse_chapter_data', series_id, chapter_id, url)
+
     def _parse(self, response, method, *args):
         parsers = [lxml.html.soupparser, lxml.html]
         # lxml.html.soupparser.fromstring is generally more tolerant than
@@ -116,11 +132,13 @@ class NaverBrowser(object):
                         response.url, exc_info=True)
         raise self.ResponseUnparsable(response.url)
 
-    def get_issues(self):
-        response = self.get(URL['series_by_day'])
-        return self._parse(response, '_parse_issues')
+    @staticmethod
+    def login_required(response):
+        __logger__.info('Checking the URL: %s', response.url)
+        return 'login' in response.url
 
-    def _parse_issues(self, doc):
+    @staticmethod
+    def _parse_issues(doc):
         __logger__.debug('Parsing the current series list')
         retval = []
         for a_elem in doc.xpath('//*[@class="list_area daily_all"]//li/*[@class="thumb"]/a'):
@@ -131,11 +149,8 @@ class NaverBrowser(object):
             retval.append(dict(id=series_id, day=day, days_uploaded=day if uploaded else False))
         return retval
 
-    def get_completed_series(self):
-        response = self.get(URL['completed_series'])
-        return self._parse(response, '_parse_completed_series')
-
-    def _parse_completed_series(self, doc):
+    @staticmethod
+    def _parse_completed_series(doc):
         __logger__.debug('Parsing the completed series list')
         retval = []
         for a_elem in doc.xpath('//*[@class="list_area"]//li/*[@class="thumb"]/a'):
@@ -145,14 +160,8 @@ class NaverBrowser(object):
             retval.append(dict(id=series_id))
         return retval
 
-    def get_series_data(self, series_id):
-        url = URL['last_chapter'].format(series_id=series_id)
-        response = self.get(url)
-        if response.url != url:
-            return dict(removed=True)
-        return self._parse(response, '_parse_series_data', series_id)
-
-    def _parse_series_data(self, doc, series_id): 
+    @staticmethod
+    def _parse_series_data(doc, series_id):
         __logger__.debug('Parsing data for series #%d', series_id)
         comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
         permalink = doc.xpath('//meta[@property="og:url"]/@content')[0]
@@ -166,12 +175,8 @@ class NaverBrowser(object):
             'thumbnail_url': doc.xpath('//meta[@property="og:image"]/@content')[0],
         }
 
-    def get_chapter_data(self, series_id, chapter_id):
-        url = URL['chapter'].format(series_id=series_id, chapter_id=chapter_id)
-        response = self.get(url)
-        return self._parse(response, '_parse_chapter_data', series_id, chapter_id, url)
-
-    def _parse_chapter_data(self, doc, series_id, chapter_id, url):
+    @staticmethod
+    def _parse_chapter_data(doc, series_id, chapter_id, url):
         __logger__.debug('Parsing data for chapter #%d of series #%d', chapter_id, series_id)
         if url != doc.xpath('//meta[@property="og:url"]/@content')[0]:
             return dict(not_found=True)
