@@ -12,42 +12,30 @@ You can use the deployed app at
 Installation
 ------------
 
-
-### Your Server
-
-* Clone this repository or download
+* Clone or download
   [this project from GitHub](https://github.com/clee704/NaverWebtoonFeeds).
 * Create a virtual environment for the app (optional).
 * Install required packages by running `pip install -r requirements.txt`.
-  If you are going to use a database engine other than MySQL or a cache backend
-  other than Redis, then you should install the packages for them yourself.
-* Configure the app in `naverwebtoonfeeds/default_settings.local.py`.
-  You can copy config options from `naverwebtoonfeeds/default_settings.py`.
-* Set an environment variable `NAVERWEBTOONFEEDS_SETTINGS` to the path to your
-  settings file
-  (`/path/to/the/app/naverwebtoonfeeds/default_settings.local.py`).
+  If you are going to use a database engine other than MySQL or a cache
+  backend other than Redis, then you should install the packages for them
+  yourself.
+* Edit `env.template` and save it as `.env`.
+* Set the environment variables from `.env`.
+  You have several options here:
+  * If you are using Heroku, prepend commands with `foreman run`.
+  * If you are not using Heroku, prepend commands with `env $(cat .env | grep -v "^#")`.
+  * If you are using virtualenvwrapper, go to `$VIRTUAL_ENV/bin` and
+    edit `postactivate` and `postdeactivate` to set and unset variables.
 * Run `python manage.py db create` to create database tables.
-* Run `python manage.py db fill` to fill the database in. It may take a few
-  hours.
+* Run `python manage.py db fill` to fill the database in.
+  It may take a few hours.
 * Run `gunicorn web:app` from the root directory of the project.
 
 Sass and CoffeeScript binaries are required separately.
 
-
-### Heroku
-
-* Clone this repository or download
-  [this project from GitHub](https://github.com/clee704/NaverWebtoonFeeds).
-* Follow steps as described in
-  [Deploying with Git](https://devcenter.heroku.com/articles/git#creating-a-heroku-remote)
-  at the Heroku Dev Center.
-
-You need to set a few config variables in your Heroku application. First,
-set `NAVERWEBTOONFEEDS_SETTINGS` to `heroku_settings.py`. You can do this by
-running `heroku config:set NAVERWEBTOONFEEDS_SETTINGS=heroku_settings.py`.
-
-For other variables, see the comments in
-`naverwebtoonfeeds/default_settings.py`.
+For development, set `NWF_MODE` to `development` and
+change `naverwebtoonfeeds/config/development.py` to configure
+the app. `.env` file is not needed in this case.
 
 
 License

@@ -1,6 +1,7 @@
 import logging
 import logging.config
 import os
+import sys
 
 from flask import Flask
 from flask.ext.cache import Cache
@@ -9,9 +10,15 @@ from flask.ext.assets import Environment, Bundle
 from naverwebtoonfeeds.models import db
 
 app = Flask(__name__)
-app.config.from_object('naverwebtoonfeeds.default_settings')
-if os.environ.get('NAVERWEBTOONFEEDS_SETTINGS'):
-    app.config.from_envvar('NAVERWEBTOONFEEDS_SETTINGS')
+mode = os.environ.get('NWF_MODE')
+try:
+    app.config.from_object('naverwebtoonfeeds.config.{0}.Config'.format(mode))
+except ImportError:
+    import naverwebtoonfeeds.config
+    modes = ', '.join(naverwebtoonfeeds.config.__all__)
+    print >>sys.stderr, 'Invalid NWF_MODE:', mode
+    print >>sys.stderr, 'Valid modes:', modes
+    sys.exit(1)
 
 app.logger   # Make sure the logger is created.
 logging.config.dictConfig(app.config['LOGGING'])
