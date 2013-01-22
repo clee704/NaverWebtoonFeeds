@@ -34,7 +34,7 @@ def fill():
         cache.delete('feed_index')
     for series_id in series_updated:
         cache.delete('feed_show_%d' % series_id)
-    add_completed_series()
+    addcompletedseries()
 
 cache_manager = Manager()
 manager.add_command('cache', cache_manager)
