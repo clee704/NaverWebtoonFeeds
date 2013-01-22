@@ -103,6 +103,19 @@ def update_series(series, add_new_chapters=True, do_commit=True, background=Fals
     return [series_updated, chapters_updated]
 
 
+def add_completed_series():
+    try:
+        completed_series = __browser__.get_completed_series()
+    except:
+        return
+    completed_series_ids = set(data['id'] for data in completed_series)
+    existing_series_ids = set(row[0] for row in db.session.query(Series.id))
+    for series_id in completed_series_ids - existing_series_ids:
+        series = Series(id=series_id)
+        series.new_chapters_available = True
+        update_series(series)
+
+
 def _series_stats_update_interval():
     # The longer this interval, the fewer HTTP requests will be made to Naver.
     # 30 min to 1 hour would be a good choice.

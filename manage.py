@@ -66,13 +66,8 @@ def migrate(action):
 def addcompletedseries():
     """Add completed series."""
     from naverwebtoonfeeds.models import Series
-    from naverwebtoonfeeds.lib.updater import __browser__, update_series
-    completed_series_ids = set(data['id'] for data in __browser__.get_completed_series())
-    existing_series_ids = set(row[0] for row in db.session.query(Series.id))
-    for series_id in completed_series_ids - existing_series_ids:
-        series = Series(id=series_id)
-        series.new_chapters_available = True
-        update_series(series)
+    from naverwebtoonfeeds.lib.updater import add_completed_series
+    add_completed_series()
     cache.delete('feed_index')
 
 @manager.command
