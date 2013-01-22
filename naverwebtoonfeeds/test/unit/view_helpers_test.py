@@ -40,7 +40,7 @@ class ViewHelpersTest(unittest.TestCase):
                 data=dict(type='beaver', qty=5)
         )
 
-    def test_redirect_to_canonical_url_no_raw_uri_no_force_redirect(self):
+    def test_redirect_to_canonical_url_without_raw_uri_without_force_redirect(self):
         v.app = mock_obj(config=dict(URL_ROOT='http://bit.ly', FORCE_REDIRECT=False))
         v.request = mock_obj(environ=dict(), url='http://foo.com/baa/aar')
         view = mock_obj(__name__='view', __doc__=None)
@@ -48,7 +48,7 @@ class ViewHelpersTest(unittest.TestCase):
         decorated_view(1, 'x', y=3)
         view.assert_called_with(1, 'x', y=3)
 
-    def test_redirect_to_canonical_url_no_raw_uri_force_redirect(self):
+    def test_redirect_to_canonical_url_without_raw_uri_with_force_redirect(self):
         v.app = mock_obj(config=dict(URL_ROOT='http://bit.ly', FORCE_REDIRECT=True))
         v.request = mock_obj(environ=dict(), url='http://foo.com/baa/aar')
         v.redirect = Mock()
@@ -57,7 +57,7 @@ class ViewHelpersTest(unittest.TestCase):
         decorated_view(1, 'x', y=3)
         v.redirect.assert_called_with('http://bit.ly/baa/aar', 301)
 
-    def test_redirect_to_canonical_url_raw_uri_force_redirect(self):
+    def test_redirect_to_canonical_url_with_raw_uri_with_force_redirect(self):
         v.app = mock_obj(config=dict(URL_ROOT='http://bit.ly', FORCE_REDIRECT=True))
         v.request = mock_obj(environ=dict(RAW_URI='/baa/aar'), url='http://foo.com/baa/aar')
         v.redirect = Mock()
