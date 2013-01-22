@@ -228,15 +228,12 @@ def _add_new_chapters(series):
         chapter = Chapter(series=series, id=chapter_id)
         # chapter is in a pending state, probably because of the series
         # attribute. But I couldn't find this in the documentation.
-        try:
-            if _fetch_chapter_data(chapter):
-                chapter.atom_id = _make_atom_id(chapter)
-                # Not necessary; it doesn't hurt to do so.
-                db.session.add(chapter)
-                updated = True
-            else:
-                db.session.expunge(chapter)
-        except Chapter.DoesNotExist:
+        if _fetch_chapter_data(chapter):
+            chapter.atom_id = _make_atom_id(chapter)
+            # Not necessary; it doesn't hurt to do so.
+            db.session.add(chapter)
+            updated = True
+        else:
             db.session.expunge(chapter)
     return updated
 
@@ -256,7 +253,7 @@ def _fetch_chapter_data(chapter):
     except:
         return
     if data.get('not_found'):
-        raise Chapter.DoesNotExist
+        return False
     attributes = ['title', 'pubdate', 'thumbnail_url']
     return _update_attributes(chapter, data, attributes)
 

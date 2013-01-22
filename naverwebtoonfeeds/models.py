@@ -27,9 +27,6 @@ class Chapter(db.Model):
     series_id = db.Column(db.Integer, db.ForeignKey('series.id'), primary_key=True)
     series = db.relationship('Series', backref=db.backref('chapters', order_by=id.desc()))
 
-    class DoesNotExist(Exception):
-        pass
-
 
 class Config(db.Model):
     key = db.Column(db.String(255), primary_key=True)
