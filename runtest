@@ -1,2 +1,2 @@
 #! /bin/sh
-NWF_MODE=test nosetests
+NWF_MODE=test nosetests $@
