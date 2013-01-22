@@ -16,18 +16,21 @@ class HelpersTest(unittest.TestCase):
 
     def test_via_imgproxy_null(self):
         h.app = mock_app(config=dict())
-        self.assertEqual(h.via_imgproxy('http://naver.com/test.png'), 'http://naver.com/test.png')
+        self.assertEqual(h.via_imgproxy('http://naver.com/test.png'),
+                'http://naver.com/test.png')
 
     def test_via_imgproxy_with_url(self):
         h.app = mock_app(config=dict(IMGPROXY_URL='http://imgproxy.com/{url}'))
-        self.assertEqual(h.via_imgproxy('http://naver.com/test.png'), 'http://imgproxy.com/http://naver.com/test.png')
+        self.assertEqual(h.via_imgproxy('http://naver.com/test.png'),
+                'http://imgproxy.com/http://naver.com/test.png')
 
     def test_via_imgproxy_with_pattern(self):
         h.app = mock_app(config=dict(
             IMGPROXY_URL_PATTERN='http://imgproxy.com/{variable}/{url}',
             IMGPROXY_URL_VARIABLE=lambda url: 0
         ))
-        self.assertEqual(h.via_imgproxy('http://naver.com/test.png'), 'http://imgproxy.com/0/http://naver.com/test.png')
+        self.assertEqual(h.via_imgproxy('http://naver.com/test.png'),
+                'http://imgproxy.com/0/http://naver.com/test.png')
 
     def tearDown(self):
         h.app = self.original_app
