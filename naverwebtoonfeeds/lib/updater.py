@@ -254,8 +254,7 @@ def _fetch_chapter_data(chapter):
         return
     if data.get('not_found'):
         return False
-    attributes = ['title', 'pubdate', 'thumbnail_url']
-    return _update_attributes(chapter, data, attributes)
+    return _update_attributes(chapter, data, ['title', 'pubdate', 'thumbnail_url'])
 
 
 def _update_attributes(obj, data, attribute_names):
