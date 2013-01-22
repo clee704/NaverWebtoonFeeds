@@ -125,6 +125,9 @@ class Config(object):
                 'subject': '[NaverWebtoonFeeds] Logs',
                 'mailhost': 'localhost',
             },
+            'null': {
+                'class': 'logging.NullHandler',
+            },
         },
         'loggers': {
             'naverwebtoonfeeds': {

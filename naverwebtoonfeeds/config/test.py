@@ -8,4 +8,4 @@ class Config(Default):
 
     # Disable all loggers.
     for logger in LOGGING['loggers'].values():
-        logger['handlers'] = []
+        logger['handlers'] = ['null']
