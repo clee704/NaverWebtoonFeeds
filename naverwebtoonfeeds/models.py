@@ -10,7 +10,7 @@ class Series(db.Model):
     title = db.Column(db.String(255), nullable=False, index=True)
     author = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text)
-    last_chapter = db.Column(db.Integer, nullable=False)
+    last_chapter = db.Column(db.Integer, nullable=False, default=0)
     is_completed = db.Column(db.Boolean, nullable=False, default=False, index=True)
     thumbnail_url = db.Column(db.String(255))
     upload_days = db.Column(db.String(31))
