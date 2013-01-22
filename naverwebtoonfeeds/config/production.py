@@ -1,10 +1,12 @@
+from copy import deepcopy
 import os
 import re
 from naverwebtoonfeeds.config.default import Config as Default
 
 class Config(Default):
 
-    Default.LOGGING['handlers']['console']['level'] = os.environ.get('LOG_LEVEL', 'WARNING')
+    LOGGING = deepcopy(Default.LOGGING)
+    LOGGING['handlers']['console']['level'] = os.environ.get('LOG_LEVEL', 'WARNING')
 
     @classmethod
     def setup_smtp(cls):
