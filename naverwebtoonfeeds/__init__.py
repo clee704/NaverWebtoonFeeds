@@ -16,8 +16,8 @@ try:
 except ImportError:
     import naverwebtoonfeeds.config
     modes = ', '.join(naverwebtoonfeeds.config.__all__)
-    print >>sys.stderr, 'Invalid NWF_MODE:', mode
-    print >>sys.stderr, 'Valid modes:', modes
+    print >> sys.stderr, 'Invalid NWF_MODE:', mode
+    print >> sys.stderr, 'Valid modes:', modes
     sys.exit(1)
 
 app.logger   # Make sure the logger is created.

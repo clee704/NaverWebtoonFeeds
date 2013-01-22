@@ -64,13 +64,13 @@ def render_and_cache_feed_show(series):
     return response
 
 
-def enqueue_job(func, args=None):
+def enqueue_job(func, args=None, kwargs=None):
     if app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
         heroku_scale('worker', 1)
     from naverwebtoonfeeds import redis_queue
     redis_queue.enqueue_call(func=func,
             args=args,
-            kwargs=dict(background=True),
+            kwargs=kwargs,
             result_ttl=0,
             timeout=3600)
 

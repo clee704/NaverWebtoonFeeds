@@ -5,4 +5,3 @@ class Config(Default):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///db/development.db'
     GZIP = True
     Default.LOGGING['handlers']['console']['level'] = 'DEBUG'
-    Default.LOGGING['loggers']['naverwebtoonfeeds']['handlers'].remove('mail_admins')

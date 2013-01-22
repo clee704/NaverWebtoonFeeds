@@ -46,7 +46,7 @@ class Config(object):
 
     # Default cache control max age to use with send_static_files()
     # and send_file(). (Flask config)
-    SEND_FILE_MAX_AGE_DEFAULT=31536000
+    SEND_FILE_MAX_AGE_DEFAULT = 31536000
 
     # If enabled, requests from different hosts other than URL_ROOT
     # will be redirected to the corresponding canonical URL.
