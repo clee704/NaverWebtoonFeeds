@@ -94,6 +94,7 @@ def update_series(series, add_new_chapters=True, do_commit=True):
         chapters_updated = _add_new_chapters(series)
         if not chapters_updated:
             __logger__.warning('New chapters for series #%d were not found', series.id)
+        # TODO find a better way to do this
         series.new_chapters_available = False
         # updated indicates the view cache should be purged.
         # new_chapters_available doesn't affect the view, so it doesn't set
