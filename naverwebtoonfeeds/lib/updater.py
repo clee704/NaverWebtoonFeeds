@@ -72,8 +72,12 @@ def update_series_list(update_all=False, background=False):
 
     if background:
         for series in Series.query.filter_by(new_chapters_available=True):
-            update_series(series)
-            render_and_cache_feed_show(series)
+            series_updated, chapters_updated = update_series(series)
+            updated[0] |= series_updated
+            if chapters_updated:
+                updated[1].append(series.id)
+            if series_updated or chapters_updated:
+                render_and_cache_feed_show(series)
         if updated[0]:
             render_and_cache_feed_index()
 
@@ -83,6 +87,8 @@ def update_series_list(update_all=False, background=False):
 def update_series(series, add_new_chapters=True, do_commit=True, background=False):
     series_updated = _fetch_series_data(series)
     chapters_updated = False
+    if series_updated is None:
+        return [series_updated, chapters_updated]
     db.session.add(series)
     if add_new_chapters and series.new_chapters_available:
         chapters_updated = _add_new_chapters(series)
@@ -189,7 +195,7 @@ def _fetch_series_data(series):
     try:
         data = __browser__.get_series_data(series.id)
     except:
-        return False
+        return
     if data.get('removed'):
         if not series.is_completed:
             __logger__.warning('Series #%d seems removed', series.id)
