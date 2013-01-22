@@ -1,3 +1,4 @@
+# pylint: disable=E0611,F0401,C0103
 import logging
 import logging.config
 import os
@@ -20,7 +21,10 @@ except ImportError:
     print >> sys.stderr, 'Valid modes:', modes
     sys.exit(1)
 
-app.logger   # Make sure the logger is created.
+# Make sure the logger is created.
+# pylint: disable=W0104
+app.logger
+
 logging.config.dictConfig(app.config['LOGGING'])
 try:
     from naverwebtoonfeeds.lib.naver import get_public_ip

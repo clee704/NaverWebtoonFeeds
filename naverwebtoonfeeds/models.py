@@ -1,3 +1,4 @@
+# pylint: disable=E0611,F0401,W0232
 from flask.ext.sqlalchemy import SQLAlchemy
 
 

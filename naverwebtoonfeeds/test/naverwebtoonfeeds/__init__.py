@@ -1,4 +1,4 @@
 import os
 
-def setUp():
+def setup_package():
     os.environ['NWF_MODE'] = 'test'

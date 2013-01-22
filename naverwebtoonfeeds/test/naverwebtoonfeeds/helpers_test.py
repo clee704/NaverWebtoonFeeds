@@ -4,6 +4,7 @@ from naverwebtoonfeeds.test.utilities import mock_app
 import naverwebtoonfeeds.helpers as h
 
 
+# pylint: disable=C0103,R0904
 class HelpersTest(unittest.TestCase):
 
     def setUp(self):

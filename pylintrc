@@ -34,11 +34,10 @@ load-plugins=
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
 #
-# E0611, F0401: Incompatible with flask.ext.someextension
-# W0232, R0903: Doesn't work with SQLAlchemy models
-# W0702: Using except clauses to catch all exceptions is considered not bad
+# I0011: Used when an inline option disables a message or a messages category.
+# W0702: Using except clauses to catch all exceptions is not bad here.
 # C0111: Docstrings are good, but let's ignore them for a while.
-disable=E0611,F0401,W0232,R0903,W0702,C0111
+disable=I0011,W0702,C0111
 
 
 [REPORTS]
@@ -49,7 +48,7 @@ disable=E0611,F0401,W0232,R0903,W0702,C0111
 output-format=colorized
 
 # Include message's id in output
-include-ids=no
+include-ids=yes
 
 # Include symbolic ids of messages in output
 symbols=no
@@ -251,7 +250,7 @@ max-parents=7
 max-attributes=7
 
 # Minimum number of public methods for a class (see R0903).
-min-public-methods=2
+min-public-methods=0
 
 # Maximum number of public methods for a class (see R0904).
 max-public-methods=20
