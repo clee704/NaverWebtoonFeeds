@@ -254,7 +254,7 @@ def _fetch_chapter_data(chapter):
     try:
         data = __browser__.get_chapter_data(chapter.series.id, chapter.id)
     except:
-        return False
+        return
     if data.get('not_found'):
         raise Chapter.DoesNotExist
     attributes = ['title', 'pubdate', 'thumbnail_url']
