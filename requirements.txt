@@ -43,3 +43,8 @@ logilab-common==0.58.3
 logilab-astng==0.24.1
 nose==1.2.1
 
+#
+# Test
+#
+mock==1.0.1
+

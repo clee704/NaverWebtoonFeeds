@@ -1,8 +1,8 @@
+from mock import Mock
+from naverwebtoonfeeds import app
+
 def mock_obj(**kwargs):
-    class MockApp(object):
-        def __getattr__(self, name):
-            if name in kwargs:
-                return kwargs[name]
-            else:
-                raise AttributeError
-    return MockApp()
+    mock = Mock(app)
+    for key, value in kwargs.items():
+        setattr(mock, key, value)
+    return mock
