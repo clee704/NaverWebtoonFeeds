@@ -20,7 +20,6 @@ BeautifulSoup==3.2.1
 # Others
 pytz==2012j
 yuicompressor==2.4.7
-nose==1.2.1
 
 #
 # Deployment-specific
@@ -42,4 +41,5 @@ ipython==0.13.1
 pylint==0.26.0
 logilab-common==0.58.3
 logilab-astng==0.24.1
+nose==1.2.1
 
