@@ -1,4 +1,4 @@
-def mock_app(**kwargs):
+def mock_obj(**kwargs):
     class MockApp(object):
         def __getattr__(self, name):
             if name in kwargs:

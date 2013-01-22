@@ -1,6 +1,6 @@
 import unittest
 
-from naverwebtoonfeeds.test.utilities import mock_app
+from naverwebtoonfeeds.test.utilities import mock_obj
 import naverwebtoonfeeds.helpers as h
 
 
@@ -11,21 +11,21 @@ class HelpersTest(unittest.TestCase):
         self.original_app = h.app
 
     def test_externalize(self):
-        h.app = mock_app(config=dict(URL_ROOT='https://example.com'))
+        h.app = mock_obj(config=dict(URL_ROOT='https://example.com'))
         self.assertEqual(h.externalize('/foo/bar'), 'https://example.com/foo/bar')
 
     def test_via_imgproxy_null(self):
-        h.app = mock_app(config=dict())
+        h.app = mock_obj(config=dict())
         self.assertEqual(h.via_imgproxy('http://naver.com/test.png'),
                 'http://naver.com/test.png')
 
     def test_via_imgproxy_with_url(self):
-        h.app = mock_app(config=dict(IMGPROXY_URL='http://imgproxy.com/{url}'))
+        h.app = mock_obj(config=dict(IMGPROXY_URL='http://imgproxy.com/{url}'))
         self.assertEqual(h.via_imgproxy('http://naver.com/test.png'),
                 'http://imgproxy.com/http://naver.com/test.png')
 
     def test_via_imgproxy_with_pattern(self):
-        h.app = mock_app(config=dict(
+        h.app = mock_obj(config=dict(
             IMGPROXY_URL_PATTERN='http://imgproxy.com/{variable}/{url}',
             IMGPROXY_URL_VARIABLE=lambda url: 0
         ))
