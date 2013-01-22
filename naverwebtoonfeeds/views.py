@@ -42,8 +42,6 @@ def feed_show(series_id):
         if app.config.get('USE_REDIS_QUEUE'):
             enqueue_job(update_series_list)
         else:
-            # update_series_list with no argument only adds new series.
-            # The current series never gets updated.
             list_updated, _ = update_series_list()
             if list_updated:
                 cache.delete('feed_index')
