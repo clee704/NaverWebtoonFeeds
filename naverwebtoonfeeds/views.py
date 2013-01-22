@@ -21,8 +21,7 @@ def feed_index():
         if app.config.get('USE_REDIS_QUEUE'):
             enqueue_job(update_series_list)
         else:
-            list_updated, _ = update_series_list()
-            invalidate_cache = list_updated
+            invalidate_cache = update_series_list()[0]
     if not invalidate_cache:
         response = cache.get('feed_index')
         if response:
@@ -41,10 +40,8 @@ def feed_show(series_id):
     if series_list_needs_fetching():
         if app.config.get('USE_REDIS_QUEUE'):
             enqueue_job(update_series_list)
-        else:
-            list_updated, _ = update_series_list()
-            if list_updated:
-                cache.delete('feed_index')
+        elif update_series_list()[0]:
+            cache.delete('feed_index')
     series = Series.query.get_or_404(series_id)
     if series.new_chapters_available:
         if app.config.get('USE_REDIS_QUEUE'):
