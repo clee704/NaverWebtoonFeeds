@@ -27,7 +27,7 @@ app.logger
 
 logging.config.dictConfig(app.config['LOGGING'])
 try:
-    from naverwebtoonfeeds.lib.naver import get_public_ip
+    from naverwebtoonfeeds.misc import get_public_ip
     app.logger.warning('Current IP: %s', get_public_ip())
 except:
     app.logger.warning('Failed to get the public IP')
@@ -67,4 +67,4 @@ assets.register('css_all',
 )
 
 import naverwebtoonfeeds.views
-import naverwebtoonfeeds.helpers
+import naverwebtoonfeeds.template

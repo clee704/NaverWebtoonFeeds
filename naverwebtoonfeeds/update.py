@@ -4,12 +4,12 @@ import logging
 from sqlalchemy.exc import IntegrityError
 
 from naverwebtoonfeeds import app, db
-from naverwebtoonfeeds.view_helpers import render_and_cache_feed_index, render_and_cache_feed_show
+from naverwebtoonfeeds.browser import as_naver_time_zone, Browser
 from naverwebtoonfeeds.models import Series, Chapter, Config
-from naverwebtoonfeeds.lib.naver import as_naver_time_zone, NaverBrowser
+from naverwebtoonfeeds.render import render_feed_index, render_feed_show
 
 
-__browser__ = NaverBrowser(app)
+__browser__ = Browser(app)
 __logger__ = logging.getLogger(__name__)
 
 
@@ -77,9 +77,9 @@ def update_series_list(update_all=False, background=False):
             if chapters_updated:
                 updated[1].append(series.id)
             if series_updated or chapters_updated:
-                render_and_cache_feed_show(series)
+                render_feed_show(series)
         if updated[0]:
-            render_and_cache_feed_index()
+            render_feed_index()
 
     return updated
 

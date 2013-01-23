@@ -3,10 +3,10 @@ import logging
 from flask import render_template, url_for
 
 from naverwebtoonfeeds import app, cache
-from naverwebtoonfeeds.view_helpers import redirect_to_canonical_url, enqueue_job
-from naverwebtoonfeeds.view_helpers import render_and_cache_feed_index, render_and_cache_feed_show
+from naverwebtoonfeeds.misc import redirect_to_canonical_url, enqueue_job
 from naverwebtoonfeeds.models import Series
-from naverwebtoonfeeds.lib.updater import series_list_needs_fetching, update_series_list, update_series
+from naverwebtoonfeeds.render import render_feed_index, render_feed_show
+from naverwebtoonfeeds.update import series_list_needs_fetching, update_series_list, update_series
 
 
 __logger__ = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def feed_index():
         if response:
             __logger__.debug('Cache hit')
             return response
-    return render_and_cache_feed_index()
+    return render_feed_index()
 
 
 @app.route('/feeds/<int:series_id>.xml')
@@ -53,7 +53,7 @@ def feed_show(series_id):
         if response:
             __logger__.debug('Cache hit')
             return response
-    return render_and_cache_feed_show(series)
+    return render_feed_show(series)
 
 
 @app.errorhandler(500)

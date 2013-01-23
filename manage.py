@@ -28,7 +28,7 @@ def drop():
 @db_manager.command
 def fill():
     """Update database by fetching changes from Naver Comics."""
-    from naverwebtoonfeeds.lib.updater import update_series_list
+    from naverwebtoonfeeds.update import update_series_list
     list_updated, series_updated = update_series_list(update_all=True)
     if list_updated:
         cache.delete('feed_index')
@@ -66,7 +66,7 @@ def migrate(action):
 def addcompletedseries():
     """Add completed series."""
     from naverwebtoonfeeds.models import Series
-    from naverwebtoonfeeds.lib.updater import add_completed_series
+    from naverwebtoonfeeds.update import add_completed_series
     add_completed_series()
     cache.delete('feed_index')
 
@@ -76,7 +76,7 @@ def runworker(burst=False):
     from rq import Connection
     import rq
     from naverwebtoonfeeds import redis_connection
-    from naverwebtoonfeeds.view_helpers import heroku_scale
+    from naverwebtoonfeeds.misc import heroku_scale
     with Connection(connection=redis_connection):
         w = rq.Worker([rq.Queue()], exc_handler=lambda job, *exc_info: False)
         w.work(burst=burst)
