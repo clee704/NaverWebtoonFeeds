@@ -6,12 +6,29 @@ import re
 from flask import request, redirect
 import heroku
 import lxml.html
+import pytz
 import requests
 
 from naverwebtoonfeeds import app
+from naverwebtoonfeeds.constants import NAVER_TIMEZONE, URL
 
 
 __logger__ = logging.getLogger(__name__)
+
+
+def naver_url(series_id, chapter_id=None, mobile=False):
+    """Return appropriate webtoon URL for the given arguments."""
+    if mobile:
+        key = 'mobile'
+    elif chapter_id is None:
+        key = 'series'
+    else:
+        key = 'chapter'
+    return URL[key].format(series_id=series_id, chapter_id=chapter_id)
+
+
+def as_naver_time_zone(datetime_obj):
+    return pytz.utc.localize(datetime_obj).astimezone(NAVER_TIMEZONE)
 
 
 def inner_html(element):

@@ -4,7 +4,8 @@ import logging
 from sqlalchemy.exc import IntegrityError
 
 from naverwebtoonfeeds import app, db
-from naverwebtoonfeeds.browser import as_naver_time_zone, Browser
+from naverwebtoonfeeds.browser import Browser
+from naverwebtoonfeeds.misc import as_naver_time_zone
 from naverwebtoonfeeds.models import Series, Chapter, Config
 from naverwebtoonfeeds.render import render_feed_index, render_feed_show
 

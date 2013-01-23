@@ -1,7 +1,7 @@
 import urlparse
 
 from naverwebtoonfeeds import app
-from naverwebtoonfeeds.browser import naver_url
+from naverwebtoonfeeds.misc import naver_url
 
 
 @app.template_filter()

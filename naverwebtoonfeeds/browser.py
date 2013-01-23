@@ -9,27 +9,8 @@ import lxml.html.soupparser
 import pytz
 import requests
 
-from naverwebtoonfeeds.constants import NAVER_TIMEZONE
+from naverwebtoonfeeds.constants import NAVER_TIMEZONE, URL
 from naverwebtoonfeeds.misc import get_public_ip, inner_html
-
-
-BASE_URL = 'http://comic.naver.com/webtoon'
-MOBILE_BASE_URL = 'http://m.comic.naver.com/webtoon'
-URL = {
-    'last_chapter': BASE_URL + '/detail.nhn?titleId={series_id}',
-    'chapter': BASE_URL + '/detail.nhn?titleId={series_id}&no={chapter_id}',
-    'mobile': MOBILE_BASE_URL + '/detail.nhn?titleId={series_id}&no={chapter_id}',
-    'series': BASE_URL + '/list.nhn?titleId={series_id}',
-    'series_by_day': BASE_URL + '/weekday.nhn',
-    'completed_series': BASE_URL + '/finish.nhn',
-}
-HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 6.1; ko; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'Accept-Encoding': 'gzip,deflate',
-    'Accept-Language': 'ko-kr,ko;q=0.8,en-us;q=0.5,en;q=0.3',
-    'Connection': 'keep-alive',
-}
 
 
 __logger__ = logging.getLogger(__name__)
@@ -37,10 +18,18 @@ __logger__ = logging.getLogger(__name__)
 
 class Browser(object):
 
+    HEADERS = {
+        'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 6.1; ko; rv:1.9.2.3) Gecko/20100401 Firefox/3.6.3',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Encoding': 'gzip,deflate',
+        'Accept-Language': 'ko-kr,ko;q=0.8,en-us;q=0.5,en;q=0.3',
+        'Connection': 'keep-alive',
+    }
+
     def __init__(self, app, max_retry=3):
         self.app = app
         self.cookies = None
-        self.headers = HEADERS.copy()
+        self.headers = self.HEADERS.copy()
         self.max_retry = max_retry
         self.forbidden_ip_addresses = set()
 
@@ -211,18 +200,3 @@ class Browser(object):
 
     class AccessDenied(Exception):
         pass
-
-
-def naver_url(series_id, chapter_id=None, mobile=False):
-    """Return appropriate webtoon URL for the given arguments."""
-    if mobile:
-        key = 'mobile'
-    elif chapter_id is None:
-        key = 'series'
-    else:
-        key = 'chapter'
-    return URL[key].format(series_id=series_id, chapter_id=chapter_id)
-
-
-def as_naver_time_zone(datetime_obj):
-    return pytz.utc.localize(datetime_obj).astimezone(NAVER_TIMEZONE)
