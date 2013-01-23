@@ -9,6 +9,7 @@ import lxml.html.soupparser
 import pytz
 import requests
 
+from naverwebtoonfeeds.constants import NAVER_TIMEZONE
 from naverwebtoonfeeds.misc import get_public_ip, inner_html
 
 
@@ -29,7 +30,6 @@ HEADERS = {
     'Accept-Language': 'ko-kr,ko;q=0.8,en-us;q=0.5,en;q=0.3',
     'Connection': 'keep-alive',
 }
-NAVER_TIMEZONE = pytz.timezone('Asia/Seoul')
 
 
 __logger__ = logging.getLogger(__name__)

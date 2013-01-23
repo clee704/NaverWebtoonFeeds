@@ -14,7 +14,7 @@
   <subtitle type="html"><![CDATA[{{ series.description|safe }}]]></subtitle>
   <logo>{{ series.thumbnail_url|via_imgproxy }}</logo>
   <generator>Naver Webtoon Feeds</generator>
-  {% for chapter in chapters %}
+  {% for chapter in series.chapters %}
     <entry>
       {% set chapter_url = naver_url(series.id, chapter.id) %}
       {% set pubdate_iso = chapter.pubdate_with_tz.isoformat() %}

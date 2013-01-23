@@ -1,5 +1,8 @@
 # pylint: disable=E0611,F0401,W0232
 from flask.ext.sqlalchemy import SQLAlchemy
+import pytz
+
+from naverwebtoonfeeds.constants import NAVER_TIMEZONE
 
 
 db = SQLAlchemy()
@@ -27,6 +30,10 @@ class Chapter(db.Model):
     atom_id = db.Column(db.String(255), nullable=False)
     series_id = db.Column(db.Integer, db.ForeignKey('series.id'), primary_key=True)
     series = db.relationship('Series', backref=db.backref('chapters', order_by=id.desc()))
+
+    @property
+    def pubdate_with_tz(self):
+        return pytz.utc.localize(self.pubdate).astimezone(NAVER_TIMEZONE)
 
 
 class Config(db.Model):
