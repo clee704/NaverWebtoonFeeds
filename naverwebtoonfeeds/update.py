@@ -194,7 +194,6 @@ def _add_new_series(new_series_ids, fetched_data, update_all, updated):
             # It failed to fetch data for the series.
             # It may happen when it failed to login to Naver and the series
             # requires login to view.
-            db.session.expunge(series)
             continue
         if chapters_updated:
             updated[1].append(series.id)
