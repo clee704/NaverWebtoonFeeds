@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 import unittest
 
-from naverwebtoonfeeds import db
+from naverwebtoonfeeds.objects import db
 import naverwebtoonfeeds.views as v
 
 

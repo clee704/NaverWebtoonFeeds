@@ -2,7 +2,7 @@ import logging
 
 from flask import render_template, url_for
 
-from naverwebtoonfeeds import app, cache
+from naverwebtoonfeeds.objects import app, cache
 from naverwebtoonfeeds.misc import redirect_to_canonical_url, enqueue_job
 from naverwebtoonfeeds.models import Series
 from naverwebtoonfeeds.render import render_feed_index, render_feed_show

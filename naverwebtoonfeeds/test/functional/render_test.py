@@ -5,7 +5,7 @@ import unittest
 from flask import url_for
 import lxml.html
 
-from naverwebtoonfeeds import db
+from naverwebtoonfeeds.objects import db
 from naverwebtoonfeeds.models import Series, Chapter
 from naverwebtoonfeeds.template import externalize
 from naverwebtoonfeeds.test.utilities import Mock

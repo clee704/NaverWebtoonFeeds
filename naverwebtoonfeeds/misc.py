@@ -9,7 +9,7 @@ import lxml.html
 import pytz
 import requests
 
-from naverwebtoonfeeds import app
+from naverwebtoonfeeds.objects import app
 from naverwebtoonfeeds.constants import NAVER_TIMEZONE, URL
 
 
@@ -80,7 +80,7 @@ def heroku_scale(process_name, qty):
 def enqueue_job(func, args=None, kwargs=None):
     if app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
         heroku_scale('worker', 1)
-    from naverwebtoonfeeds import redis_queue
+    from naverwebtoonfeeds.objects import redis_queue
     redis_queue.enqueue_call(func=func,
             args=args,
             kwargs=kwargs,

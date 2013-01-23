@@ -1,4 +1,4 @@
-from naverwebtoonfeeds import app, cache
+from naverwebtoonfeeds.objects import app, cache
 
 # Code that only executed when a web server starts, not
 # for workers or management scripts.

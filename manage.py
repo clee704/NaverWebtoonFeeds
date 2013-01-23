@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 from flask.ext.script import Manager, Shell, prompt_bool
-from naverwebtoonfeeds import app, cache, db
+from naverwebtoonfeeds.objects import app, cache, db
 
 manager = Manager(app)
 
@@ -75,7 +75,7 @@ def runworker(burst=False):
     """Run the worker that fetches data from Naver and update the database."""
     from rq import Connection
     import rq
-    from naverwebtoonfeeds import redis_connection
+    from naverwebtoonfeeds.objects import redis_connection
     from naverwebtoonfeeds.misc import heroku_scale
     with Connection(connection=redis_connection):
         w = rq.Worker([rq.Queue()], exc_handler=lambda job, *exc_info: False)

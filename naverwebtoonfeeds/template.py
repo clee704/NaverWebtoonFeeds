@@ -1,6 +1,6 @@
 import urlparse
 
-from naverwebtoonfeeds import app
+from naverwebtoonfeeds.objects import app
 from naverwebtoonfeeds.misc import naver_url
 
 
