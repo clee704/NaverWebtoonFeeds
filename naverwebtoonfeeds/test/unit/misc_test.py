@@ -4,7 +4,7 @@ from naverwebtoonfeeds.test.utilities import mock_obj, Mock
 import naverwebtoonfeeds.misc as m
 
 
-# pylint: disable=C0103,R0904
+# pylint: disable=C0103,R0904,E1103,R0201
 class MiscTest(unittest.TestCase):
 
     def setUp(self):
@@ -34,6 +34,7 @@ class MiscTest(unittest.TestCase):
         m.heroku = Mock()
         m.heroku_scale('beaver', 5)
         m.heroku.from_key.assert_called_with('foobar123')
+        # pylint: disable=W0212
         m.heroku.from_key('foobar123')._http_resource.assert_called_with(
                 method='POST',
                 resource=('apps', 'testapp', 'ps', 'scale'),
