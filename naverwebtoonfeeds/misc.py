@@ -1,3 +1,4 @@
+from functools import wraps
 import logging
 import urlparse
 import re
@@ -70,8 +71,9 @@ def enqueue_job(func, args=None, kwargs=None):
             timeout=3600)
 
 
-def redirect_to_canonical_url(view):
-    def new_view(*args, **kwargs):
+def redirect_to_canonical_url(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
         path = request.environ['RAW_URI'] if 'RAW_URI' in request.environ else urlpath(request.url)
         canonical_url = app.config['URL_ROOT'] + path
         __logger__.debug('request.url=%s, canonical_url=%s', request.url, canonical_url)
@@ -79,7 +81,5 @@ def redirect_to_canonical_url(view):
             __logger__.info('Redirecting to the canonical URL')
             return redirect(canonical_url, 301)
         else:
-            return view(*args, **kwargs)
-    new_view.__name__ = view.__name__
-    new_view.__doc__ = view.__doc__
-    return new_view
+            return f(*args, **kwargs)
+    return decorated_function
