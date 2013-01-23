@@ -9,7 +9,9 @@
       <link rel="stylesheet" href="{{ ASSET_URL }}" />
     {% endassets %}
     <!--[if lt IE 9]>
-    <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <style type="text/css">img { max-width: none; }</style>
+    <script src="{{ url_for('static', filename='html5shiv.js') }}"></script>
+    <script src="{{ url_for('static', filename='es5-shim.min.js') }}"></script>
     <![endif]-->
   </head>
   <body>
