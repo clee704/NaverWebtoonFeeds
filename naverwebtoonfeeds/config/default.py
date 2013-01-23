@@ -69,6 +69,9 @@ class Config(object):
     #CACHE_REDIS_PORT = 6379
     #CACHE_REDIS_PASSWORD = ''
 
+    # Compress when storing values in the cache. (Redis only)
+    #ENABLE_CACHE_COMPRESSION = True
+
     # Use Redis Queue to update the database by background workers.
     # You must use Redis as a cache (see above).
     #USE_REDIS_QUEUE = True

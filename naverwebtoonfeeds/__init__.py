@@ -35,6 +35,9 @@ except:
 db.init_app(app)
 
 cache = Cache(app)
+if app.config.get('ENABLE_CACHE_COMPRESSION') and app.config.get('CACHE_TYPE') == 'redis':
+    from naverwebtoonfeeds.compressedcache import CompressedRedisCache
+    cache.cache.__class__ = CompressedRedisCache
 
 if app.config.get('GZIP'):
     from flask.ext.gzip import Gzip
