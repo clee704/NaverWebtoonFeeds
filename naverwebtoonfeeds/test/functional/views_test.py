@@ -12,15 +12,15 @@ class ViewsTest(unittest.TestCase):
         self.originals = {}
         for name in dir(v):
             self.originals[name] = getattr(v, name)
-        self.test_request_context = v.app.test_request_context()
-        self.test_request_context.__enter__()
+        self.ctx = v.app.test_request_context()
+        self.ctx.push()
         db.create_all()
 
     def tearDown(self):
         for name in self.originals:
             setattr(v, name, self.originals[name])
         db.drop_all()
-        self.test_request_context.__exit__(None, None, None)
+        self.ctx.pop()
 
     @unittest.skip("pending")
     def test_feed_index(self):

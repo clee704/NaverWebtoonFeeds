@@ -19,15 +19,15 @@ class RenderTest(unittest.TestCase):
         self.originals = {}
         for name in dir(r):
             self.originals[name] = getattr(r, name)
-        self.test_request_context = r.app.test_request_context()
-        self.test_request_context.__enter__()
+        self.ctx = r.app.test_request_context()
+        self.ctx.push()
         db.create_all()
 
     def tearDown(self):
         for name in self.originals:
             setattr(r, name, self.originals[name])
         db.drop_all()
-        self.test_request_context.__exit__(None, None, None)
+        self.ctx.pop()
 
     def test_render_feed_index_without_series(self):
         r.cache = Mock()
