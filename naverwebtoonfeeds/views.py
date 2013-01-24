@@ -45,7 +45,7 @@ def feed_show(series_id):
     series = Series.query.get_or_404(series_id)
     if series.new_chapters_available:
         if app.config.get('USE_REDIS_QUEUE'):
-            enqueue_job(update_series, args=(series,))
+            enqueue_job(update_series, args=(series,), kwargs=dict(background=True))
         else:
             invalidate_cache = any(update_series(series))
     if not invalidate_cache:
