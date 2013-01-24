@@ -73,11 +73,11 @@ def update_series_list(update_all=False, background=False):
 
     if background:
         for series in Series.query.filter_by(new_chapters_available=True):
-            series_updated, chapters_updated = update_series(series)
+            series_updated, chapters_added = update_series(series)
             updated[0] |= series_updated
-            if chapters_updated:
+            if chapters_added:
                 updated[1].append(series.id)
-            if series_updated or chapters_updated:
+            if series_updated or chapters_added:
                 render_feed_show(series)
         if updated[0]:
             render_feed_index()
@@ -87,13 +87,13 @@ def update_series_list(update_all=False, background=False):
 
 def update_series(series, add_new_chapters=True, do_commit=True, background=False):
     series_updated = _fetch_series_data(series)
-    chapters_updated = False
+    chapters_added = False
     if series_updated is None:
-        return [series_updated, chapters_updated]
+        return [series_updated, chapters_added]
     db.session.add(series)
     if add_new_chapters and series.new_chapters_available:
-        chapters_updated = _add_new_chapters(series)
-        if not chapters_updated:
+        chapters_added = _add_new_chapters(series)
+        if not chapters_added:
             __logger__.warning('New chapters for series #%d were not found', series.id)
         # TODO find a better way to do this
         series.new_chapters_available = False
@@ -102,9 +102,9 @@ def update_series(series, add_new_chapters=True, do_commit=True, background=Fals
         # updated to True.
     if do_commit:
         _commit()
-    if background and (series_updated or chapters_updated):
+    if background and (series_updated or chapters_added):
         render_feed_show(series)
-    return [series_updated, chapters_updated]
+    return [series_updated, chapters_added]
 
 
 def add_completed_series():
@@ -178,9 +178,9 @@ def _update_existing_series(fetched_data, update_all, updated):
             series.new_chapters_available = True
         series.last_upload_status = ','.join(info['days_uploaded'])
         if update_all:
-            series_updated, chapters_updated = update_series(series, update_all, False)
+            series_updated, chapters_added = update_series(series, update_all, False)
             updated[0] |= series_updated
-            if chapters_updated:
+            if chapters_added:
                 updated[1].append(series.id)
     return series_list
 
@@ -191,13 +191,13 @@ def _add_new_series(new_series_ids, fetched_data, update_all, updated):
     updated[0] = True
     for series_id in new_series_ids:
         series = Series(id=series_id)
-        series_updated, chapters_updated = update_series(series, update_all, False)
+        series_updated, chapters_added = update_series(series, update_all, False)
         if not series_updated:
             # It failed to fetch data for the series.
             # It may happen when it failed to login to Naver and the series
             # requires login to view.
             continue
-        if chapters_updated:
+        if chapters_added:
             updated[1].append(series.id)
         info = fetched_data[series.id]
         upload_days = ','.join(info['upload_days'])
