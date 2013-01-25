@@ -6,4 +6,4 @@ class Config(Default):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///db/development.db'
     GZIP = True
     LOGGING = deepcopy(Default.LOGGING)
-    LOGGING['handlers']['console']['level'] = 'DEBUG'
+    LOGGING['loggers']['naverwebtoonfeeds']['level'] = 'DEBUG'

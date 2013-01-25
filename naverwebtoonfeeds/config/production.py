@@ -6,7 +6,9 @@ from naverwebtoonfeeds.config.default import Config as Default
 class Config(Default):
 
     LOGGING = deepcopy(Default.LOGGING)
-    LOGGING['handlers']['console']['level'] = os.environ.get('LOG_LEVEL', 'WARNING')
+    LOGGING['loggers']['naverwebtoonfeeds']['level'] = os.environ.get('LOG_LEVEL', 'WARNING')
+    LOGGING['loggers']['sqlalchemy.engine']['level'] = os.environ.get('LOG_LEVEL', 'WARNING')
+    LOGGING['loggers']['rq.worker']['level'] = os.environ.get('LOG_LEVEL', 'WARNING')
 
     @classmethod
     def setup_smtp(cls):

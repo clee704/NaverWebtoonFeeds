@@ -112,12 +112,20 @@ class Config(object):
                 'format': '%(asctime)s [%(name)s] [%(levelname)s] %(message)s',
                 'datefmt': '%Y-%m-%d %H:%M:%S',
             },
+            'raw': {
+                'format': '%(message)s'
+            },
         },
         'handlers': {
             'console': {
-                'level': 'WARNING',
+                'level': 'DEBUG',
                 'class': 'logging.StreamHandler',
                 'formatter': 'default',
+            },
+            'console_raw': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+                'formatter': 'raw',
             },
             'mail_admins': {
                 'level': 'ERROR',
@@ -135,15 +143,24 @@ class Config(object):
         'loggers': {
             'naverwebtoonfeeds': {
                 'handlers': ['console'],
-                'level': 'DEBUG',
+                'level': 'WARNING',
+            },
+            'naverwebtoonfeeds.objects': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propagate': False,
             },
             'sqlalchemy.engine': {
                 'handlers': ['console'],
-                'level': 'DEBUG',
+                'level': 'WARNING',
             },
             'rq.worker': {
                 'handlers': ['console'],
-                'level': 'DEBUG',
+                'level': 'WARNING',
+            },
+            'gunicorn.access': {
+                'handlers': ['console_raw'],
+                'level': 'INFO',
             },
         },
     }

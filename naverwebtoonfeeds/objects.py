@@ -10,7 +10,14 @@ from flask.ext.assets import Environment, Bundle
 
 from naverwebtoonfeeds.models import db
 
+
+__logger__ = logging.getLogger(__name__)
+
+
 app = Flask(__name__)
+
+
+# Configuration handling
 mode = os.environ.get('NWF_MODE')
 try:
     app.config.from_object('naverwebtoonfeeds.config.{0}.Config'.format(mode))
@@ -21,27 +28,26 @@ except ImportError:
     print >> sys.stderr, 'Valid modes:', modes
     sys.exit(1)
 
+
 # Make sure the logger is created.
 # pylint: disable=W0104
 app.logger
-
 logging.config.dictConfig(app.config['LOGGING'])
-try:
-    from naverwebtoonfeeds.misc import get_public_ip
-    app.logger.warning('Current IP: %s', get_public_ip())
-except:
-    app.logger.warning('Failed to get the public IP')
+
 
 db.init_app(app)
+
 
 cache = Cache(app)
 if app.config.get('ENABLE_CACHE_COMPRESSION') and app.config.get('CACHE_TYPE') == 'redis':
     from naverwebtoonfeeds.cache import CompressedRedisCache
     cache.cache.__class__ = CompressedRedisCache
 
+
 if app.config.get('GZIP'):
     from flask.ext.gzip import Gzip
     gzip = Gzip(app)
+
 
 if app.config.get('USE_REDIS_QUEUE'):
     from redis import Redis
@@ -50,6 +56,7 @@ if app.config.get('USE_REDIS_QUEUE'):
             port=app.config['CACHE_REDIS_PORT'],
             password=app.config['CACHE_REDIS_PASSWORD'])
     redis_queue = Queue(connection=redis_connection)
+
 
 assets = Environment(app)
 assets.register('js_all',
@@ -69,5 +76,15 @@ assets.register('css_all',
     output='gen/packed.%(version)s.css'
 )
 
+
 import naverwebtoonfeeds.views
 import naverwebtoonfeeds.template
+
+
+# Log the current IP address
+# since Naver blocks requests from some IP address ranges.
+try:
+    from naverwebtoonfeeds.misc import get_public_ip
+    __logger__.info('Current IP: %s', get_public_ip())
+except:
+    __logger__.info('Failed to get the public IP')

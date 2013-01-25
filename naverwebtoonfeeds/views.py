@@ -1,6 +1,6 @@
 import logging
 
-from flask import render_template, url_for
+from flask import render_template
 
 from naverwebtoonfeeds.objects import app, cache
 from naverwebtoonfeeds.misc import redirect_to_canonical_url, enqueue_job
@@ -15,7 +15,6 @@ __logger__ = logging.getLogger(__name__)
 @app.route('/')
 @redirect_to_canonical_url
 def feed_index():
-    __logger__.info('feed_index (GET %s)', url_for('feed_index'))
     invalidate_cache = False
     if series_list_needs_fetching():
         if app.config.get('USE_REDIS_QUEUE'):
@@ -33,8 +32,6 @@ def feed_index():
 @app.route('/feeds/<int:series_id>.xml')
 @redirect_to_canonical_url
 def feed_show(series_id):
-    url = url_for('feed_show', series_id=series_id)
-    __logger__.info('feed_show, series_id=%d (GET %s)', series_id, url)
     series = None
     invalidate_cache = False
     if series_list_needs_fetching():
