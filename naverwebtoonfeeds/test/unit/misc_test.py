@@ -66,3 +66,15 @@ class MiscTest(unittest.TestCase):
         decorated_view = m.redirect_to_canonical_url(view)
         decorated_view(1, 'x', y=3)
         m.redirect.assert_called_with('http://bit.ly/baa/aar', 301)
+
+    def test_naver_url(self):
+        self.assertEqual(m.naver_url(42), 'http://comic.naver.com/webtoon/list.nhn?titleId=42')
+
+    def test_naver_url_with_chapter_id(self):
+        self.assertEqual(m.naver_url(42, 1), 'http://comic.naver.com/webtoon/detail.nhn?titleId=42&no=1')
+
+    def test_naver_url_with_mobile(self):
+        self.assertEqual(m.naver_url(42, mobile=True), 'http://m.comic.naver.com/webtoon/list.nhn?titleId=42')
+
+    def test_naver_url_with_chapter_id_with_mobile(self):
+        self.assertEqual(m.naver_url(42, 1, mobile=True), 'http://m.comic.naver.com/webtoon/detail.nhn?titleId=42&no=1')

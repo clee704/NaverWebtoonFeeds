@@ -10,7 +10,7 @@ import pytz
 import requests
 
 from naverwebtoonfeeds.objects import app
-from naverwebtoonfeeds.constants import NAVER_TIMEZONE, URL
+from naverwebtoonfeeds.constants import NAVER_TIMEZONE, URLS
 from naverwebtoonfeeds.misc import get_public_ip, inner_html
 
 
@@ -97,22 +97,22 @@ class Browser(object):
         return True
 
     def get_issues(self):
-        response = self.get(URL['series_by_day'])
+        response = self.get(URLS['series_by_day'])
         return self._parse(response, '_parse_issues')
 
     def get_completed_series(self):
-        response = self.get(URL['completed_series'])
+        response = self.get(URLS['completed_series'])
         return self._parse(response, '_parse_completed_series')
 
     def get_series_data(self, series_id):
-        url = URL['last_chapter'].format(series_id=series_id)
+        url = URLS['last_chapter'].format(series_id=series_id)
         response = self.get(url)
         if response.url != url:
             return dict(removed=True)
         return self._parse(response, '_parse_series_data', series_id)
 
     def get_chapter_data(self, series_id, chapter_id):
-        url = URL['chapter'].format(series_id=series_id, chapter_id=chapter_id)
+        url = URLS['chapter'].format(series_id=series_id, chapter_id=chapter_id)
         response = self.get(url)
         return self._parse(response, '_parse_chapter_data', series_id, chapter_id, url)
 

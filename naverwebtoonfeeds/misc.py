@@ -10,7 +10,7 @@ import pytz
 import requests
 
 from naverwebtoonfeeds.objects import app
-from naverwebtoonfeeds.constants import NAVER_TIMEZONE, URL
+from naverwebtoonfeeds.constants import NAVER_TIMEZONE, URLS, MOBILE_URLS
 
 
 __logger__ = logging.getLogger(__name__)
@@ -18,13 +18,9 @@ __logger__ = logging.getLogger(__name__)
 
 def naver_url(series_id, chapter_id=None, mobile=False):
     """Return appropriate webtoon URL for the given arguments."""
-    if mobile:
-        key = 'mobile'
-    elif chapter_id is None:
-        key = 'series'
-    else:
-        key = 'chapter'
-    return URL[key].format(series_id=series_id, chapter_id=chapter_id)
+    key = 'series' if chapter_id is None else 'chapter'
+    urls = URLS if not mobile else MOBILE_URLS
+    return urls[key].format(series_id=series_id, chapter_id=chapter_id)
 
 
 def as_naver_time_zone(datetime_obj):
