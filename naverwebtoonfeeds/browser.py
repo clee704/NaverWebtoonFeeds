@@ -9,6 +9,7 @@ import lxml.html.soupparser
 import pytz
 import requests
 
+from naverwebtoonfeeds.objects import app
 from naverwebtoonfeeds.constants import NAVER_TIMEZONE, URL
 from naverwebtoonfeeds.misc import get_public_ip, inner_html
 
@@ -26,8 +27,7 @@ class Browser(object):
         'Connection': 'keep-alive',
     }
 
-    def __init__(self, app, max_retry=3):
-        self.app = app
+    def __init__(self, max_retry=3):
         self.cookies = None
         self.headers = self.HEADERS.copy()
         self.max_retry = max_retry
@@ -78,15 +78,15 @@ class Browser(object):
         Try to login to Naver and return True if logged in and False if failed.
 
         """
-        if not self.app.config.get('NAVER_USERNAME'):
+        if not app.config.get('NAVER_USERNAME'):
             return False
         url = 'https://nid.naver.com/nidlogin.login'
         headers = dict(Referer='http://static.nid.naver.com/login.nhn')
         headers.update(self.headers)
         data = {
             'enctp': '2',
-            'id': self.app.config['NAVER_USERNAME'],
-            'pw': self.app.config['NAVER_PASSWORD'],
+            'id': app.config['NAVER_USERNAME'],
+            'pw': app.config['NAVER_PASSWORD'],
         }
         self.get('http://www.naver.com/')   # Get cookies
         response = requests.post(url, data=data, cookies=self.cookies, headers=headers)

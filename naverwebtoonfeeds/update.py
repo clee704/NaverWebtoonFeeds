@@ -10,7 +10,7 @@ from naverwebtoonfeeds.models import Series, Chapter, Config
 from naverwebtoonfeeds.render import render_feed_index, render_feed_show
 
 
-__browser__ = Browser(app)
+__browser__ = Browser()
 __logger__ = logging.getLogger(__name__)
 
 
