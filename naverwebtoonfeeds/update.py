@@ -93,10 +93,15 @@ def update_series(series, add_new_chapters=True, do_commit=True, background=Fals
     db.session.add(series)
     if add_new_chapters and series.new_chapters_available:
         chapters_added = _add_new_chapters(series)
-        if not chapters_added:
+        if chapters_added:
+            series.new_chapters_available = False
+            series.retries_left = 0
+        else:
             __logger__.warning('New chapters for series #%d were not found', series.id)
-        # TODO find a better way to do this
-        series.new_chapters_available = False
+            if series.retries_left == 0:
+                series.new_chapters_available = False
+            else:
+                series.retries_left -= 1
         # updated indicates the view cache should be purged.
         # new_chapters_available doesn't affect the view, so it doesn't set
         # updated to True.
@@ -176,6 +181,7 @@ def _update_existing_series(fetched_data, update_all, updated):
         # last_update_stattus don't affect the view.
         if any(day not in series.last_upload_status for day in info['days_uploaded']):
             series.new_chapters_available = True
+            series.retries_left = 2
         series.last_upload_status = ','.join(info['days_uploaded'])
         if update_all:
             series_updated, chapters_added = update_series(series, update_all, False)

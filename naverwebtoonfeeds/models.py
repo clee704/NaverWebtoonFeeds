@@ -20,6 +20,7 @@ class Series(db.Model):
 
     new_chapters_available = db.Column(db.Boolean, default=False)
     last_upload_status = db.Column(db.String(31), nullable=False, default='')
+    retries_left = db.Column(db.Integer, nullable=False, default=0)
 
 
 class Chapter(db.Model):
