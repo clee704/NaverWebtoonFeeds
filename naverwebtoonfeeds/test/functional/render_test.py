@@ -8,7 +8,7 @@ import lxml.html
 from naverwebtoonfeeds.objects import db
 from naverwebtoonfeeds.models import Series, Chapter
 from naverwebtoonfeeds.template import externalize
-from naverwebtoonfeeds.test.utilities import Mock, mock_obj
+from naverwebtoonfeeds.test.utilities import Mock
 import naverwebtoonfeeds.render as r
 
 
