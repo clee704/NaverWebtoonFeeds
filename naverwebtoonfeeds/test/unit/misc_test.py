@@ -104,3 +104,10 @@ class MiscTest(unittest.TestCase):
     def test_inner_html_4(self):
         elem = lxml.html.fromstring(u'<p>논-아스키</p>')
         self.assertEqual(m.inner_html(elem), u'논-아스키')
+
+    def test_get_public_ip(self):
+        m.requests = Mock()
+        m.requests.get.return_value.text = '<html><head><title>Current IP Check</title></head><body>Current IP Address: 1.2.3.4</body></html>'
+        rv = m.get_public_ip()
+        m.requests.get.assert_called_with('http://checkip.dyndns.com/')
+        self.assertEqual(rv, '1.2.3.4')
