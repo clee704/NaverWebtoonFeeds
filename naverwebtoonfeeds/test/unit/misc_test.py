@@ -9,7 +9,7 @@ from naverwebtoonfeeds.test.utilities import mock_obj, Mock
 import naverwebtoonfeeds.misc as m
 
 
-# pylint: disable=C0103,R0904,E1103,R0201
+# pylint: disable=C0103,R0904,E1103,R0201,C0301
 class MiscTest(unittest.TestCase):
 
     def setUp(self):

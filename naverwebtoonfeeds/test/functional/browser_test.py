@@ -1,11 +1,12 @@
 import unittest
 
 from naverwebtoonfeeds.test.utilities import mock_obj, Mock, read_fixture
+# pylint: disable=W0611
 import naverwebtoonfeeds.objects   # Resolves a circular import issue below.
 import naverwebtoonfeeds.browser as b
 
 
-# pylint: disable=C0103,R0904,E1103,R0201
+# pylint: disable=C0103,R0904,E1103
 class MiscTest(unittest.TestCase):
 
     def setUp(self):
