@@ -1,5 +1,7 @@
+from datetime import datetime
 import unittest
 
+from naverwebtoonfeeds.constants import NAVER_TIMEZONE
 from naverwebtoonfeeds.test.utilities import mock_obj, Mock
 import naverwebtoonfeeds.misc as m
 
@@ -78,3 +80,7 @@ class MiscTest(unittest.TestCase):
 
     def test_naver_url_with_chapter_id_with_mobile(self):
         self.assertEqual(m.naver_url(42, 1, mobile=True), 'http://m.comic.naver.com/webtoon/detail.nhn?titleId=42&no=1')
+
+    def test_as_naver_time_zone(self):
+        self.assertEqual(m.as_naver_time_zone(datetime(2013, 1, 1, 0)),
+                NAVER_TIMEZONE.localize(datetime(2013, 1, 1, 9)))
