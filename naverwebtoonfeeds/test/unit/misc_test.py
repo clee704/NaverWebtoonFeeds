@@ -1,5 +1,8 @@
+# -*- coding: UTF-8 -*-
 from datetime import datetime
 import unittest
+
+import lxml.html
 
 from naverwebtoonfeeds.constants import NAVER_TIMEZONE
 from naverwebtoonfeeds.test.utilities import mock_obj, Mock
@@ -85,3 +88,19 @@ class MiscTest(unittest.TestCase):
     def test_as_naver_time_zone(self):
         self.assertEqual(m.as_naver_time_zone(datetime(2013, 1, 1, 0)),
                 NAVER_TIMEZONE.localize(datetime(2013, 1, 1, 9)))
+
+    def test_inner_html_1(self):
+        elem = lxml.html.fromstring('<p>hello,<br>world!</p>')
+        self.assertEqual(m.inner_html(elem), 'hello,<br>world!')
+
+    def test_inner_html_2(self):
+        elem = lxml.html.fromstring('<div class="foo"><span>bar <span>bar</span></span> bar</div>')
+        self.assertEqual(m.inner_html(elem), '<span>bar <span>bar</span></span> bar')
+
+    def test_inner_html_3(self):
+        elem = lxml.html.fromstring('<img src="http://nowhere.com/nothing.jpg" />')
+        self.assertEqual(m.inner_html(elem), '')
+
+    def test_inner_html_4(self):
+        elem = lxml.html.fromstring(u'<p>논-아스키</p>')
+        self.assertEqual(m.inner_html(elem), u'논-아스키')
