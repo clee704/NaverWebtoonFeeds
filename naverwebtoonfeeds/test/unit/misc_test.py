@@ -79,7 +79,8 @@ class MiscTest(unittest.TestCase):
         self.assertEqual(m.naver_url(42, mobile=True), 'http://m.comic.naver.com/webtoon/list.nhn?titleId=42')
 
     def test_naver_url_with_chapter_id_with_mobile(self):
-        self.assertEqual(m.naver_url(42, 1, mobile=True), 'http://m.comic.naver.com/webtoon/detail.nhn?titleId=42&no=1')
+        self.assertEqual(m.naver_url(42, 1, mobile=True),
+                'http://m.comic.naver.com/webtoon/detail.nhn?titleId=42&no=1')
 
     def test_as_naver_time_zone(self):
         self.assertEqual(m.as_naver_time_zone(datetime(2013, 1, 1, 0)),
