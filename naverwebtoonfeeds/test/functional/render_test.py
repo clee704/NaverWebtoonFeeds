@@ -8,7 +8,7 @@ import lxml.html
 from naverwebtoonfeeds.objects import db
 from naverwebtoonfeeds.models import Series, Chapter
 from naverwebtoonfeeds.template import externalize
-from naverwebtoonfeeds.test.utilities import Mock
+from naverwebtoonfeeds.test.utilities import Mock, mock_obj
 import naverwebtoonfeeds.render as r
 
 
@@ -54,7 +54,7 @@ class RenderTest(unittest.TestCase):
         self.assertIn('A girl named Alice falls down a rabbit hole into a fantasy world.', response)
         self.assertNotIn(u'구독할 수 있는 웹툰이 없습니다.', response)
         self.assertEqual(doc.xpath('count(//article)'), 2)
-        self.assertEqual(['series-2', 'series-1'], doc.xpath('//article/attribute::id'),
+        self.assertEqual(doc.xpath('//article/attribute::id'), ['series-2', 'series-1'],
                 "Series should be sorted by title.")
         self.assertIn(externalize(url_for('feed_show', series_id=1)),
                 doc.xpath('//article//a/attribute::href'))
@@ -62,11 +62,14 @@ class RenderTest(unittest.TestCase):
     def test_render_feed_show_with_chapters(self):
         r.cache = Mock()
         db.session.add(Series(id=1, title='Peanuts', author='Charles M. Schulz'))
-        db.session.add(Chapter(id=1, title='Strip #1', pubdate=datetime(1950, 10, 2), atom_id='', series_id=1))
-        db.session.add(Chapter(id=2, title='Strip #2', pubdate=datetime(1950, 10, 3), atom_id='', series_id=1))
+        db.session.add(Chapter(id=1, title='Strip #1', pubdate=datetime(1950, 10, 2), atom_id='atom1', series_id=1))
+        db.session.add(Chapter(id=2, title='Strip #2', pubdate=datetime(1950, 10, 3), atom_id='atom2', series_id=1))
         db.session.commit()
         response = r.render_feed_show(Series.query.get(1))
         doc = lxml.html.fromstring(response.data)
 
-        self.assertIn('Peanuts', response.data)
-        # TODO continue to write code tomorrow
+        r.cache.set.assert_called_with('feed_show_1', response, r.CACHE_PERMANENT)
+        self.assertEqual(doc.xpath('//feed/title/text()'), ['Peanuts'])
+        self.assertEqual(doc.xpath('//feed/author/name/text()'), ['Charles M. Schulz'])
+        self.assertEqual(doc.xpath('count(//entry)'), 2)
+        self.assertEqual(doc.xpath('//entry/id/text()'), ['atom2', 'atom1'])
