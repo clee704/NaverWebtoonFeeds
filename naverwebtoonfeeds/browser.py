@@ -135,7 +135,7 @@ class Browser(object):
             except:
                 __logger__.warning('An error occurred while parsing data for %s',
                         response.url, exc_info=True)
-        raise self.ResponseUnparsable(response.url)
+        raise self.UnparsableResponse(response.url)
 
     @staticmethod
     def login_required(response):
@@ -197,7 +197,7 @@ class Browser(object):
                     data['thumbnail_url'], series_id, chapter_id)
         return data
 
-    class ResponseUnparsable(Exception):
+    class UnparsableResponse(Exception):
         pass
 
     class UnauthorizedRequest(Exception):
