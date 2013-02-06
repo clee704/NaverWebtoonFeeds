@@ -1,5 +1,7 @@
 import unittest
 
+from netaddr import IPAddress
+
 from naverwebtoonfeeds.test.utilities import mock_obj, Mock, read_fixture
 # pylint: disable=W0611
 import naverwebtoonfeeds.objects   # Resolves a circular import issue below.
@@ -7,7 +9,7 @@ import naverwebtoonfeeds.browser as b
 
 
 # pylint: disable=C0103,R0904,E1103
-class MiscTest(unittest.TestCase):
+class BrowserTest(unittest.TestCase):
 
     def setUp(self):
         self.originals = {}
@@ -19,16 +21,17 @@ class MiscTest(unittest.TestCase):
         for name in self.originals:
             setattr(b, name, self.originals[name])
 
-    def test_get_when_access_denied(self):
-        b.get_public_ip = Mock(return_value='1.3.5.7')
+    def test_get_with_new_forbidden_address(self):
+        b.PUBLIC_IP = IPAddress('1.3.5.7')
         self.browser.session = Mock()
         self.browser.session.get.return_value.status_code = 403
         self.browser.session.get.return_value.raise_for_status.side_effect = b.requests.exceptions.HTTPError()
-
-        self.assertRaises(b.requests.exceptions.HTTPError, self.browser.get, 'http://www.naver.com/')
-        self.browser.session.get.reset_mock()
         self.assertRaises(self.browser.AccessDenied, self.browser.get, 'http://www.naver.com/')
-        # It should not make a request when the current IP address is blocked.
+
+    def test_get_with_known_forbidden_address(self):
+        b.PUBLIC_IP = IPAddress('50.16.1.2')
+        self.browser.session = Mock()
+        self.assertRaises(self.browser.AccessDenied, self.browser.get, 'http://www.naver.com/')
         self.assertFalse(self.browser.session.get.called)
 
     def test_get_issues(self):

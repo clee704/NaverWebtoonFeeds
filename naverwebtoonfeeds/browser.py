@@ -8,10 +8,11 @@ import lxml.html
 import lxml.html.soupparser
 import pytz
 import requests
+from netaddr import IPAddress, IPNetwork
 
-from naverwebtoonfeeds.objects import app
+from naverwebtoonfeeds.objects import app, PUBLIC_IP
 from naverwebtoonfeeds.constants import NAVER_TIMEZONE, URLS
-from naverwebtoonfeeds.misc import get_public_ip, inner_html
+from naverwebtoonfeeds.misc import inner_html
 
 
 __logger__ = logging.getLogger(__name__)
@@ -27,18 +28,27 @@ class Browser(object):
         'Connection': 'keep-alive',
     }
 
+    FORBIDDEN_NETWORKS = [IPNetwork(net) for net in [
+        '50.16.0.0/15', '50.19.0.0/16', '184.72.64.0/18', '184.72.128.0/17',
+        '184.73.0.0/16', '204.236.192/18',
+    ]]
+
     def __init__(self, max_retry=3):
         self.session = requests.Session()
         self.session.headers.update(self.HEADERS)
         self.max_retry = max_retry
-        self.forbidden_ip_addresses = set()
+
+    def is_forbidden(self, addr):
+        """
+        Return `True` if the given IPv4 address is forbidden by Naver.
+
+        """
+        return any(addr in net for net in self.FORBIDDEN_NETWORKS)
 
     def get(self, url):
-        if self.forbidden_ip_addresses:
-            public_ip = get_public_ip()
-            if public_ip in self.forbidden_ip_addresses:
-                __logger__.warning('Your IP address %s is forbidden', public_ip)
-                raise self.AccessDenied()
+        if PUBLIC_IP is not None and self.is_forbidden(PUBLIC_IP):
+            __logger__.warning('Your IP address %s is forbidden', PUBLIC_IP)
+            raise self.AccessDenied()
         errors = 0
         delay = 1
         while True:
@@ -59,10 +69,8 @@ class Browser(object):
             except requests.exceptions.HTTPError as e:
                 __logger__.warning('An HTTP error occurred while requesting %s: %s', url, e)
                 if response is not None and response.status_code == 403:
-                    public_ip = get_public_ip()
-                    __logger__.warning('Forbidden IP: %s', public_ip)
-                    self.forbidden_ip_addresses.add(public_ip)
-                    raise
+                    __logger__.warning('Forbidden IP: %s', PUBLIC_IP)
+                    raise self.AccessDenied()
             except:
                 __logger__.warning('An error occurred while requesting %s', url, exc_info=True)
             errors += 1

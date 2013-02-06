@@ -7,6 +7,7 @@ import sys
 from flask import Flask
 from flask.ext.cache import Cache
 from flask.ext.assets import Environment, Bundle
+from netaddr import IPAddress
 
 from naverwebtoonfeeds.models import db
 
@@ -77,14 +78,16 @@ assets.register('css_all',
 )
 
 
-import naverwebtoonfeeds.views
-import naverwebtoonfeeds.template
-
-
 # Log the current IP address
 # since Naver blocks requests from some IP address ranges.
+PUBLIC_IP = None
 try:
     from naverwebtoonfeeds.misc import get_public_ip
+    PUBLIC_IP = IPAddress(get_public_ip())
     __logger__.info('Current IP: %s', get_public_ip())
 except:
     __logger__.info('Failed to get the public IP')
+
+
+import naverwebtoonfeeds.views
+import naverwebtoonfeeds.template
