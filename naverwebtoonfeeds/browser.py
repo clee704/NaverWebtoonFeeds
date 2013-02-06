@@ -28,8 +28,8 @@ class Browser(object):
     }
 
     def __init__(self, max_retry=3):
-        self.cookies = None
-        self.headers = self.HEADERS.copy()
+        self.session = requests.Session()
+        self.session.headers.update(self.HEADERS)
         self.max_retry = max_retry
         self.forbidden_ip_addresses = set()
 
@@ -46,8 +46,7 @@ class Browser(object):
             try:
                 # Requests to Naver should be carefully monitored.
                 __logger__.warning('Requesting GET %s', url)
-                response = requests.get(url, cookies=self.cookies, headers=self.headers)
-                self.cookies = response.cookies
+                response = self.session.get(url)
                 response.raise_for_status()
                 if self.login_required(response):
                     if not self.login():
@@ -81,16 +80,14 @@ class Browser(object):
         if not app.config.get('NAVER_USERNAME'):
             return False
         url = 'https://nid.naver.com/nidlogin.login'
-        headers = dict(Referer='http://static.nid.naver.com/login.nhn')
-        headers.update(self.headers)
         data = {
             'enctp': '2',
             'id': app.config['NAVER_USERNAME'],
             'pw': app.config['NAVER_PASSWORD'],
         }
-        self.get('http://www.naver.com/')   # Get cookies
-        response = requests.post(url, data=data, cookies=self.cookies, headers=headers)
-        self.cookies = response.cookies
+        self.get('http://www.naver.com/')   # Get initial cookies
+        response = self.session.post(url, data=data,
+                headers={'Referer': 'http://static.nid.naver.com/login.nhn'})
         if 'location.replace' not in response.text[:100]:
             return False
         __logger__.info('Logged in')

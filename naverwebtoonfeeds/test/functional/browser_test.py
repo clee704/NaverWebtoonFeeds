@@ -21,18 +21,17 @@ class MiscTest(unittest.TestCase):
 
     def test_get_when_access_denied(self):
         b.get_public_ip = Mock(return_value='1.3.5.7')
-        b.requests = Mock()
-        b.requests.exceptions.HTTPError = self.originals['requests'].exceptions.HTTPError
-        b.requests.get.return_value.status_code = 403
-        b.requests.get.return_value.raise_for_status.side_effect = b.requests.exceptions.HTTPError()
+        self.browser.session = Mock()
+        self.browser.session.get.return_value.status_code = 403
+        self.browser.session.get.return_value.raise_for_status.side_effect = b.requests.exceptions.HTTPError()
 
-        self.assertRaises(b.requests.exceptions.HTTPError, self.browser.get, ('http://www.naver.com/',))
-        b.requests.get.reset_mock()
-        self.assertRaises(self.browser.AccessDenied, self.browser.get, ('http://www.naver.com/',))
+        self.assertRaises(b.requests.exceptions.HTTPError, self.browser.get, 'http://www.naver.com/')
+        self.browser.session.get.reset_mock()
+        self.assertRaises(self.browser.AccessDenied, self.browser.get, 'http://www.naver.com/')
         # It should not make a request when the current IP address is blocked.
-        self.assertFalse(b.requests.get.called)
+        self.assertFalse(self.browser.session.get.called)
 
     def test_get_issues(self):
-        b.requests = Mock()
-        b.requests.get.side_effect = lambda url, **kwargs: mock_obj(url=url, text=read_fixture('weekday.nhn.html'))
+        self.browser.session = Mock()
+        self.browser.session.get.side_effect = lambda url, **kwargs: mock_obj(url=url, text=read_fixture('weekday.nhn.html'))
         self.assertEqual(self.browser.get_issues(), read_fixture('weekday.nhn.parsed.yml'))
