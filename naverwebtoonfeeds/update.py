@@ -130,9 +130,13 @@ def _series_stats_update_interval():
     # 30 min to 1 hour would be a good choice.
     # Should be shorter than 1 day.
     hour = as_naver_time_zone(datetime.utcnow()).hour
-    if 23 <= hour or hour < 1:
+    # Values are based on the upload history since May 31, 2012
+    # when the official upload time was changed from midnight to 11pm.
+    if hour == 23:
+        # The rush hour; 85% of chapters were uploaded at 11pm.
         return timedelta(minutes=10)
-    elif 1 <= hour < 3:
+    elif hour in (10, 11, 0):
+        # 7% of chapters were uploaded either at 10am, 11am, or midnight.
         return timedelta(minutes=30)
     else:
         return timedelta(hours=1)
