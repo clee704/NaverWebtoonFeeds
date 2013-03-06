@@ -21,14 +21,14 @@ class BrowserTest(unittest.TestCase):
         for name in self.originals:
             setattr(b, name, self.originals[name])
 
-    def test_get_with_new_forbidden_address(self):
+    def test_get_access_denied(self):
         b.PUBLIC_IP = IPAddress('1.3.5.7')
         self.browser.session = Mock()
         self.browser.session.get.return_value.status_code = 403
         self.browser.session.get.return_value.raise_for_status.side_effect = b.requests.exceptions.HTTPError()
         self.assertRaises(self.browser.AccessDenied, self.browser.get, 'http://www.naver.com/')
 
-    def test_get_with_known_forbidden_address(self):
+    def test_get_access_denied_known_address(self):
         b.PUBLIC_IP = IPAddress('50.16.1.2')
         self.browser.session = Mock()
         self.assertRaises(self.browser.AccessDenied, self.browser.get, 'http://www.naver.com/')

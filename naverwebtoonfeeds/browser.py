@@ -28,7 +28,7 @@ class Browser(object):
         'Connection': 'keep-alive',
     }
 
-    FORBIDDEN_NETWORKS = [IPNetwork(net) for net in [
+    NETWORK_BLACKLIST = [IPNetwork(net) for net in [
         '50.16.0.0/15', '50.19.0.0/16', '184.72.64.0/18', '184.72.128.0/17',
         '184.73.0.0/16', '204.236.192/18',
     ]]
@@ -38,16 +38,16 @@ class Browser(object):
         self.session.headers.update(self.HEADERS)
         self.max_retry = max_retry
 
-    def is_forbidden(self, addr):
+    def is_denied(self, addr):
         """
-        Return `True` if the given IPv4 address is forbidden by Naver.
+        Return `True` if access from the given IPv4 address is denied by Naver.
 
         """
-        return any(addr in net for net in self.FORBIDDEN_NETWORKS)
+        return any(addr in net for net in self.NETWORK_BLACKLIST)
 
     def get(self, url):
-        if PUBLIC_IP is not None and self.is_forbidden(PUBLIC_IP):
-            __logger__.warning('Your IP address %s is forbidden', PUBLIC_IP)
+        if PUBLIC_IP is not None and self.is_denied(PUBLIC_IP):
+            __logger__.warning('Access from your IP address %s is denied', PUBLIC_IP)
             raise self.AccessDenied()
         errors = 0
         delay = 1
@@ -69,7 +69,7 @@ class Browser(object):
             except requests.exceptions.HTTPError as e:
                 __logger__.warning('An HTTP error occurred while requesting %s: %s', url, e)
                 if response is not None and response.status_code == 403:
-                    __logger__.warning('Forbidden IP: %s', PUBLIC_IP)
+                    __logger__.warning('Access from %s is denied', PUBLIC_IP)
                     raise self.AccessDenied()
             except:
                 __logger__.warning('An error occurred while requesting %s', url, exc_info=True)
