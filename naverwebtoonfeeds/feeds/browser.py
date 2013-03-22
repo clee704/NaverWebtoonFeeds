@@ -1,18 +1,19 @@
 # -*- coding: UTF-8 -*-
+# pylint: disable=W0702
 from datetime import datetime
 import logging
 import re
 import time
 
+from flask import current_app
 import lxml.html
 import lxml.html.soupparser
+from netaddr import IPNetwork
 import pytz
 import requests
-from netaddr import IPAddress, IPNetwork
 
-from naverwebtoonfeeds.objects import app, PUBLIC_IP
-from naverwebtoonfeeds.constants import NAVER_TIMEZONE, URLS
-from naverwebtoonfeeds.misc import inner_html
+from .constants import NAVER_TIMEZONE, URLS
+from .util import inner_html, get_public_ip
 
 
 __logger__ = logging.getLogger(__name__)
@@ -37,17 +38,19 @@ class Browser(object):
         self.session = requests.Session()
         self.session.headers.update(self.HEADERS)
         self.max_retry = max_retry
+        self.public_ip = None
+        self._get_public_ip()
 
     def is_denied(self, addr):
         """
-        Return `True` if access from the given IPv4 address is denied by Naver.
+        Returns *True* if access from the given IPv4 address is denied by Naver.
 
         """
         return any(addr in net for net in self.NETWORK_BLACKLIST)
 
     def get(self, url):
-        if PUBLIC_IP is not None and self.is_denied(PUBLIC_IP):
-            __logger__.warning('Access from your IP address %s is denied', PUBLIC_IP)
+        if self.public_ip is not None and self.is_denied(self.public_ip):
+            __logger__.warning('Access from your IP address %s is denied', self.public_ip)
             raise self.AccessDenied()
         errors = 0
         delay = 1
@@ -69,7 +72,7 @@ class Browser(object):
             except requests.exceptions.HTTPError as e:
                 __logger__.warning('An HTTP error occurred while requesting %s: %s', url, e)
                 if response is not None and response.status_code == 403:
-                    __logger__.warning('Access from %s is denied', PUBLIC_IP)
+                    __logger__.warning('Access from %s is denied', self.public_ip)
                     raise self.AccessDenied()
             except:
                 __logger__.warning('An error occurred while requesting %s', url, exc_info=True)
@@ -82,16 +85,16 @@ class Browser(object):
 
     def login(self):
         """
-        Try to login to Naver and return True if logged in and False if failed.
+        Logs in to Naver and return *True* if logged in and *False* if failed.
 
         """
-        if not app.config.get('NAVER_USERNAME'):
+        if not current_app.config.get('NAVER_USERNAME'):
             return False
         url = 'https://nid.naver.com/nidlogin.login'
         data = {
             'enctp': '2',
-            'id': app.config['NAVER_USERNAME'],
-            'pw': app.config['NAVER_PASSWORD'],
+            'id': current_app.config['NAVER_USERNAME'],
+            'pw': current_app.config['NAVER_PASSWORD'],
         }
         self.get('http://www.naver.com/')   # Get initial cookies
         response = self.session.post(url, data=data,
@@ -136,6 +139,13 @@ class Browser(object):
                 __logger__.warning('An error occurred while parsing data for %s',
                         response.url, exc_info=True)
         raise self.UnparsableResponse(response.url)
+
+    def _get_public_ip(self):
+        try:
+            self.public_ip = get_public_ip()
+            __logger__.info('Current IP: %s', get_public_ip())
+        except:
+            __logger__.warning('Failed to get the public IP')
 
     @staticmethod
     def login_required(response):

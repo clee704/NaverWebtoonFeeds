@@ -1,11 +1,13 @@
 from copy import deepcopy
 import os
 import re
-from naverwebtoonfeeds.config.default import Config as Default
 
-class Config(Default):
+from ..config import DefaultConfig
 
-    LOGGING = deepcopy(Default.LOGGING)
+
+class Config(DefaultConfig):
+
+    LOGGING = deepcopy(DefaultConfig.LOGGING)
     LOGGING['loggers']['naverwebtoonfeeds']['level'] = os.environ.get('LOG_LEVEL', 'WARNING')
     LOGGING['loggers']['sqlalchemy.engine']['level'] = os.environ.get('LOG_LEVEL', 'WARNING')
     LOGGING['loggers']['rq.worker']['level'] = os.environ.get('LOG_LEVEL', 'WARNING')

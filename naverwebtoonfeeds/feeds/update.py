@@ -1,13 +1,15 @@
+# pylint: disable=W0702
 from datetime import datetime, timedelta
 import logging
 
+from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
-from naverwebtoonfeeds.objects import app, db
-from naverwebtoonfeeds.browser import Browser
-from naverwebtoonfeeds.misc import as_naver_time_zone
-from naverwebtoonfeeds.models import Series, Chapter, Config
-from naverwebtoonfeeds.render import render_feed_index, render_feed_show
+from ..extensions import db
+from .browser import Browser
+from .models import Series, Chapter, Config
+from .render import render_feed_index, render_feed_show
+from .util import as_naver_time_zone
 
 
 __browser__ = Browser()
@@ -253,7 +255,7 @@ def _add_new_chapters(series):
 
 def _make_atom_id(chapter):
     date = datetime.utcnow().strftime('%Y-%m-%d')
-    tagging_entity = app.config['AUTHORITY_NAME'] + ',' + date
+    tagging_entity = current_app.config['AUTHORITY_NAME'] + ',' + date
     specific_list = ['generator=naverwebtoonfeeds']
     specific_list.append('series={0}'.format(chapter.series.id))
     specific_list.append('chapter={0}'.format(chapter.id))

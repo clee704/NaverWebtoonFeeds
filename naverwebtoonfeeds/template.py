@@ -1,29 +1,26 @@
 import urlparse
 
-from naverwebtoonfeeds.objects import app
-from naverwebtoonfeeds.misc import naver_url
+from flask import current_app
 
 
-@app.template_filter()
 def externalize(url):
     """
-    Externalize the given internal URL path like /foo/bar to
-    http://myserver.com/foo/bar so that it can be used in feeds.
+    Externalizes the given internal URL path like /foo/bar to
+    http://example.com/foo/bar so that it can be used in feeds.
 
     """
-    return urlparse.urljoin(app.config['URL_ROOT'], url)
+    return urlparse.urljoin(current_app.config['URL_ROOT'], url)
 
 
-@app.template_filter()
-def via_imgproxy(url):
-    if not app.config.get('IMGPROXY_URL_PATTERN'):
-        url_format = app.config.get('IMGPROXY_URL')
+def proxify(url):
+    """
+    Proxifies the given image URL to prevent resource blocking based on
+    the Referer header.
+
+    """
+    if not current_app.config.get('IMGPROXY_URL_PATTERN'):
+        url_format = current_app.config.get('IMGPROXY_URL')
         return url_format.format(url=url) if url_format else url
-    pattern = app.config['IMGPROXY_URL_PATTERN']
-    variable = app.config['IMGPROXY_URL_VARIABLE'](url)
+    pattern = current_app.config['IMGPROXY_URL_PATTERN']
+    variable = current_app.config['IMGPROXY_URL_VARIABLE'](url)
     return pattern.format(variable=variable, url=url)
-
-
-@app.context_processor
-def utility_processor():
-    return dict(naver_url=naver_url)

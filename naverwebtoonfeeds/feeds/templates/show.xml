@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  {% set feed_url = url_for('feed_show', series_id=series.id)|externalize %}
+  {% set feed_url = url_for('.show', series_id=series.id)|externalize %}
   <title type="text">{{ series.title }}</title>
   <id>{{ feed_url }}</id>
   {% if series.chapters %}
@@ -12,7 +12,7 @@
     <name>{{ series.author }}</name>
   </author>
   <subtitle type="html"><![CDATA[{{ series.description|safe }}]]></subtitle>
-  <logo>{{ series.thumbnail_url|via_imgproxy }}</logo>
+  <logo>{{ series.thumbnail_url|proxify }}</logo>
   <generator>Naver Webtoon Feeds</generator>
   {% for chapter in series.chapters %}
     <entry>
@@ -26,7 +26,7 @@
       <content type="html"><![CDATA[
         <a href="{{ chapter_url }}">PC</a>
         <a href="{{ naver_url(series.id, chapter.id, mobile=True) }}">모바일</a>
-        <img src="{{ chapter.thumbnail_url|via_imgproxy }}" alt="" style="vertical-align: top" />
+        <img src="{{ chapter.thumbnail_url|proxify }}" alt="" style="vertical-align: top" />
       ]]></content>
     </entry>
   {% endfor %}

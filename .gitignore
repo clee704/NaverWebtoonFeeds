@@ -1,8 +1,7 @@
-*.py?
+*.pyc
+*.pyo
+*.egg
+*.egg-info
 .env
-/naverwebtoonfeeds/db/*.db
-/naverwebtoonfeeds/db/*.db-journal
-/naverwebtoonfeeds/static/gen/
-/naverwebtoonfeeds/static/.webassets-cache/
-requirements.local.txt
-/naverwebtoonfeeds/default_settings.local.py
+dist
+build

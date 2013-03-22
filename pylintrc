@@ -35,9 +35,8 @@ load-plugins=
 # it should appear only once).
 #
 # I0011: Used when an inline option disables a message or a messages category.
-# W0702: Using except clauses to catch all exceptions is not bad here.
 # C0111: Docstrings are good, but let's ignore them for a while.
-disable=I0011,W0702,C0111
+disable=I0011,C0111
 
 
 [REPORTS]
@@ -59,7 +58,7 @@ symbols=no
 files-output=no
 
 # Tells whether to display a full report or only the messages
-reports=yes
+reports=no
 
 # Python expression which should return a note less than 10 (10 is the highest
 # note). You have access to the variables errors warning, statement which

@@ -1,11 +1,8 @@
-# pylint: disable=E0611,F0401,W0232
-from flask.ext.sqlalchemy import SQLAlchemy
+# pylint: disable=W0232
 import pytz
 
-from naverwebtoonfeeds.constants import NAVER_TIMEZONE
-
-
-db = SQLAlchemy()
+from ..extensions import db
+from .constants import NAVER_TIMEZONE
 
 
 class Series(db.Model):
