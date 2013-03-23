@@ -53,3 +53,4 @@ Flask-Testing==0.4
 twill==0.9
 mock==1.0.1
 PyYAML==3.10
+pysqlite==2.6.3
