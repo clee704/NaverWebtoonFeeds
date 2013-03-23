@@ -68,6 +68,7 @@ setup(
         "Flask-Testing==0.4",
         "mock==1.0.1",
         "PyYAML==3.10",
+        "pysqlite==2.6.3",
     ],
     extras_require = {
         "docs": ["Sphinx==1.1.3"],
