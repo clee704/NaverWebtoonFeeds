@@ -22,7 +22,8 @@ License
 -------
 
 Naver Webtoon Feeds is licensed under `GNU Affero General Public License,
-version 3`_. See ``LICENSE`` for the full text.
+version 3`_. See LICENSE_ for the full text.
 
 .. _GNU Affero General Public License, version 3:
     http://www.gnu.org/licenses/agpl-3.0.html
+.. _LICENSE: LICENSE
