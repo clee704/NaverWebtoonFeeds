@@ -40,7 +40,7 @@ class DefaultConfig(object):
     # When using SQLite, make sure the database file, as well as
     # the parent directory of the file, is both readable and writable
     # by the server process.
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///db/naverwebtoonfeeds.db'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///naverwebtoonfeeds.db'
 
     # If enabled, record SQL queries for debugging.
     # It should be disabled on the production environment.

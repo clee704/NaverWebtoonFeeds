@@ -5,3 +5,5 @@
 .env
 dist
 build
+*.db
+*.db-journal
