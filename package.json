@@ -2,10 +2,10 @@
   "name": "NaverWebtoonFeeds",
   "version": "0.0.1",
   "dependencies": {
-    "coffee-script": "1.4.0"
+    "coffee-script": "1.6.2"
   },
   "engines": {
-    "node": "0.6.12",
-    "npm": "1.1.4"
+    "node": "0.10.4",
+    "npm": "1.2.18"
   }
 }
