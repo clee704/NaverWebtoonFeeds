@@ -50,7 +50,7 @@ class Browser(object):
 
     def get(self, url):
         if self.public_ip is not None and self.is_denied(self.public_ip):
-            __logger__.warning('Access from your IP address %s is denied', self.public_ip)
+            __logger__.warning('Your IP address %s is in a blacklisted range', self.public_ip)
             raise self.AccessDenied()
         errors = 0
         delay = 1
@@ -72,7 +72,7 @@ class Browser(object):
             except requests.exceptions.HTTPError as e:
                 __logger__.warning('An HTTP error occurred while requesting %s: %s', url, e)
                 if response is not None and response.status_code == 403:
-                    __logger__.warning('Access from %s is denied', self.public_ip)
+                    __logger__.warning('Access from your IP address %s is denied', self.public_ip)
                     raise self.AccessDenied()
             except:
                 __logger__.warning('An error occurred while requesting %s', url, exc_info=True)
