@@ -20,7 +20,7 @@ $ ->
   # Use Lazy Load.
   $('img.lazy').lazyload
     effect: 'fadeIn'
-    threshold: 200
+    threshold: 1000
 
   # Select the whole feed URL when it is clicked.
   $tabContent.on 'click', '.feed-url', -> this.select()
