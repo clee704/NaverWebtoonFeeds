@@ -177,5 +177,13 @@ class DefaultConfig(object):
                 'handlers': ['console_raw'],
                 'level': 'INFO',
             },
+            'scss': {
+                'handlers': ['console'],
+                'level': 'WARNING',
+            },
         },
     }
+
+    # Flask-Assets options (You should not change these!)
+    PYSCSS_STATIC_ROOT = 'static'
+    PYSCSS_STATIC_URL = 'static'

@@ -22,6 +22,7 @@ netaddr==0.7.10
 ## Others
 pytz==2013b
 yuicompressor==2.4.7
+pyScss==1.1.5
 decorator==3.4.0
 
 # Optional packages

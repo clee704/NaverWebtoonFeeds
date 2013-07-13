@@ -61,6 +61,7 @@ setup(
         "netaddr==0.7.10",
         "pytz==2012j",
         "yuicompressor==2.4.7",
+        "pyScss==1.1.5",
         "decorator==3.4.0",
     ],
     tests_require = [

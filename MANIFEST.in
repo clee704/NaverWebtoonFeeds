@@ -1,5 +1,5 @@
 include .gitignore Makefile LICENSE README.rst pylintrc env.template manage.py
-include requirements.txt dev-requirements.txt Gemfile Gemfile.lock package.json
+include requirements.txt dev-requirements.txt package.json
 include Procfile .buildpacks runtime.txt
 recursive-include docs *
 prune docs/_build
