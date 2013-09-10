@@ -1,12 +1,14 @@
 # pylint: disable=W0702
 from datetime import datetime, timedelta
 import logging
+import os
+import signal
 
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
 from ..extensions import db
-from .browser import Browser
+from .browser import Browser, AccessDenied
 from .models import Series, Chapter, Config
 from .render import render_feed_index, render_feed_show
 from .util import as_naver_time_zone
@@ -115,16 +117,26 @@ def update_series(series, add_new_chapters=True, do_commit=True, background=Fals
 
 
 def add_completed_series():
-    try:
-        completed_series = __browser__.get_completed_series()
-    except:
-        return
+    completed_series = __browser__.get_completed_series()
     completed_series_ids = set(data['id'] for data in completed_series)
     existing_series_ids = set(row[0] for row in db.session.query(Series.id))
     for series_id in completed_series_ids - existing_series_ids:
         series = Series(id=series_id)
         series.new_chapters_available = True
         update_series(series)
+
+
+def run_from_worker(method, *args):
+    try:
+        if method == 'list':
+            update_series_list(background=True)
+        elif method == 'series':
+            update_series(Series.query.get(args[0]), background=True)
+        else:
+            raise RuntimeError('unknown method')
+    except AccessDenied:
+        # Stop the current worker to get a new IP address
+        os.kill(os.getppid(), signal.SIGTERM)
 
 
 def _series_stats_update_interval():
@@ -146,10 +158,7 @@ def _series_stats_update_interval():
 
 def _fetch_series_list(update_all, updated):
     fetched_data = {}
-    try:
-        issues = __browser__.get_issues()
-    except:
-        return
+    issues = __browser__.get_issues()
     for data in issues:
         info = fetched_data.setdefault(data['id'], {})
         info.setdefault('upload_days', []).append(data['day'])
@@ -220,10 +229,7 @@ def _add_new_series(new_series_ids, fetched_data, update_all, updated):
 
 
 def _fetch_series_data(series):
-    try:
-        data = __browser__.get_series_data(series.id)
-    except:
-        return
+    data = __browser__.get_series_data(series.id)
     if data.get('removed'):
         if not series.is_completed:
             __logger__.warning('Series #%d seems removed', series.id)
@@ -263,10 +269,7 @@ def _make_atom_id(chapter):
 
 
 def _fetch_chapter_data(chapter):
-    try:
-        data = __browser__.get_chapter_data(chapter.series.id, chapter.id)
-    except:
-        return
+    data = __browser__.get_chapter_data(chapter.series.id, chapter.id)
     if data.get('not_found'):
         return False
     return _update_attributes(chapter, data, ['title', 'pubdate', 'thumbnail_url'])

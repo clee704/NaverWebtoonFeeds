@@ -51,7 +51,7 @@ class Browser(object):
     def get(self, url):
         if self.public_ip is not None and self.is_denied(self.public_ip):
             __logger__.warning('Your IP address %s is in a blacklisted range', self.public_ip)
-            raise self.AccessDenied()
+            raise AccessDenied()
         errors = 0
         delay = 1
         while True:
@@ -63,22 +63,22 @@ class Browser(object):
                 response.raise_for_status()
                 if self.login_required(response):
                     if not self.login():
-                        raise self.UnauthorizedRequest()
+                        raise UnauthorizedRequest()
                     continue
                 return response
-            except self.UnauthorizedRequest:
+            except UnauthorizedRequest:
                 __logger__.warning('Failed to login to Naver')
                 raise
             except requests.exceptions.HTTPError as e:
                 __logger__.warning('An HTTP error occurred while requesting %s: %s', url, e)
                 if response is not None and response.status_code == 403:
                     __logger__.warning('Access from your IP address %s is denied', self.public_ip)
-                    raise self.AccessDenied()
+                    raise AccessDenied()
             except:
                 __logger__.warning('An error occurred while requesting %s', url, exc_info=True)
             errors += 1
             if errors > self.max_retry:
-                raise
+                raise TooManyErrors()
             __logger__.warning('Waiting for %.1f seconds before reconnecting', delay)
             time.sleep(delay)
             delay += 0.5
@@ -138,7 +138,7 @@ class Browser(object):
             except:
                 __logger__.error('An error occurred while parsing data for %s',
                         response.url, exc_info=True)
-        raise self.UnparsableResponse(response.url)
+        raise UnparsableResponse(response.url)
 
     def _get_public_ip(self):
         try:
@@ -207,11 +207,22 @@ class Browser(object):
                     data['thumbnail_url'], series_id, chapter_id)
         return data
 
-    class UnparsableResponse(Exception):
-        pass
 
-    class UnauthorizedRequest(Exception):
-        pass
+class BrowserException(Exception):
+    pass
 
-    class AccessDenied(Exception):
-        pass
+
+class UnparsableResponse(BrowserException):
+    pass
+
+
+class UnauthorizedRequest(BrowserException):
+    pass
+
+
+class AccessDenied(BrowserException):
+    pass
+
+
+class TooManyErrors(BrowserException):
+    pass

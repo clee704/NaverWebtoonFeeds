@@ -7,7 +7,7 @@ from flask import Blueprint, current_app, request, redirect
 from ..extensions import cache
 from .models import Series
 from .render import render_feed_index, render_feed_show
-from .update import series_list_needs_fetching, update_series_list, update_series
+from .update import series_list_needs_fetching, update_series_list, update_series, run_from_worker
 from .util import naver_url, enqueue_job
 
 
@@ -38,7 +38,7 @@ def index():
     invalidate_cache = False
     if series_list_needs_fetching():
         if current_app.config.get('USE_REDIS_QUEUE'):
-            enqueue_job(update_series_list, kwargs=dict(background=True))
+            enqueue_job(run_from_worker, args=('list',))
         else:
             invalidate_cache = update_series_list()[0]
     if not invalidate_cache:
@@ -60,13 +60,13 @@ def show(series_id):
     invalidate_cache = False
     if series_list_needs_fetching():
         if current_app.config.get('USE_REDIS_QUEUE'):
-            enqueue_job(update_series_list, kwargs=dict(background=True))
+            enqueue_job(run_from_worker, args=('list',))
         elif update_series_list()[0]:
             cache.delete('feed_index')
     series = Series.query.get_or_404(series_id)
     if series.new_chapters_available:
         if current_app.config.get('USE_REDIS_QUEUE'):
-            enqueue_job(update_series, args=(series,), kwargs=dict(background=True))
+            enqueue_job(run_from_worker, args=('series', series_id))
         else:
             invalidate_cache = any(update_series(series))
     if not invalidate_cache:
