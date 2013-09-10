@@ -136,7 +136,7 @@ class Browser(object):
                 doc = parser.fromstring(response.text)
                 return getattr(self, method)(doc, *args)
             except:
-                __logger__.warning('An error occurred while parsing data for %s',
+                __logger__.error('An error occurred while parsing data for %s',
                         response.url, exc_info=True)
         raise self.UnparsableResponse(response.url)
 
@@ -183,7 +183,7 @@ class Browser(object):
         status = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
         return {
             'title': comicinfo_dsc.xpath('h2/text()')[0].strip(),
-            'author': comicinfo_dsc.xpath('h2/em')[0].text_content().strip(),
+            'author': comicinfo_dsc.xpath('h2/*[@class="wrt_nm"]')[0].text_content().strip(),
             'description': inner_html(comicinfo_dsc.xpath('p[@class="txt"]')[0]),
             'last_chapter': int(re.search(r'no=(\d+)', permalink).group(1)),
             'is_completed': status == u'완결웹툰',
