@@ -11,7 +11,9 @@ from netaddr import IPAddress
 import pytz
 import requests
 
+from ..extensions import db
 from .constants import URLS, MOBILE_URLS, NAVER_TIMEZONE
+from .models import Config
 
 
 __logger__ = logging.getLogger(__name__)
@@ -47,13 +49,25 @@ def get_public_ip():
 
 
 def heroku_scale(process_name, qty):
+    key = 'heroku:{0}'.format(process_name)
+    old_qty = Config.query.get(key)
+    if old_qty is not None and old_qty.value == qty:
+        return
     # Currently it's not possible to scale processes between 0 and 1 using the
     # public API. Below is a quick-and-dirty workaround for that issue.
     cloud = heroku.from_key(current_app.config['HEROKU_API_KEY'])
     # pylint: disable=W0212
-    cloud._http_resource(method='POST',
-        resource=('apps', current_app.config['HEROKU_APP_NAME'], 'ps', 'scale'),
-        data=dict(type=process_name, qty=qty))
+    try:
+        cloud._http_resource(method='POST',
+            resource=('apps', current_app.config['HEROKU_APP_NAME'], 'ps', 'scale'),
+            data=dict(type=process_name, qty=qty))
+        if old_qty is None:
+            db.session.add(Config(key=key, value=qty))
+        else:
+            old_qty.value = qty
+        db.session.commit()
+    except requests.HTTPError as e:
+        __logger__.error('Could not scale heroku: %s', e.message)
 
 
 def enqueue_job(func, args=None, kwargs=None):
