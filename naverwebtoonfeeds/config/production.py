@@ -18,7 +18,7 @@ class Config(DefaultConfig):
         if not all(os.environ.get(x) for x in keys):
             return
         smtp_handler = cls.LOGGING['handlers']['mail_admins']
-        smtp_handler['toaddrs'] = os.environ['MAIL_TOADDRS']
+        smtp_handler['toaddrs'] = autocast(os.environ['MAIL_TOADDRS'])
         smtp_handler['mailhost'] = ('smtp.gmail.com', 587)
         smtp_handler['credentials'] = (os.environ['GMAIL_USERNAME'], os.environ['GMAIL_PASSWORD'])
         smtp_handler['secure'] = ()
