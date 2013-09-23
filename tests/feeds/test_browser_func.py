@@ -14,7 +14,7 @@ class TestBrowser(TestCase):
         self.b.session = Mock()
         self.b.session.get.return_value.status_code = 403
         self.b.session.get.return_value.raise_for_status.side_effect = feeds_browser.requests.exceptions.HTTPError()
-        self.assertRaises(self.b.AccessDenied, self.b.get, 'http://www.naver.com/')
+        self.assertRaises(feeds_browser.AccessDenied, self.b.get, 'http://www.naver.com/')
 
     @patch('naverwebtoonfeeds.feeds.browser.get_public_ip')
     def test_get_access_denied_known_address(self, mock_get_public_ip):
@@ -22,7 +22,7 @@ class TestBrowser(TestCase):
         self.b.public_ip = IPAddress('50.16.1.2')
         self.b.session = Mock()
         self.b.session.get.return_value.url = 'http://www.naver.com/'
-        self.assertRaises(self.b.AccessDenied, self.b.get, 'http://www.naver.com/')
+        self.assertRaises(feeds_browser.AccessDenied, self.b.get, 'http://www.naver.com/')
         self.assertFalse(self.b.session.get.called)
 
     @patch('naverwebtoonfeeds.feeds.browser.get_public_ip')

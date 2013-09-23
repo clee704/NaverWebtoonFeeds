@@ -7,6 +7,7 @@ from netaddr import IPAddress
 from tests import TestCase
 from ..util import Mock, patch
 from naverwebtoonfeeds.feeds.constants import NAVER_TIMEZONE
+from naverwebtoonfeeds.feeds.models import Config
 import naverwebtoonfeeds.feeds.util as feeds_util
 
 
@@ -23,6 +24,10 @@ class TestUtil(TestCase):
                 resource=('apps', 'testapp', 'ps', 'scale'),
                 data=dict(type='beaver', qty=5)
         )
+        assert Config.query.get('heroku:beaver').value == 5
+        mock_heroku.from_key('foobar123')._http_resource.reset_mock()
+        feeds_util.heroku_scale('beaver', 5)
+        assert not mock_heroku.from_key('foobar123')._http_resource.called
 
     def test_naver_url(self):
         self.assertEqual(feeds_util.naver_url(42), 'http://comic.naver.com/webtoon/list.nhn?titleId=42')

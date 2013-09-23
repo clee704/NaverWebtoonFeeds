@@ -1,10 +1,14 @@
 $ ->
 
+  # Used to detect changes of search terms in the search bar
+  # to make the search almost instant.
+  # input event is the right option, but
   # IE 9 doesn't fire input event when the value is changed to blank.
-  # Didn't tested IE 10; just use the old keyup event.
+  # So keyup event is used for IE browsers, although
+  # it isn't tested whether input works in IE 10.
   searchBarEventType = if $.browser.msie then 'keyup' else 'input'
 
-  # jQuery collections that are used often.
+  # Frequently-used jQuery collections
   $body = $('body')
   $form = $('form')
   $searchBar = $form.find('input[type=search]')
@@ -16,7 +20,7 @@ $ ->
   # Use Lazy Load.
   $('img.lazy').lazyload
     effect: 'fadeIn'
-    threshold: 200
+    threshold: 1000
 
   # Select the whole feed URL when it is clicked.
   $tabContent.on 'click', '.feed-url', -> this.select()
@@ -25,13 +29,14 @@ $ ->
   $form.on 'submit', ->
     $searchBar.blur().triggerHandler(searchBarEventType)
     false
-  # Empty the search bar and focus it when the close button is clicked.
+  # Empty the search bar and focus it when X is clicked.
   .find('.close').on 'click', ->
     $searchBar.val('')
     $searchBar.focus().triggerHandler(searchBarEventType)
     false
 
-  # Normalize the string for search.
+  # Normalize strings so that they can be searched
+  # while composing hangul syllables.
   normalize = do ->
     JAMO_LIST = [
       ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ',
@@ -63,7 +68,7 @@ $ ->
       temp.join('')
     (str) -> decompose(str.trim().toLowerCase())
 
-  # Store normalized text for search.
+  # Index the normalized strings with their IDs.
   tuples = {}
   $mediaElements.each ->
     attrs = ['title', 'author', 'description']
@@ -114,8 +119,8 @@ $ ->
     # Prevent the hash from appearing at the address bar.
     false
 
+  # Compute the number of visible media elements and hide empty tabs.
   organizeTabs = ->
-    # Compute the number of visible media elements and hide empty tabs.
     $tabs.removeClass('empty')
     $tabContent.removeClass('empty')
     $tabs.each ->
@@ -134,8 +139,8 @@ $ ->
     if $tabs.first().is('.empty')
       $tabContent.addClass('empty')
 
+  # Load lazy images currently visible in the viewport.
   loadLazyImagesInCurrentViewport = ->
-    # Load lazy images currently visible in the viewport.
     $body.trigger('scroll')
 
   $checkbox.on('click', toggleCompletedSeries).triggerHandler('click')

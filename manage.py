@@ -2,6 +2,7 @@
 from flask.ext.script import Manager, Shell, prompt_bool
 from naverwebtoonfeeds import create_app
 from naverwebtoonfeeds.extensions import cache, db
+from naverwebtoonfeeds.feeds.browser import BrowserException
 
 
 app = create_app()
@@ -25,13 +26,16 @@ def addcompletedseries():
 @manager.command
 def runworker(burst=False):
     """Runs the worker that fetches data from Naver and update the database."""
-    from rq import Connection
-    import rq
-    from naverwebtoonfeeds.extensions import redis_connection
-    from naverwebtoonfeeds.feeds.util import heroku_scale
-    with Connection(connection=redis_connection):
-        w = rq.Worker([rq.Queue()], exc_handler=lambda job, *exc_info: False)
-        w.work(burst=burst)
+    try:
+        import rq
+        from naverwebtoonfeeds.extensions import redis_connection
+        from naverwebtoonfeeds.feeds.util import heroku_scale
+        with rq.Connection(connection=redis_connection):
+            w = rq.Worker([rq.Queue()])
+            # Remove default exception handler that moves job to failed queue
+            w.pop_exc_handler()
+            w.work(burst=burst)
+    finally:
         if burst and app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
             heroku_scale('worker', 0)
 

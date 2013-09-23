@@ -5,8 +5,8 @@ __all__ = ['development', 'test', 'production']
 # Default configurations for NaverWebtoonFeeds.
 #
 # You should override at least URL_ROOT and AUTHORITY_NAME.
-# Edit this file or make a separate settings file and set
-# NAVERWEBTOONFEEDS_SETTINGS environment variable to point to it.
+# Edit this file or make a separate settings file and
+# make NAVERWEBTOONFEEDS_SETTINGS environment variable point to it.
 #
 # Make sure this file is unreadable by others if you've decided to
 # write down your Naver login information here.
@@ -58,12 +58,12 @@ class DefaultConfig(object):
     # and send_file(). (Flask config)
     SEND_FILE_MAX_AGE_DEFAULT = 31536000
 
-    # If enabled, requests from different hosts other than URL_ROOT
-    # will be redirected to the corresponding canonical URL.
+    # Enable redirecting to the canonical URL if the request is from different
+    # hosts other than URL_ROOT.
     #FORCE_REDIRECT = True
 
     # Cache is used to store rendered pages and to queue background
-    # jobs. Both features are optional, so you can just not use cache.
+    # jobs. Both features are optional, although strongly recommended.
     CACHE_KEY_PREFIX = 'naverwebtoonfeeds:'
     CACHE_TYPE = 'simple'
     #
@@ -79,19 +79,22 @@ class DefaultConfig(object):
     #CACHE_REDIS_PORT = 6379
     #CACHE_REDIS_PASSWORD = ''
 
-    # Compress when storing values in the cache. (Redis only)
-    #ENABLE_CACHE_COMPRESSION = True
-
-    # Use Redis Queue to update the database by background workers.
-    # You must use Redis as a cache (see above).
+    # Use Redis Queue to update the database by a background worker.
+    # You must use Redis cache for this feature.
     #USE_REDIS_QUEUE = True
 
-    # Save your money by running the worker process only when needed.
+    # Enable on-demand starting and stopping of a background worker.
+    # If disabled, the worker process must be running all the time.
+    # Your Heroku API key and app name is needed.
     #REDIS_QUEUE_BURST_MODE_IN_HEROKU = True
     #HEROKU_API_KEY = ''
     #HEROKU_APP_NAME = ''
 
-    # Naver login information is needed to access some adult-only series.
+    # Enable data compression in Redis cache.
+    # Recommended if you have a small cache (~ 5 MB).
+    #ENABLE_CACHE_COMPRESSION = True
+
+    # Naver account is needed to access adult-only works.
     #NAVER_USERNAME = ''
     #NAVER_PASSWORD = ''
 
@@ -99,12 +102,14 @@ class DefaultConfig(object):
     # Naver disallow access to thumbnails from other domains.
     # If provided, all thumbnail URLs will be formatted by
     # IMGPROXY_URL.format(url=thumbnail_url).
+    # It may be overridden by IMGPROXY_URL_PATTERN.
     IMGPROXY_URL = 'http://images2-focus-opensocial.googleusercontent.com/' + \
             'gadgets/proxy?container=focus&url={url}'
 
     # You can use multiple hostnames to speed up page loading.
     # According to a research, too many hostnames actually have
     # negative impact on the performance; 2 to 4 should be good.
+    # It overrides IMGPROXY_URL.
     IMGPROXY_URL_PATTERN = 'http://images{variable}-focus-opensocial.googleusercontent.com/' + \
             'gadgets/proxy?container=focus&url={url}'
     # Use 3 hostnames starting with images0, images1, and images2.
@@ -172,5 +177,13 @@ class DefaultConfig(object):
                 'handlers': ['console_raw'],
                 'level': 'INFO',
             },
+            'scss': {
+                'handlers': ['console'],
+                'level': 'WARNING',
+            },
         },
     }
+
+    # Flask-Assets options (You should not change these!)
+    PYSCSS_STATIC_ROOT = 'static'
+    PYSCSS_STATIC_URL = 'static'
