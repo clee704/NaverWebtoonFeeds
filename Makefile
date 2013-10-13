@@ -1,4 +1,4 @@
-.PHONY: init lint test docs dist
+.PHONY: init lint test docs dist clean
 
 init:
 	pip install -r requirements.txt
