@@ -22,7 +22,7 @@ class Config(DefaultConfig):
         smtp_handler['mailhost'] = ('smtp.gmail.com', 587)
         smtp_handler['credentials'] = (os.environ['GMAIL_USERNAME'], os.environ['GMAIL_PASSWORD'])
         smtp_handler['secure'] = ()
-        cls.LOGGING['loggers']['naverwebtoonfeeds'].append('mail_admins')
+        cls.LOGGING['loggers']['naverwebtoonfeeds']['handlers'].append('mail_admins')
 
     @classmethod
     def from_envvars(cls):
@@ -48,3 +48,4 @@ def autocast(value):
         return value
 
 Config.from_envvars()
+Config.setup_smtp()
