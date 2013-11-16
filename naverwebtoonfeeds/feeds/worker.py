@@ -71,14 +71,16 @@ def _heroku_scale(process_name, qty):
         __logger__.debug('%s is already scaled to %d processes', process_name, qty)
         return
 
-    cloud = heroku.from_key(current_app.config['HEROKU_API_KEY'])
+    h = heroku.from_key(current_app.config['HEROKU_API_KEY'])
     try:
-        app = cloud.apps[current_app.config['HEROKU_APP_NAME']]
+        app = h.apps[current_app.config['HEROKU_APP_NAME']]
         try:
             app.processes[process_name].scale(qty)
         except KeyError:
             # No existing processes
-            app.processes.add((process_name, qty))
+            # Use a dirty hack: https://github.com/heroku/heroku.py/issues/45
+            from heroku.models import Process
+            Process.new_from_dict({'process': process_name}, h, app=app).scale(qty)
         __logger__.debug('%s is scaled to %d processes', process_name, qty)
         # Save the changed quantity for 5 minutes to make it possible
         # to re-issue the command after 5 minutes.
