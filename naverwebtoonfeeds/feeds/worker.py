@@ -44,6 +44,7 @@ def _update_func_wrapper(target, *args):
         else:
             __logger__.warning('Unknown target: %s', target)
     except AccessDenied:
+        __logger__.warning('Access denied; stopping the process')
         # Stop the current worker to get a new IP address
         os.kill(os.getppid(), signal.SIGTERM)
 
