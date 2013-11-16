@@ -1,5 +1,4 @@
 from .app import create_app
-# pylint: disable=C0103
 application = create_app()
 
 # Code that only executed when a web server starts, not

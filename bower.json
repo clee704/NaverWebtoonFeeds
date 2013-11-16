@@ -1,0 +1,9 @@
+{
+  "name": "naverwebtoonfeeds",
+  "version": "0.0.1",
+  "dependencies": {
+    "jquery": "~1.10.2",
+    "bootstrap": "~3.0.2",
+    "jquery.lazyload": "~1.9.0"
+  }
+}

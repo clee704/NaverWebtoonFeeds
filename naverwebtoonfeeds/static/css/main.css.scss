@@ -1,0 +1,125 @@
+$font-family-sans-serif: "Nanum Gothic", NanumGothic, "나눔고딕", "서울남산체", "Malgun Gothic", "맑은 고딕", "맑은고딕", "Apple SD Gothic Neo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+$font-size-base: 14px;
+$font-size-small: ceil($font-size-base * 0.85);
+$font-size-title: ceil($font-size-base * 1.5); // ~21px
+$line-height-base: 1.428571429; // 20/14
+$line-height-computed: floor($font-size-base * $line-height-base); // ~20px
+
+body, h1, input, button {
+  font-family: $font-family-sans-serif;
+}
+
+body {
+  margin: $line-height-computed 0;
+}
+
+.text-small {
+  font-size: $font-size-small;
+  line-height: $line-height-computed;
+}
+
+.searchbar {
+  position: relative;
+  .close {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+  }
+}
+
+.nav-tabs {
+  .empty {
+    // Hide empty tab handles except for the first one
+    display: none;
+    &:first-child {
+      display: list-item;
+    }
+  }
+}
+
+.tab-content {
+  .no-results {
+    display: none;
+  }
+  &.empty .no-results {
+    display: block;
+    margin-top: $line-height-computed;
+  }
+}
+
+.media {
+  &:first-child {
+    margin-top: $line-height-computed;
+  }
+  &.ended {
+    display: none;
+  }
+  .media-object {
+    width: 217px;
+    height: 165px;
+  }
+  header {
+    display: block;
+    margin-bottom: $line-height-computed / 2;
+    h1 {
+      font-size: $font-size-title;
+      margin: 0;
+      display: inline;
+      line-height: 1;
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+    }
+  }
+  .description {
+    margin-bottom: $line-height-computed / 2;
+  }
+  .links {
+    margin-bottom: 0;
+    ul {
+      margin-bottom: 0;
+    }
+  }
+  .feed-url-wrapper {
+    white-space: nowrap;
+    overflow: hidden;
+    .feed-url {
+      color: inherit;
+      background: transparent;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      display: inline;
+      cursor: pointer;
+      font-size: inherit;
+      width: 100%;
+      min-height: 0;
+    }
+  }
+}
+
+// Show or hide .media based on the current search term and 'show ended works' checkbox
+.show-ended .media.ended,
+.show-matched .media.matched {
+  display: block;
+}
+$day-list: mon tue wed thu fri sat sun ended;
+@each $day1 in $day-list {
+  @each $day2 in $day-list {
+    @if $day1 != $day2 {
+      .show-day-#{$day1} .media.#{$day2} {
+        display: none;
+      }
+    }
+  }
+}
+@each $day in $day-list {
+  .show-day-#{$day} .media.#{$day} {
+    display: block;
+  }
+}
+.hide-ended .media.ended,
+.show-matched .media.unmatched {
+  display: none;
+}

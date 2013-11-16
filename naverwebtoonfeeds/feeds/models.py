@@ -1,4 +1,3 @@
-# pylint: disable=W0232
 import pytz
 
 from ..extensions import db

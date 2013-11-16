@@ -2,18 +2,14 @@
 {% block body %}
   <div class="container">
     <form>
-      <div class="row">
-        <div class="span4">
-          <input type="search" class="input-block-level search-query" placeholder="검색" />
-          <a class="close" href="#">&times;</a>
-        </div>
+      <div class="searchbar">
+        <input type="search" class="form-control" placeholder="검색">
+        <a class="close" href="#">&times;</a>
       </div>
-      <div class="row">
-        <div class="span4">
-          <label class="checkbox">
-            <input type="checkbox" /> 완결 웹툰 보이기
-          </label>
-        </div>
+      <div class="checkbox">
+        <label>
+          <input type="checkbox"> 완결 웹툰 보이기
+        </label>
       </div>
     </form>
     {% if series_list %}
@@ -26,34 +22,34 @@
         <li><a href="#fri">금요일</a></li>
         <li><a href="#sat">토요일</a></li>
         <li><a href="#sun">일요일</a></li>
-        <li class="empty"><a href="#completed">완결</a></li>
+        <li class="empty"><a href="#ended">완결</a></li>
       </ul>
       <div class="tab-content">
         {% for series in series_list %}
           {% set feed_url = url_for('.show', series_id=series.id)|externalize %}
-          <article id="series-{{ series.id }}" class="media {{ "completed" if series.is_completed }} {{ ' '.join(series.upload_days.split(',')) if series.upload_days and not series.is_completed }}">
+          <article id="series-{{ series.id }}" class="media {{ "ended" if series.is_completed }} {{ ' '.join(series.upload_days.split(',')) if series.upload_days and not series.is_completed }}">
             <span class="pull-left">
-              <img class="media-object lazy" data-original="{{ series.thumbnail_url|proxify }}" src="/static/img/grey.gif" alt="" width="217" height="165" />
+              <img class="media-object lazy" data-original="{{ series.thumbnail_url|proxify }}" src="/static/img/grey.gif" alt="" width="217" height="165">
             </span>
             <div class="media-body">
               <header>
                 <h1><a class="title" href="{{ naver_url(series.id) }}">{{ series.title }}</a></h1>
-                <span class="muted">by <span class="author">{{ series.author }}</span></span>
+                <span class="text-muted">by <span class="author">{{ series.author }}</span></span>
               </header>
               <p class="description">{{ series.description|safe }}</p>
-              <div class="well well-small">
-                <ul class="unstyled small muted">
+              <div class="links well well-sm">
+                <ul class="list-unstyled text-small">
                   <li class="feed-url-wrapper">
-                    <i class="icon-bookmark"></i>
-                    <input class="feed-url span6" value="{{ feed_url }}" readonly="readonly" />
+                    <i class="glyphicon glyphicon-bookmark"></i>
+                    <input class="feed-url" value="{{ feed_url }}" readonly="readonly">
                   </li>
                   <li>
-                    <i class="icon-globe"></i>
+                    <i class="glyphicon glyphicon-globe"></i>
                     <a href="{{ feed_url }}">브라우저에서 보기</a>
                   </li>
                   <li>
-                    <i class="icon-plus"></i>
-                    <a href="http://www.google.com/reader/view/feed/{{ feed_url }}" target="_blank">Google 리더에서 보기</a>
+                    <i class="glyphicon glyphicon-plus"></i>
+                    <a href="http://www.feedly.com/home#subscription/feed/{{ feed_url }}" target="_blank">Feedly에서 보기</a>
                   </li>
                 </ul>
               </div>

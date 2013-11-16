@@ -33,10 +33,7 @@ load-plugins=
 # can either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
-#
-# I0011: Used when an inline option disables a message or a messages category.
-# C0111: Docstrings are good, but let's ignore them for a while.
-disable=I0011,C0111
+disable=missing-docstring,locally-disabled
 
 
 [REPORTS]

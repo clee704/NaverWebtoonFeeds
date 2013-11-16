@@ -1,80 +1,70 @@
 #! /usr/bin/env python
 import os
-import re
 import sys
-from setuptools import setup, find_packages
-from setuptools.command.test import test as TestCommand
 
+execfile("naverwebtoonfeeds/version.py")
 
-__dir__ = os.path.dirname(__file__)
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
+packages = [
+    "naverwebtoonfeeds",
+    "naverwebtoonfeeds.config",
+    "naverwebtoonfeeds.feeds",
+]
 
-# Parse version since we can't import the package
-# due to dependencies
-def getversion():
-    with open(os.path.join(__dir__, 'naverwebtoonfeeds', 'version.py')) as f:
-        text = f.read()
-        m = re.match("^__version__ = '(.*)'$", text)
-        return m.group(1)
+package_dir = 'naverwebtoonfeeds'
 
+def recursive_include(dirname, base=''):
+    base = os.path.join(package_dir, base)
+    paths = []
+    for dirpath, dirnames, filenames in os.walk(base, dirname):
+        for name in filenames:
+            paths.append(os.path.relpath(os.path.join(dirpath, name), base))
+    return paths
 
-# Utility function to read the README file.
-def read(fname):
-    return open(os.path.join(__dir__, fname)).read()
+package_data = {
+    "naverwebtoonfeeds": recursive_include('static') + recursive_include('templates'),
+    "naverwebtoonfeeds.feeds": recursive_include('templates', 'feeds'),
+}
 
-
-class PyTest(TestCommand):
-
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
-        import pytest
-        errno = pytest.main(self.test_args)
-        sys.exit(errno)
-
+requires = [
+    "Flask==0.10.1",
+    "Flask-SQLAlchemy==1.0",
+    "Flask-Cache==0.10.1",
+    "Flask-Script==0.5.3",
+    "Flask-Assets==0.8",
+    "Flask-gzip==0.1",
+    "requests==1.1.0",
+    "lxml==3.1beta1",
+    "BeautifulSoup==3.2.1",
+    "netaddr==0.7.10",
+    "pytz==2012j",
+    "yuicompressor==2.4.7",
+    "pyScss==1.1.5",
+    "PyYAML==3.10",
+]
 
 setup(
     name = "naverwebtoonfeeds",
-    version = getversion(),
+    version = __version__,
+    description = "Feeds for Naver webtoons",
+    long_description = open("README.rst").read(),
     author = "Choongmin Lee",
     author_email = "choongmin@me.com",
-    description = "Feeds for Naver webtoons",
-    long_description = read("README.rst"),
-    keywords = "rss atom feed naver webtoons webcomics",
-    license = "GNU AGPL v3",
     url = "https://github.com/clee704/NaverWebtoonFeeds",
-    packages = find_packages(),
-    install_requires = [
-        "Flask==0.9",
-        "Flask-SQLAlchemy==0.16",
-        "Flask-Cache==0.10.1",
-        "Flask-Script==0.5.3",
-        "Flask-Assets==0.8",
-        "Flask-gzip==0.1",
-        "requests==1.1.0",
-        "lxml==3.1beta1",
-        "BeautifulSoup==3.2.1",
-        "netaddr==0.7.10",
-        "pytz==2012j",
-        "yuicompressor==2.4.7",
-        "pyScss==1.1.5",
-        "decorator==3.4.0",
-    ],
-    tests_require = [
-        "pytest==2.3.4",
-        "Flask-Testing==0.4",
-        "mock==1.0.1",
-        "PyYAML==3.10",
-        "pysqlite==2.6.3",
-    ],
-    extras_require = {
-        "docs": ["Sphinx==1.1.3"],
+    packages = packages,
+    package_data = package_data,
+    install_requires = requires,
+    entry_points = {
+        "console_scripts": [
+            "manage.py = naverwebtoonfeeds.manage:main",
+        ],
     },
-    cmdclass = {"test": PyTest},
+    license = "GNU AGPL v3",
+    keywords = "rss atom feed naver webtoons webcomics",
     classifiers = [
         # Full list is here: http://pypi.python.org/pypi?%3Aaction=list_classifiers
         "Development Status :: 3 - Alpha",

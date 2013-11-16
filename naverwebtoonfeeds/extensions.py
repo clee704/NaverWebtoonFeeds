@@ -1,4 +1,8 @@
-# pylint: disable=E0611,F0401,C0103,W0231
+import os
+
+
+__dir__ = os.path.dirname(__file__)
+
 
 from flask.ext.sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
@@ -8,40 +12,52 @@ from flask.ext.cache import Cache
 cache = Cache()
 
 
-from flask.ext.assets import Environment, Bundle
-assets = Environment()
-assets.register('js_all',
-    'jquery.min.js',
-    'bootstrap/js/bootstrap.min.js',
-    'jquery.lazyload.min.js',
-    Bundle('jquery.delayedlast.js.coffee',
-        'app.js.coffee',
-        filters='coffeescript,yui_js'),
-    output='gen/packed.%(version)s.js'
-)
-assets.register('css_all',
-    Bundle('bootstrap/css/bootstrap.min.css',
-        'bootstrap/css/bootstrap-responsive.min.css',
-        filters='cssrewrite'),
-    Bundle('app.css.scss', filters='pyscss,yui_css'),
-    output='gen/packed.%(version)s.css'
-)
+from flask.ext.assets import Environment
+assets_env = Environment()
+assets_env.from_yaml(os.path.join(__dir__, 'static/webassets.yaml'))
 
 
 from flask.ext.gzip import Gzip
+
 class MyGzip(Gzip):
-    def __init__(self):
-        pass
-    def init_app(self, app):
-        Gzip.__init__(self, app)
+  def __init__(self):
+    pass
+
+  def init_app(self, app):
+    Gzip.__init__(self, app)
+
+  def after_request(self, response):
+    # Fix https://github.com/elasticsales/Flask-gzip/issues/7
+    response.direct_passthrough = False
+    return super(MyGzip, self).after_request(response)
+
 gzip = MyGzip()
+
+
+import zlib
+from werkzeug.contrib.cache import RedisCache
+
+class CompressedRedisCache(RedisCache):
+
+    def dump_object(self, value):
+        serialized_str = RedisCache.dump_object(self, value)
+        try:
+            return zlib.compress(serialized_str)
+        except zlib.error:
+            return serialized_str
+
+    def load_object(self, value):
+        try:
+            serialized_str = zlib.decompress(value)
+        except (zlib.error, TypeError):
+            serialized_str = value
+        return RedisCache.load_object(self, serialized_str)
 
 
 try:
     from redis import Redis
     from rq import Queue
 
-    # pylint: disable=R0904,R0924
     class MyRedis(Redis):
         def __init__(self):
             pass

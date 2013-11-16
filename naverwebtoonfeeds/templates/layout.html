@@ -1,32 +1,37 @@
 <!DOCTYPE html>
 <html lang="ko">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>네이버 웹툰 구독</title>
-    {% assets "css_all" %}
-      <link rel="stylesheet" href="{{ ASSET_URL }}" />
-    {% endassets %}
+
+    {% if config.ASSETS_DEBUG %}
+      {% assets "css_cdn" %}<link rel="stylesheet" href="{{ ASSET_URL }}" />{% endassets %}
+    {% else %}
+      <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+    {% endif %}
+    {% assets "css_all" %}<link rel="stylesheet" href="{{ ASSET_URL }}" />{% endassets %}
     <!--[if lt IE 9]>
-    <style type="text/css">img { max-width: none; }</style>
-    <script src="{{ url_for('static', filename='html5shiv.js') }}"></script>
-    <script src="{{ url_for('static', filename='es5-shim.min.js') }}"></script>
+      <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.3.0/respond.js"></script>
     <![endif]-->
   </head>
   <body>
     {% block body %}{% endblock %}
-    <script>
-      function script_async(src) {
-        var node = document.createElement('script');
-        node.type = 'text/javascript';
-        node.async = true;
-        node.src = src;
-        var s = document.getElementsByTagName('script')[0];
-        s.parentNode.insertBefore(node, s);
-      }
-      {% assets "js_all" %}
-        script_async("{{ ASSET_URL }}");
-      {% endassets %}
-    </script>
+
+    <!--[if lt IE 9]>
+      <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.js"></script>
+      <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-shim.min.js"></script>
+    <![endif]-->
+
+    {% if config.ASSETS_DEBUG %}
+      {% assets "js_cdn" %}<script src="{{ASSET_URL}}"></script>{% endassets %}
+    {% else %}
+      <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+      <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+      <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.lazyload/1.9.0/jquery.lazyload.min.js"></script>
+    {% endif %}
+
+    {% assets "js_all" %}<script src="{{ASSET_URL}}"></script>{% endassets %}
   </body>
 </html>

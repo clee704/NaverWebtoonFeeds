@@ -1,14 +1,6 @@
-include .gitignore Makefile LICENSE README.rst pylintrc env.template manage.py
-include requirements.txt dev-requirements.txt package.json
-include Procfile .buildpacks runtime.txt
+include Makefile LICENSE README.rst requirements.txt dev-requirements.txt pylintrc
 recursive-include docs *
-prune docs/_build
-prune docs/_themes/.git
-recursive-include tests *
+recursive-include test *
 recursive-include naverwebtoonfeeds/static *
-prune naverwebtoonfeeds/static/gen
-prune naverwebtoonfeeds/static/.webassets-cache
 recursive-include naverwebtoonfeeds/templates *
 recursive-include naverwebtoonfeeds/feeds/templates *
-exclude .env
-global-exclude *.pyc *.pyo *.swp *.swo *.db *.db-journal

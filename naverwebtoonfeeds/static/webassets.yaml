@@ -1,0 +1,29 @@
+js_cdn:
+  contents:
+  - bower_components/jquery/jquery.js
+  - bower_components/bootstrap/dist/js/bootstrap.js
+  - bower_components/jquery.lazyload/jquery.lazyload.js
+  filters: yui_js
+  output: '%(version)s.cdn.js'
+js_all:
+  contents:
+  - contents:
+    - js/jquery.delayedlast.js.coffee
+    - js/main.js.coffee
+    filters: coffeescript
+    output: main.js
+  filters: yui_js
+  output: '%(version)s.all.js'
+css_cdn:
+  contents:
+  - bower_components/bootstrap/dist/css/bootstrap.css
+  filters: cssrewrite,yui_css
+  output: '%(version)s.cdn.css'
+css_all:
+  contents:
+  - contents:
+    - css/main.css.scss
+    filters: pyscss
+    output: main.css
+  filters: yui_css
+  output: '%(version)s.all.css'

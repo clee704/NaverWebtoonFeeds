@@ -1,34 +1,38 @@
+from functools import wraps
 import logging
+import os
 import urlparse
 
-from decorator import decorator
 from flask import Blueprint, current_app, request, redirect
 
+from ..config import __package_dir__
 from ..extensions import cache
 from .models import Series
 from .render import render_feed_index, render_feed_show
-from .update import series_list_needs_fetching, update_series_list, update_series, run_from_worker
-from .util import naver_url, enqueue_job
+from .update import series_list_needs_fetching, update_series_list, update_series
+from .util import naver_url
+from .worker import enqueue_update_series_list, enqueue_update_series
 
 
 __logger__ = logging.getLogger(__name__)
 
 
-# pylint: disable=C0103
 #: Blueprint for feeds.
 feeds = Blueprint('feeds', __name__, template_folder='templates')
 
 
-@decorator
-def redirect_to_canonical_url(f, *args, **kwargs):
-    path = request.environ['RAW_URI'] if 'RAW_URI' in request.environ else urlpath(request.url)
-    canonical_url = current_app.config['URL_ROOT'] + path
-    __logger__.debug('request.url=%s, canonical_url=%s', request.url, canonical_url)
-    if current_app.config.get('FORCE_REDIRECT') and request.url != canonical_url:
-        __logger__.info('Redirecting to the canonical URL')
-        return redirect(canonical_url, 301)
-    else:
-        return f(*args, **kwargs)
+def redirect_to_canonical_url(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        path = request.environ['RAW_URI'] if 'RAW_URI' in request.environ else urlpath(request.url)
+        canonical_url = current_app.config['URL_ROOT'] + path
+        __logger__.debug('request.url=%s, canonical_url=%s', request.url, canonical_url)
+        if current_app.config.get('FORCE_REDIRECT') and request.url != canonical_url:
+            __logger__.info('Redirecting to the canonical URL')
+            return redirect(canonical_url, 301)
+        else:
+            return f(*args, **kwargs)
+    return wrapper
 
 
 @feeds.route('/')
@@ -38,7 +42,7 @@ def index():
     invalidate_cache = False
     if series_list_needs_fetching():
         if current_app.config.get('USE_REDIS_QUEUE'):
-            enqueue_job(run_from_worker, args=('list',))
+            enqueue_update_series_list()
         else:
             invalidate_cache = update_series_list()[0]
     if not invalidate_cache:
@@ -60,13 +64,13 @@ def show(series_id):
     invalidate_cache = False
     if series_list_needs_fetching():
         if current_app.config.get('USE_REDIS_QUEUE'):
-            enqueue_job(run_from_worker, args=('list',))
+            enqueue_update_series_list()
         elif update_series_list()[0]:
             cache.delete('feed_index')
     series = Series.query.get_or_404(series_id)
     if series.new_chapters_available:
         if current_app.config.get('USE_REDIS_QUEUE'):
-            enqueue_job(run_from_worker, args=('series', series_id))
+            enqueue_update_series(series_id)
         else:
             invalidate_cache = any(update_series(series))
     if not invalidate_cache:

@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-# pylint: disable=W0702
 from datetime import datetime
 import logging
 import re
@@ -58,7 +57,7 @@ class Browser(object):
             response = None
             try:
                 # Requests to Naver should be carefully monitored.
-                __logger__.warning('Requesting GET %s', url)
+                __logger__.debug('Requesting GET %s', url)
                 response = self.session.get(url)
                 response.raise_for_status()
                 if self.login_required(response):
@@ -136,8 +135,7 @@ class Browser(object):
                 doc = parser.fromstring(response.text)
                 return getattr(self, method)(doc, *args)
             except:
-                __logger__.error('An error occurred while parsing data for %s',
-                        response.url, exc_info=True)
+                __logger__.exception('An error occurred while parsing data for %s', response.url)
         raise UnparsableResponse(response.url)
 
     def _get_public_ip(self):
@@ -149,7 +147,6 @@ class Browser(object):
 
     @staticmethod
     def login_required(response):
-        __logger__.info('Checking the URL: %s', response.url)
         return 'login' in response.url
 
     @staticmethod

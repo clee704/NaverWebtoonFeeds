@@ -9,17 +9,28 @@ Welcome to Naver Webtoon Feeds's documentation!
 Naver Webtoon Feeds provides feeds for Naver webtoons (webcomics).
 
 
+Configurations
+--------------
+
+.. autoclass:: naverwebtoonfeeds.config.DefaultConfig
+   :members:
+   :member-order: bysource
+
+
 API reference for developers
 ----------------------------
 
 .. automodule:: naverwebtoonfeeds.app
    :members:
+   :member-order: bysource
+
 
 Template filters
 ~~~~~~~~~~~~~~~~
 
 .. automodule:: naverwebtoonfeeds.template
    :members:
+
 
 Feeds blueprint
 ~~~~~~~~~~~~~~~

@@ -1,14 +1,11 @@
-# pylint: disable=W0702
 from datetime import datetime, timedelta
 import logging
-import os
-import signal
 
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
 from ..extensions import db
-from .browser import Browser, AccessDenied
+from .browser import Browser
 from .models import Series, Chapter, Config
 from .render import render_feed_index, render_feed_show
 from .util import as_naver_time_zone
@@ -116,7 +113,7 @@ def update_series(series, add_new_chapters=True, do_commit=True, background=Fals
     return [series_updated, chapters_added]
 
 
-def add_completed_series():
+def add_ended_series():
     completed_series = __browser__.get_completed_series()
     completed_series_ids = set(data['id'] for data in completed_series)
     existing_series_ids = set(row[0] for row in db.session.query(Series.id))
@@ -124,19 +121,6 @@ def add_completed_series():
         series = Series(id=series_id)
         series.new_chapters_available = True
         update_series(series)
-
-
-def run_from_worker(method, *args):
-    try:
-        if method == 'list':
-            update_series_list(background=True)
-        elif method == 'series':
-            update_series(Series.query.get(args[0]), background=True)
-        else:
-            raise RuntimeError('unknown method')
-    except AccessDenied:
-        # Stop the current worker to get a new IP address
-        os.kill(os.getppid(), signal.SIGTERM)
 
 
 def _series_stats_update_interval():
@@ -244,6 +228,8 @@ def _add_new_chapters(series):
     updated = False
     current_last_chapter = series.chapters[0].id if len(series.chapters) else 0
     start = current_last_chapter + 1
+    if current_app.config.get('EXPRESS_MODE'):
+        start = max(start, series.last_chapter - 3)
     chapter_ids = range(start, series.last_chapter + 1)
     for chapter_id in chapter_ids:
         chapter = Chapter(series=series, id=chapter_id)
@@ -288,5 +274,5 @@ def _commit():
     try:
         db.session.commit()
     except IntegrityError:
-        __logger__.error('IntegrityError', exc_info=True)
+        __logger__.exception('An error occurred while committing')
         db.session.rollback()
