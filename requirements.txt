@@ -30,3 +30,6 @@ rq==0.3.11
 gunicorn==18.0
 # heroku==0.1.4
 -e git+https://github.com/clee704/heroku.py#egg=heroku
+
+## Development
+ipython==1.1.0
