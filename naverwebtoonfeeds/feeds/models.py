@@ -19,6 +19,9 @@ class Series(db.Model):
     last_upload_status = db.Column(db.String(31), nullable=False, default='')
     retries_left = db.Column(db.Integer, nullable=False, default=0)
 
+    def __repr__(self):
+        return '<Series [{0}]>'.format(self.id)
+
 
 class Chapter(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -33,8 +36,14 @@ class Chapter(db.Model):
     def pubdate_with_tz(self):
         return pytz.utc.localize(self.pubdate).astimezone(NAVER_TIMEZONE)
 
+    def __repr__(self):
+        return '<Chapter [{0}-{1}]>'.format(self.id, self.series_id)
+
 
 # TODO rename (candidates: Variable, Value, State, Status, ConfigVar, ...)
 class Config(db.Model):
     key = db.Column(db.String(255), primary_key=True)
     value = db.Column(db.PickleType)
+
+    def __repr__(self):
+        return 'Config(key={0}, value={1})'.format(repr(self.key), repr(self.value))
