@@ -43,7 +43,7 @@ def _job(target, *args):
             series = Series.query.get(series_id)
             update_series(series, background=True)
         else:
-            __logger__.warning('Unknown target: %s', target)
+            __logger__.error('Unknown target: %s', target)
     except AccessDenied:
         pass
     except:

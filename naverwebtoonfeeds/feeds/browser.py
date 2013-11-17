@@ -89,7 +89,7 @@ class Browser(object):
         """
         __logger__.debug('Trying to log in to Naver')
         if not current_app.config.get('NAVER_USERNAME'):
-            __logger__.info('Login failed: NAVER_USERNAME is not defined')
+            __logger__.warning('Login failed: NAVER_USERNAME is not defined')
             return False
         url = 'https://nid.naver.com/nidlogin.login'
         data = {
@@ -101,7 +101,7 @@ class Browser(object):
         response = self.session.post(url, data=data,
                 headers={'Referer': 'http://static.nid.naver.com/login.nhn'})
         if 'location.replace' not in response.text[:100]:
-            __logger__.info('Login failed: wrong username or password')
+            __logger__.warning('Login failed: wrong username or password')
             return False
         __logger__.info('Logged in')
         return True

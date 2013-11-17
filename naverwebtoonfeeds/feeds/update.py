@@ -105,10 +105,11 @@ def update_series(series, add_new_chapters=True, do_commit=True, background=Fals
             series.new_chapters_available = False
             series.retries_left = 0
         else:
-            __logger__.warning('No new chapters in series %d', series.id)
             if series.retries_left == 0:
+                __logger__.warning("Couldn't find new chapters in series %d", series.id)
                 series.new_chapters_available = False
             else:
+                __logger__.info('No new chapters in series %d; retry later', series.id)
                 series.retries_left -= 1
         # updated indicates the view cache should be purged.
         # new_chapters_available doesn't affect the view, so it doesn't set

@@ -26,7 +26,7 @@ def redirect_to_canonical_url(f):
         canonical_url = current_app.config['URL_ROOT'] + path
         if current_app.config.get('FORCE_REDIRECT') and request.url != canonical_url:
             __logger__.debug('request.url=%s != canonical_url=%s', request.url, canonical_url)
-            __logger__.info('Redirecting to the canonical URL')
+            __logger__.debug('Redirecting to the canonical URL')
             return redirect(canonical_url, 301)
         else:
             return f(*args, **kwargs)
