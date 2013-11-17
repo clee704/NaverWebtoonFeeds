@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # pylint: disable=import-error,no-name-in-module
+from datetime import datetime, timedelta
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -36,6 +37,14 @@ def addendedseries():
 def runworker(burst=False):
     """Runs the worker that fetches data from Naver and update the database."""
     run_worker(burst)
+
+@manager.command
+def triggerupdate():
+    c = Config.query.get('series_list_fetched')
+    if not c:
+        return
+    c.value = datetime.utcnow() - timedelta(hours=1)
+    db.session.commit()
 
 
 db_manager = Manager()
