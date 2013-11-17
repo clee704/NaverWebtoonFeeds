@@ -8,6 +8,7 @@ from flask import current_app
 import rq
 
 from ..extensions import redis_connection, redis_queue
+from .browser import AccessDenied
 from .models import Series
 from .update import update_series_list, update_series
 
@@ -17,12 +18,12 @@ __logger__ = logging.getLogger(__name__)
 
 def enqueue_update_series_list():
     # TODO check duplicate
-    _enqueue_job(_update_func_wrapper, ('list',))
+    _enqueue_job(_job, ('list',))
 
 
 def enqueue_update_series(series_id):
     # TODO check duplicate
-    _enqueue_job(_update_func_wrapper, ('series', series_id))
+    _enqueue_job(_job, ('series', series_id))
 
 
 def _enqueue_job(func, args=None):
@@ -32,15 +33,21 @@ def _enqueue_job(func, args=None):
         _heroku_run('worker')
 
 
-def _update_func_wrapper(target, *args):
-    if target == 'list':
-        update_series_list(background=True)
-    elif target == 'series':
-        series_id = args[0]
-        series = Series.query.get(series_id)
-        update_series(series, background=True)
-    else:
-        __logger__.warning('Unknown target: %s', target)
+def _job(target, *args):
+    __logger__.debug('_job(target=%s, args=%s) called', target, args)
+    try:
+        if target == 'list':
+            update_series_list(background=True)
+        elif target == 'series':
+            series_id = args[0]
+            series = Series.query.get(series_id)
+            update_series(series, background=True)
+        else:
+            __logger__.warning('Unknown target: %s', target)
+    except AccessDenied:
+        pass
+    except:
+        __logger__.exception('An error occurred while processing a job')
     # TODO retry on failure
 
 
