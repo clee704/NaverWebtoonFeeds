@@ -1,6 +1,4 @@
 import logging
-import os
-import signal
 
 try:
     import heroku
@@ -9,9 +7,8 @@ except ImportError:
 from flask import current_app
 import rq
 
-from ..extensions import cache, db, redis_connection, redis_queue
-from .browser import AccessDenied
-from .models import Series, Config
+from ..extensions import redis_connection, redis_queue
+from .models import Series
 from .update import update_series_list, update_series
 
 
@@ -29,7 +26,7 @@ def enqueue_update_series(series_id):
 
 
 def _enqueue_job(func, args=None):
-    __logger__.debug('_enqueue_job(func=%s, args=%s) invoked', func, args)
+    __logger__.debug('_enqueue_job(func=%s, args=%s) called', func, args)
     redis_queue.enqueue_call(func=func, args=args, result_ttl=0, timeout=3600)
     if current_app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
         _heroku_run('worker')
@@ -48,7 +45,7 @@ def _update_func_wrapper(target, *args):
 
 
 def run_worker(burst=False):
-    __logger__.debug('run_worker(burst=%s) invoked', burst)
+    __logger__.debug('run_worker(burst=%s) called', burst)
     with rq.Connection(connection=redis_connection):
         w = rq.Worker([rq.Queue()])
         # Remove default exception handler that moves job to failed queue
@@ -57,12 +54,11 @@ def run_worker(burst=False):
 
 
 def _heroku_run(command):
-    __logger__.debug('_heroku_run(command=%s) invoked', command)
-
+    __logger__.debug('_heroku_run(command=%s) called', command)
     h = heroku.from_key(current_app.config['HEROKU_API_KEY'])
     try:
         app = h.apps[current_app.config['HEROKU_APP_NAME']]
         app.processes.add(command)
         __logger__.debug('%s is started', command)
-    except Exception as e:
+    except:
         __logger__.exception('Could not run heroku process')

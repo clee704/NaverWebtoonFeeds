@@ -1,12 +1,16 @@
 #! /usr/bin/env python
+# pylint: disable=import-error,no-name-in-module
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from flask.ext.script import Manager, Shell, prompt_bool
+from flask.ext.script import Manager, prompt_bool
 
 from naverwebtoonfeeds import create_app
 from naverwebtoonfeeds.extensions import cache, db
+from naverwebtoonfeeds.feeds.models import Series, Chapter, Config
+from naverwebtoonfeeds.feeds.update import update_series_list, add_ended_series
+from naverwebtoonfeeds.feeds.worker import run_worker
 
 
 app = create_app()
@@ -16,7 +20,6 @@ manager = Manager(app)
 @manager.shell
 def make_shell_context():
     """Returns shell context with common objects and classes."""
-    from naverwebtoonfeeds.feeds.models import Series, Chapter, Config
     return dict(app=app, cache=cache, db=db, Series=Series, Chapter=Chapter, Config=Config)
 
 @manager.command
@@ -26,15 +29,12 @@ def addendedseries():
     though existing series will remain after it is ended.
 
     """
-    from naverwebtoonfeeds.feeds.models import Series
-    from naverwebtoonfeeds.feeds.update import add_ended_series
     add_ended_series()
     cache.delete('feed_index')
 
 @manager.command
 def runworker(burst=False):
     """Runs the worker that fetches data from Naver and update the database."""
-    from naverwebtoonfeeds.feeds.worker import run_worker
     run_worker(burst)
 
 
@@ -65,7 +65,6 @@ def fill():
     Updates the database by fetching changes from Naver Comics.
 
     """
-    from naverwebtoonfeeds.feeds.update import update_series_list
     list_updated, series_updated = update_series_list(update_all=True)
     if list_updated:
         cache.delete('feed_index')

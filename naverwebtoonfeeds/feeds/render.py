@@ -1,6 +1,6 @@
 import logging
 
-from flask import Response, render_template, current_app
+from flask import Response, render_template
 
 from ..extensions import cache
 from .models import Series

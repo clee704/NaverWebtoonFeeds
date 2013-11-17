@@ -23,9 +23,13 @@ def series_list_needs_fetching():
 
 
 def update_series_list(update_all=False, background=False):
+    __logger__.debug('update_series_list(update_all=%s, background=%s) called',
+            update_all, background)
+
     # Check the time when series list was fetched once more if running in
     # the background.
     if background and not series_list_needs_fetching():
+        __logger__.debug("Series list is recently updated; quitting update_series_list")
         return
 
     updated = [False, []]
@@ -33,6 +37,7 @@ def update_series_list(update_all=False, background=False):
     # updated[1]: view cache of series with id in this list should be purged
 
     series_list = _fetch_series_list(update_all, updated)
+    # series_list cannot be None; WTF??
     if series_list is None:
         return updated
 
@@ -87,7 +92,9 @@ def update_series_list(update_all=False, background=False):
 
 
 def update_series(series, add_new_chapters=True, do_commit=True, background=False):
-    series_updated = _fetch_series_data(series)
+    __logger__.debug('update_series(series=%s, add_new_chapters=%s, do_commit=%s, background=%s) called',
+            series, add_new_chapters, do_commit, background)
+    series_updated = _fetch_series_info(series)
     chapters_added = False
     if series_updated is None:
         return [series_updated, chapters_added]
@@ -98,7 +105,7 @@ def update_series(series, add_new_chapters=True, do_commit=True, background=Fals
             series.new_chapters_available = False
             series.retries_left = 0
         else:
-            __logger__.warning('New chapters for series #%d were not found', series.id)
+            __logger__.warning('No new chapters in series %d', series.id)
             if series.retries_left == 0:
                 series.new_chapters_available = False
             else:
@@ -143,6 +150,7 @@ def _series_stats_update_interval():
 def _fetch_series_list(update_all, updated):
     fetched_data = {}
     issues = _get_browser().get_issues()
+    __logger__.debug('Got a series list from Naver')
     for data in issues:
         info = fetched_data.setdefault(data['id'], {})
         info.setdefault('upload_days', []).append(data['day'])
@@ -157,6 +165,7 @@ def _fetch_series_list(update_all, updated):
 
 
 def _update_existing_series(fetched_data, update_all, updated):
+    __logger__.debug('Updating series in the database')
     series_list = Series.query.all()
     for series in series_list:
         info = fetched_data.get(series.id)
@@ -193,6 +202,7 @@ def _update_existing_series(fetched_data, update_all, updated):
 def _add_new_series(new_series_ids, fetched_data, update_all, updated):
     if not new_series_ids:
         return
+    __logger__.debug('Adding new series to the database')
     updated[0] = True
     for series_id in new_series_ids:
         series = Series(id=series_id)
@@ -212,16 +222,17 @@ def _add_new_series(new_series_ids, fetched_data, update_all, updated):
         series.last_upload_status = ','.join(info['days_uploaded'])
 
 
-def _fetch_series_data(series):
-    data = _get_browser().get_series_data(series.id)
-    if data.get('removed'):
+def _fetch_series_info(series):
+    info = _get_browser().get_series_info(series.id)
+    __logger__.debug('Got info for series %d', series.id)
+    if info.get('removed'):
         if not series.is_completed:
-            __logger__.warning('Series #%d seems removed', series.id)
+            __logger__.warning('Series %d seems to be removed', series.id)
             series.is_completed = True
             return True
         return False
     attributes = ['title', 'author', 'description', 'last_chapter', 'is_completed', 'thumbnail_url']
-    return _update_attributes(series, data, attributes)
+    return _update_attributes(series, info, attributes)
 
 
 def _add_new_chapters(series):
@@ -231,11 +242,12 @@ def _add_new_chapters(series):
     if current_app.config.get('EXPRESS_MODE'):
         start = max(start, series.last_chapter - 3)
     chapter_ids = range(start, series.last_chapter + 1)
+    __logger__.debug('Adding new chapters %s to series %d', chapter_ids, series.id)
     for chapter_id in chapter_ids:
         chapter = Chapter(series=series, id=chapter_id)
         # chapter is in a pending state, probably because of the series
         # attribute. But I couldn't find this in the documentation.
-        if _fetch_chapter_data(chapter):
+        if _fetch_chapter_info(chapter):
             chapter.atom_id = _make_atom_id(chapter)
             # Not necessary; it doesn't hurt to do so.
             db.session.add(chapter)
@@ -254,31 +266,34 @@ def _make_atom_id(chapter):
     return 'tag:' + tagging_entity + ':' + ';'.join(specific_list)
 
 
-def _fetch_chapter_data(chapter):
-    data = _get_browser().get_chapter_data(chapter.series.id, chapter.id)
-    if data.get('not_found'):
+def _fetch_chapter_info(chapter):
+    info = _get_browser().get_chapter_info(chapter.series.id, chapter.id)
+    __logger__.debug('Got info for chapter %d in series %d', chapter.id, chapter.series.id)
+    if info.get('not_found'):
         return False
-    return _update_attributes(chapter, data, ['title', 'pubdate', 'thumbnail_url'])
+    return _update_attributes(chapter, info, ['title', 'pubdate', 'thumbnail_url'])
 
 
-def _update_attributes(obj, data, attribute_names):
+def _update_attributes(obj, info, attribute_names):
     updated = False
     for attribute_name in attribute_names:
-        if getattr(obj, attribute_name) != data[attribute_name]:
+        if getattr(obj, attribute_name) != info[attribute_name]:
             updated = True
-            setattr(obj, attribute_name, data[attribute_name])
+            setattr(obj, attribute_name, info[attribute_name])
     return updated
 
 
 def _commit():
     try:
         db.session.commit()
+        __logger__.debug('Changes committed')
     except IntegrityError:
         __logger__.exception('An error occurred while committing')
         db.session.rollback()
 
 
 def _get_browser():
+    # pylint: disable=global-statement
     global __browser__
     if __browser__ is None:
         __browser__ = Browser()

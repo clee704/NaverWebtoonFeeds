@@ -78,16 +78,18 @@ class Browser(object):
             errors += 1
             if errors > self.max_retry:
                 raise TooManyErrors()
-            __logger__.warning('Waiting for %.1f seconds before reconnecting', delay)
+            __logger__.debug('Waiting for %.1f seconds before reconnecting', delay)
             time.sleep(delay)
-            delay += 0.5
+            delay += 1
 
     def login(self):
         """
         Logs in to Naver and return *True* if logged in and *False* if failed.
 
         """
+        __logger__.debug('Trying to log in to Naver')
         if not current_app.config.get('NAVER_USERNAME'):
+            __logger__.info('Login failed: NAVER_USERNAME is not defined')
             return False
         url = 'https://nid.naver.com/nidlogin.login'
         data = {
@@ -99,6 +101,7 @@ class Browser(object):
         response = self.session.post(url, data=data,
                 headers={'Referer': 'http://static.nid.naver.com/login.nhn'})
         if 'location.replace' not in response.text[:100]:
+            __logger__.info('Login failed: wrong username or password')
             return False
         __logger__.info('Logged in')
         return True
@@ -111,17 +114,17 @@ class Browser(object):
         response = self.get(URLS['completed_series'])
         return self._parse(response, '_parse_completed_series')
 
-    def get_series_data(self, series_id):
+    def get_series_info(self, series_id):
         url = URLS['last_chapter'].format(series_id=series_id)
         response = self.get(url)
         if response.url != url:
             return dict(removed=True)
-        return self._parse(response, '_parse_series_data', series_id)
+        return self._parse(response, '_parse_series_info', series_id)
 
-    def get_chapter_data(self, series_id, chapter_id):
+    def get_chapter_info(self, series_id, chapter_id):
         url = URLS['chapter'].format(series_id=series_id, chapter_id=chapter_id)
         response = self.get(url)
-        return self._parse(response, '_parse_chapter_data', series_id, chapter_id, url)
+        return self._parse(response, '_parse_chapter_info', series_id, chapter_id, url)
 
     def _parse(self, response, method, *args):
         parsers = [lxml.html.soupparser, lxml.html]
@@ -135,7 +138,7 @@ class Browser(object):
                 doc = parser.fromstring(response.text)
                 return getattr(self, method)(doc, *args)
             except:
-                __logger__.exception('An error occurred while parsing data for %s', response.url)
+                __logger__.exception('An error occurred while parsing %s', response.url)
         raise UnparsableResponse(response.url)
 
     def _get_public_ip(self):
@@ -143,7 +146,7 @@ class Browser(object):
             self.public_ip = get_public_ip()
             __logger__.info('Current IP: %s', get_public_ip())
         except:
-            __logger__.warning('Failed to get the public IP')
+            __logger__.warning('Failed to get the public IP', exc_info=True)
 
     @staticmethod
     def login_required(response):
@@ -163,7 +166,7 @@ class Browser(object):
 
     @staticmethod
     def _parse_completed_series(doc):
-        __logger__.debug('Parsing the completed series list')
+        __logger__.debug('Parsing the ended series list')
         retval = []
         for a_elem in doc.xpath('//*[@class="list_area"]//li/*[@class="thumb"]/a'):
             url = a_elem.attrib['href']
@@ -173,8 +176,8 @@ class Browser(object):
         return retval
 
     @staticmethod
-    def _parse_series_data(doc, series_id):
-        __logger__.debug('Parsing data for series #%d', series_id)
+    def _parse_series_info(doc, series_id):
+        __logger__.debug('Parsing series %d', series_id)
         comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
         permalink = doc.xpath('//meta[@property="og:url"]/@content')[0]
         status = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em/text()')[0].strip()
@@ -188,21 +191,21 @@ class Browser(object):
         }
 
     @staticmethod
-    def _parse_chapter_data(doc, series_id, chapter_id, url):
-        __logger__.debug('Parsing data for chapter #%d of series #%d', chapter_id, series_id)
+    def _parse_chapter_info(doc, series_id, chapter_id, url):
+        __logger__.debug('Parsing chapter %d of series %d', chapter_id, series_id)
         if url != doc.xpath('//meta[@property="og:url"]/@content')[0]:
             return dict(not_found=True)
         date_str = doc.xpath('//form[@name="reportForm"]/input[@name="itemDt"]/@value')[0]
         naive_dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-        data = {
+        info = {
             'title': doc.xpath('//meta[@property="og:description"]/@content')[0],
             'pubdate': NAVER_TIMEZONE.localize(naive_dt).astimezone(pytz.utc).replace(tzinfo=None),
             'thumbnail_url': doc.xpath('//*[@id="comic_move"]//*[@class="on"]/img/@src')[0],
         }
-        if '{0}/{1}'.format(series_id, chapter_id) not in data['thumbnail_url']:
-            __logger__.error('Thumbnail URL looks strange: thumbnail_url=%s, series_id=%d, chapter_id=%d',
-                    data['thumbnail_url'], series_id, chapter_id)
-        return data
+        if '{0}/{1}'.format(series_id, chapter_id) not in info['thumbnail_url']:
+            __logger__.warning('Thumbnail URL looks strange: thumbnail_url=%s, series_id=%d, chapter_id=%d',
+                    info['thumbnail_url'], series_id, chapter_id)
+        return info
 
 
 class BrowserException(Exception):

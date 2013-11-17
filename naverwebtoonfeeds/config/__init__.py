@@ -2,6 +2,7 @@ import os
 import re
 
 
+# pylint: disable=undefined-all-variable
 __all__ = ['development', 'test', 'production']
 __package_dir__ = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 _p = lambda relpath: os.path.join(__package_dir__, relpath)
@@ -223,22 +224,22 @@ def autocast(value):
     Converts the given string to a Python value.
 
     """
+    # If all others fail, just use the plain string.
+    rv = value
     if re.match(r'^\d+$', value):
-        return int(value)
+        rv = int(value)
     elif re.match(r'^\d+\.\d+$', value):
-        return float(value)
+        rv = float(value)
     elif value == 'True':
-        return True
+        rv = True
     elif value == 'False':
-        return False
+        rv = False
     elif value == 'None':
-        return None
+        rv = None
     elif re.match(r'^\[.*\]$', value):
         # Example: "[a, b, c]" => ['a', 'b', 'c']
-        return re.split(r'\s*,\s*', value[1:-1])
-    else:
-        # If all others fail, just use the plain string.
-        return value
+        rv = re.split(r'\s*,\s*', value[1:-1])
+    return rv
 
 
 DefaultConfig.from_envvars()

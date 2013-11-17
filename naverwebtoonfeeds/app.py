@@ -64,7 +64,8 @@ def configure_app(app, config=None):
 
 def configure_logging(app):
     """Configures logging."""
-    # This makes it sure the logger is created before configuration.
+    # Make it sure that the logger is created before configuration.
+    # pylint: disable=pointless-statement
     app.logger
     # Now configure
     logging.config.dictConfig(app.config['LOGGING'])
@@ -109,6 +110,7 @@ def configure_template_filters(app):
 
 def configure_error_handlers(app):
     """Configures error handlers."""
+    # pylint: disable=unused-variable
 
     @app.errorhandler(500)
     def internal_server_error(_):

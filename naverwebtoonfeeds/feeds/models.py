@@ -1,3 +1,4 @@
+# pylint: disable=no-init
 import pytz
 
 from ..extensions import db
@@ -33,7 +34,7 @@ class Chapter(db.Model):
         return pytz.utc.localize(self.pubdate).astimezone(NAVER_TIMEZONE)
 
 
-# TODO rename (candidates: Variable, Value, State, Status, ...)
+# TODO rename (candidates: Variable, Value, State, Status, ConfigVar, ...)
 class Config(db.Model):
     key = db.Column(db.String(255), primary_key=True)
     value = db.Column(db.PickleType)

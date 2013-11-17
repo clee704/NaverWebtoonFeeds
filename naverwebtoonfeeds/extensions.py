@@ -1,3 +1,4 @@
+# pylint: disable=import-error,no-name-in-module
 import os
 
 
@@ -20,16 +21,16 @@ assets_env.from_yaml(os.path.join(__dir__, 'static/webassets.yaml'))
 from flask.ext.gzip import Gzip
 
 class MyGzip(Gzip):
-  def __init__(self):
-    pass
+    def __init__(self):
+        pass
 
-  def init_app(self, app):
-    Gzip.__init__(self, app)
+    def init_app(self, app):
+        Gzip.__init__(self, app)
 
-  def after_request(self, response):
-    # Fix https://github.com/elasticsales/Flask-gzip/issues/7
-    response.direct_passthrough = False
-    return super(MyGzip, self).after_request(response)
+    def after_request(self, response):
+        # Fix https://github.com/elasticsales/Flask-gzip/issues/7
+        response.direct_passthrough = False
+        return Gzip.after_request(self, response)
 
 gzip = MyGzip()
 
@@ -58,8 +59,12 @@ try:
     from redis import Redis
     from rq import Queue
 
+    # Redis implements __getitem__ but not __len__
+    # Redis has too many public methods (142 methods)
+    # pylint: disable=incomplete-protocol,too-many-public-methods
     class MyRedis(Redis):
         def __init__(self):
+            # pylint: disable=super-init-not-called
             pass
         def init_app(self, *args, **kwargs):
             Redis.__init__(self, *args, **kwargs)

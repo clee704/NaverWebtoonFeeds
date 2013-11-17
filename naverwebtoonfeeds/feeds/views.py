@@ -1,11 +1,9 @@
 from functools import wraps
 import logging
-import os
 import urlparse
 
 from flask import Blueprint, current_app, request, redirect
 
-from ..config import __package_dir__
 from ..extensions import cache
 from .models import Series
 from .render import render_feed_index, render_feed_show
@@ -26,8 +24,8 @@ def redirect_to_canonical_url(f):
     def wrapper(*args, **kwargs):
         path = request.environ['RAW_URI'] if 'RAW_URI' in request.environ else urlpath(request.url)
         canonical_url = current_app.config['URL_ROOT'] + path
-        __logger__.debug('request.url=%s, canonical_url=%s', request.url, canonical_url)
         if current_app.config.get('FORCE_REDIRECT') and request.url != canonical_url:
+            __logger__.debug('request.url=%s != canonical_url=%s', request.url, canonical_url)
             __logger__.info('Redirecting to the canonical URL')
             return redirect(canonical_url, 301)
         else:
@@ -48,7 +46,7 @@ def index():
     if not invalidate_cache:
         response = cache.get('feed_index')
         if response:
-            __logger__.debug('Cache hit')
+            __logger__.debug('Cache hit for /')
             return response
     return render_feed_index()
 
@@ -76,7 +74,7 @@ def show(series_id):
     if not invalidate_cache:
         response = cache.get('feed_show_%d' % series_id)
         if response:
-            __logger__.debug('Cache hit')
+            __logger__.debug('Cache hit for /feeds/%d.xml', series_id)
             return response
     return render_feed_show(series)
 
