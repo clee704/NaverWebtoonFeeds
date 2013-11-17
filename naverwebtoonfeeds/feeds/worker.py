@@ -1,4 +1,6 @@
 import logging
+import os
+import signal
 
 try:
     import heroku
@@ -7,7 +9,7 @@ except ImportError:
 from flask import current_app
 import rq
 
-from ..extensions import redis_connection, redis_queue
+from ..extensions import cache, redis_connection, redis_queue
 from .browser import AccessDenied
 from .models import Series
 from .update import update_series_list, update_series
@@ -17,38 +19,67 @@ __logger__ = logging.getLogger(__name__)
 
 
 def enqueue_update_series_list():
-    # TODO check duplicate
-    _enqueue_job(_job, ('list',))
+    if cache.get('job_enqueued_list'):
+        # Do nothing if already enqueued
+        return
+    try:
+        _enqueue_job(_job_update_series_list)
+    except:
+        __logger__.exception('Failed to enqueue a job')
+    else:
+        cache.set('job_enqueued_list', True, timeout=300)
 
 
 def enqueue_update_series(series_id):
-    # TODO check duplicate
-    _enqueue_job(_job, ('series', series_id))
-
-
-def _enqueue_job(func, args=None):
-    __logger__.debug('_enqueue_job(func=%s, args=%s) called', func, args)
-    redis_queue.enqueue_call(func=func, args=args, result_ttl=0, timeout=3600)
-    if current_app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
-        _heroku_run('worker')
-
-
-def _job(target, *args):
-    __logger__.debug('_job(target=%s, args=%s) called', target, args)
+    key = 'job_enqueued_series_{0}'.format(series_id)
+    if cache.get(key):
+        # Do nothing if already enqueued
+        return
     try:
-        if target == 'list':
-            update_series_list(background=True)
-        elif target == 'series':
-            series_id = args[0]
-            series = Series.query.get(series_id)
-            update_series(series, background=True)
-        else:
-            __logger__.error('Unknown target: %s', target)
+        _enqueue_job(_job_update_series, series_id)
+    except:
+        __logger__.exception('Failed to enqueue a job')
+    else:
+        cache.set(key, True, timeout=300)
+
+
+def _job_update_series_list():
+    __logger__.debug('_job_update_series_list() called')
+    try:
+        update_series_list(background=True)
     except AccessDenied:
-        pass
+        # finally block is not executed when the process is killed by os.kill
+        cache.delete('job_enqueued_list')
+        # Stop the current worker as we can't do anything with the current IP.
+        os.kill(os.getppid(), signal.SIGTERM)
     except:
         __logger__.exception('An error occurred while processing a job')
-    # TODO retry on failure
+    finally:
+        cache.delete('job_enqueued_list')
+
+
+def _job_update_series(series_id):
+    __logger__.debug('_job_update_series(series_id=%s) called', series_id)
+    key = 'job_enqueued_series_{0}'.format(series_id)
+    try:
+        series = Series.query.get(series_id)
+        update_series(series, background=True)
+    except AccessDenied:
+        # finally block is not executed when the process is killed by os.kill
+        cache.delete(key)
+        # Stop the current worker as we can't do anything with the current IP.
+        os.kill(os.getppid(), signal.SIGTERM)
+    except:
+        __logger__.exception('An error occurred while processing a job')
+    finally:
+        cache.delete(key)
+
+
+def _enqueue_job(func, *args):
+    __logger__.debug('_enqueue_job(func=%s, args=%s) called', func, args)
+    redis_queue.enqueue_call(func=func, args=args, result_ttl=0, timeout=900)
+    if current_app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
+        _heroku_run('worker')
 
 
 def run_worker(burst=False):

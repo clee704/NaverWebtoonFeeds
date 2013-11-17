@@ -42,11 +42,12 @@ def get_public_ip():
     }
     for url, pattern in url_patterns.items():
         __logger__.debug('Trying to get public IP using %s', url)
+        data = None
         try:
-            data = requests.get(url).text
+            data = requests.get(url, timeout=60).text
             ip_str = re.search(pattern, data).group(1)
             return IPAddress(ip_str)
         except (AttributeError, IndexError, TypeError):
-            __logger__.debug('Unrecognizable data: %s', repr(data))
-        except requests.ConnectionError as e:
+            __logger__.debug('Unrecognizable data: %s', repr(data), exc_info=True)
+        except (requests.ConnectionError, requests.Timeout) as e:
             __logger__.debug("Couln't get %s: %s", url, e)

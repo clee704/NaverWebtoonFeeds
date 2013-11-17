@@ -12,12 +12,12 @@ __logger__ = logging.getLogger(__name__)
 def render_feed_index():
     series_list = Series.query.order_by(Series.title).all()
     response = render_template('index.html', series_list=series_list)
-    cache.set('feed_index', response)
+    cache.set('feed_index', response, timeout=86400 * 30)
     return response
 
 
 def render_feed_show(series):
     xml = render_template('show.xml', series=series)
     response = Response(response=xml, content_type='application/atom+xml')
-    cache.set('feed_show_%d' % series.id, response)
+    cache.set('feed_show_%d' % series.id, response, timeout=86400 * 30)
     return response
