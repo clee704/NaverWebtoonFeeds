@@ -51,6 +51,7 @@ def run_worker(burst=False):
         # Remove default exception handler that moves job to failed queue
         w.pop_exc_handler()
         w.work(burst=burst)
+    __logger__.debug('run_worker(burst=%s) done', burst)
 
 
 def _heroku_run(command):

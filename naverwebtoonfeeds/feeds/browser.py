@@ -144,7 +144,10 @@ class Browser(object):
     def _get_public_ip(self):
         try:
             self.public_ip = get_public_ip()
-            __logger__.info('Current IP: %s', get_public_ip())
+            if self.public_ip:
+                __logger__.info('Current IP: %s', self.public_ip)
+            else:
+                __logger__.warning('Failed to get the public IP')
         except:
             __logger__.warning('Failed to get the public IP', exc_info=True)
 

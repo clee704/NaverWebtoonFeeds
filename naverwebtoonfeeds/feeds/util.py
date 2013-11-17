@@ -36,6 +36,17 @@ def inner_html(element):
 
 def get_public_ip():
     """Returns the public IP of the server where this app is running."""
-    data = requests.get('http://checkip.dyndns.com/').text
-    ip_str = re.search(r'Address: (\d+\.\d+\.\d+\.\d+)', data).group(1)
-    return IPAddress(ip_str)
+    url_patterns = {
+        'http://checkip.dyndns.com/': r'Address: (\d+\.\d+\.\d+\.\d+)',
+        'http://ipecho.net/plain': r'(\d+\.\d+\.\d+\.\d+)',
+    }
+    for url, pattern in url_patterns.items():
+        __logger__.debug('Trying to get public IP using %s', url)
+        try:
+            data = requests.get(url).text
+            ip_str = re.search(pattern, data).group(1)
+            return IPAddress(ip_str)
+        except (AttributeError, IndexError, TypeError):
+            __logger__.debug('Unrecognizable data: %s', repr(data))
+        except requests.ConnectionError as e:
+            __logger__.debug("Couln't get %s: %s", url, e)
