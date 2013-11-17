@@ -22,12 +22,12 @@ def enqueue_update_series_list():
     if cache.get('job_enqueued_list'):
         # Do nothing if already enqueued
         return
+    cache.set('job_enqueued_list', True, timeout=300)
     try:
         _enqueue_job(_job_update_series_list)
     except:
         __logger__.exception('Failed to enqueue a job')
-    else:
-        cache.set('job_enqueued_list', True, timeout=300)
+        cache.delete('job_enqueued_list')
 
 
 def enqueue_update_series(series_id):
@@ -35,12 +35,12 @@ def enqueue_update_series(series_id):
     if cache.get(key):
         # Do nothing if already enqueued
         return
+    cache.set(key, True, timeout=300)
     try:
         _enqueue_job(_job_update_series, series_id)
     except:
         __logger__.exception('Failed to enqueue a job')
-    else:
-        cache.set(key, True, timeout=300)
+        cache.delete(key)
 
 
 def _job_update_series_list():
