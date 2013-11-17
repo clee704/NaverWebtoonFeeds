@@ -1,4 +1,8 @@
-include Makefile LICENSE README.rst requirements.txt dev-requirements.txt pylintrc
+include Makefile LICENSE README.rst CHANGES.md
+include requirements.txt dev-requirements.txt pylintrc
+include package.json bower.json .bowerrc
+include .gitignore
+recursive-include * .gitignore
 recursive-include docs *
 recursive-include test *
 recursive-include naverwebtoonfeeds/static *

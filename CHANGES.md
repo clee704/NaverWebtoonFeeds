@@ -1,5 +1,11 @@
+0.3dev (current)
+----------------
+* Update libraries such as bootstrap and jquery to the latest version
+* Use bower for web libraries
+* Miscellaneous improvements and refactorings
+
 0.2 (Sep 24, 2013)
----
+------------------
 * Fix problems with redis queue workers
   ([cde73a12](https://github.com/clee704/NaverWebtoonFeeds/commit/cde73a123f0a6c47617f8c75132bbb7c45030fe1))
   * Failed jobs does not linger in redis anymore
@@ -14,5 +20,5 @@
   ([a2b9e067](https://github.com/clee704/NaverWebtoonFeeds/commit/a2b9e067a22ba2cde6bafc71222bb843d04878e5))
 
 0.1.0 (Mar 23, 2013)
------
+--------------------
 * First release
