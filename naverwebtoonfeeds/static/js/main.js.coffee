@@ -110,7 +110,7 @@ $ ->
   DAYS = 'all mon tue wed thu fri sat sun ended'.split(' ')
   DAY_CLASSES = ("show-day-#{day}" for day in DAYS).join(' ')
   toggleSelectedUploadDaySeries = ->
-    $tab = $("a[href='#{location.hash}']").parent() or $tabs.eq(0)
+    $tab = location.hash and $("a[href='#{location.hash}']").parent() or $tabs.eq(0)
     $body.removeClass(DAY_CLASSES)
     $body.addClass("show-day-#{$tab.data('day')}")
     $tabs.removeClass('active')
