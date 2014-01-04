@@ -49,5 +49,5 @@ class TestUtil(TestCase):
     def test_get_public_ip(self, mock_requests):
         mock_requests.get.return_value.text = '<html><head><title>Current IP Check</title></head><body>Current IP Address: 1.2.3.4</body></html>'
         rv = feeds_util.get_public_ip()
-        mock_requests.get.assert_called_with('http://checkip.dyndns.com/')
+        mock_requests.get.assert_called_with('http://checkip.dyndns.com/', timeout=60)
         self.assertEqual(rv, IPAddress('1.2.3.4'))

@@ -18,7 +18,7 @@ class TestRender(TestCase):
     def test_render_feed_index_without_series(self, mock_cache):
         response = render_feed_index()
         doc = lxml.html.fromstring(response)
-        mock_cache.set.assert_called_with('feed_index', response)
+        mock_cache.set.assert_called_with('feed_index', response, timeout=86400 * 30)
         self.assertIn(u'구독할 수 있는 웹툰이 없습니다.', response)
         self.assertEqual([], doc.xpath('//article'))
 
@@ -31,7 +31,7 @@ class TestRender(TestCase):
         response = render_feed_index()
         doc = lxml.html.fromstring(response)
 
-        mock_cache.set.assert_called_with('feed_index', response)
+        mock_cache.set.assert_called_with('feed_index', response, timeout=86400 * 30)
         self.assertIn('Peanuts', response)
         self.assertIn('Charles M. Schulz', response)
         self.assertIn("Alice&#39;s Adventures in Wonderland", response)
@@ -53,7 +53,7 @@ class TestRender(TestCase):
         response = render_feed_show(Series.query.get(1))
         doc = lxml.html.fromstring(response.data)
 
-        mock_cache.set.assert_called_with('feed_show_1', response)
+        mock_cache.set.assert_called_with('feed_show_1', response, timeout=86400 * 30)
         self.assertEqual(doc.xpath('//feed/title/text()'), ['Peanuts'])
         self.assertEqual(doc.xpath('//feed/author/name/text()'), ['Charles M. Schulz'])
         self.assertEqual(doc.xpath('count(//entry)'), 2)
