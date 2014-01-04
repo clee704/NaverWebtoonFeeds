@@ -237,18 +237,20 @@ def _fetch_series_info(series):
 
 
 def _add_new_chapters(series):
+    __logger__.debug('Adding new chapters to series %d', series.id)
     updated = False
     current_last_chapter = series.chapters[0].id if len(series.chapters) else 0
     start = current_last_chapter + 1
     if current_app.config.get('EXPRESS_MODE'):
         start = max(start, series.last_chapter - 3)
     chapter_ids = range(start, series.last_chapter + 1)
-    __logger__.debug('Adding new chapters %s to series %d', chapter_ids, series.id)
+    __logger__.debug('New chapters: %s', chapter_ids)
     for chapter_id in chapter_ids:
         chapter = Chapter(series=series, id=chapter_id)
         # chapter is in a pending state, probably because of the series
         # attribute. But I couldn't find this in the documentation.
         if _fetch_chapter_info(chapter):
+            __logger__.debug('Chapter %d is fetched', chapter_id)
             chapter.atom_id = _make_atom_id(chapter)
             # Not necessary; it doesn't hurt to do so.
             db.session.add(chapter)
