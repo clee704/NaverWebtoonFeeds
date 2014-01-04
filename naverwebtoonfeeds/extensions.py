@@ -35,41 +35,11 @@ class MyGzip(Gzip):
 gzip = MyGzip()
 
 
-import zlib
-from werkzeug.contrib.cache import RedisCache
-
-class CompressedRedisCache(RedisCache):
-
-    def dump_object(self, value):
-        serialized_str = RedisCache.dump_object(self, value)
-        try:
-            return zlib.compress(serialized_str)
-        except zlib.error:
-            return serialized_str
-
-    def load_object(self, value):
-        try:
-            serialized_str = zlib.decompress(value)
-        except (zlib.error, TypeError):
-            serialized_str = value
-        return RedisCache.load_object(self, serialized_str)
-
-
 try:
-    from redis import Redis
+    from redismod import Redis
     from rq import Queue
 
-    # Redis implements __getitem__ but not __len__
-    # Redis has too many public methods (142 methods)
-    # pylint: disable=incomplete-protocol,too-many-public-methods
-    class MyRedis(Redis):
-        def __init__(self):
-            # pylint: disable=super-init-not-called
-            pass
-        def init_app(self, *args, **kwargs):
-            Redis.__init__(self, *args, **kwargs)
-
-    redis_connection = MyRedis()
+    redis_connection = Redis()
     redis_queue = Queue(connection=redis_connection)
 except ImportError:
     redis_connection = None

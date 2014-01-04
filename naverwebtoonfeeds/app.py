@@ -5,9 +5,9 @@ import os
 from flask import Flask, render_template
 
 from .config import DefaultConfig
-from .extensions import (db, cache, assets_env, gzip, RedisCache, CompressedRedisCache,
-                         redis_connection)
+from .extensions import (db, cache, assets_env, gzip, redis_connection)
 from .feeds import feeds
+from .redismod import RedisCache, CompressedRedisCache
 from .template import externalize, proxify
 
 
@@ -96,7 +96,7 @@ def configure_extensions(app):
         gzip.init_app(app)
 
     if app.config.get('USE_REDIS_QUEUE'):
-        redis_connection.init_app(host=app.config['CACHE_REDIS_HOST'],
+        redis_connection.init(host=app.config['CACHE_REDIS_HOST'],
                 port=app.config['CACHE_REDIS_PORT'],
                 password=app.config['CACHE_REDIS_PASSWORD'])
 
