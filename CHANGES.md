@@ -3,6 +3,7 @@
 * Update libraries such as bootstrap and jquery to the latest version
 * Use bower for web libraries
 * Miscellaneous improvements and refactorings
+* Remove Heroku-specific files
 
 0.2 (Sep 24, 2013)
 ------------------

@@ -1,4 +1,3 @@
-===================
 Naver Webtoon Feeds
 ===================
 
@@ -15,7 +14,9 @@ run your own app if you like. See Installation_ for more.
 Installation
 ------------
 
-Will be written soon.
+Dependent on ``coffee-script`` (> 1.6.3).
+
+TBD
 
 
 License

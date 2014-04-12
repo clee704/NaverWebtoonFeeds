@@ -2,7 +2,6 @@
 *.pyo
 *.egg
 *.egg-info
-.env
 dist
 build
 *.db
