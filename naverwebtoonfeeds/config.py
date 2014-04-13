@@ -76,8 +76,8 @@ class DefaultConfig(object):
     #: (Flask config) Enable or disable Flask debug mode.
     DEBUG = True
 
-    #: (Flask config) Enable or disable Flask testing mode.
-    TESTING = False
+    #: Enable or disable Flask-Assets debug mode.
+    ASSETS_DEBUG = True
 
     #: Enable or disable gzip compression. If you are running your WSGI server
     #: behind a proxy such as Nginx, you might want to disable it and enable
@@ -171,7 +171,6 @@ class DefaultConfig(object):
     }
 
     # Config values that need not be changed by the user.
-    ASSETS_DEBUG = True
     ASSETS_LOAD_PATH = [join(dirname(__file__), 'static')]
     ASSETS_DIRECTORY = '{INSTANCE_PATH}/assets'
     ASSETS_URL = '/static/generated'
