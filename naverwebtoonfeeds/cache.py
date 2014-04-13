@@ -12,10 +12,11 @@ from datetime import timedelta
 from flask_cache import Cache as CacheBase
 from werkzeug.contrib.cache import RedisCache as RedisCacheBase
 
-from .redis_ import Redis
+from ._compat import string_types
+from .redis_ import from_url, Redis
 
 
-LONG_LONG_TIME = timedelta(days=365).total_seconds()
+LONG_LONG_TIME = int(timedelta(days=365).total_seconds())
 
 
 class Cache(CacheBase):
@@ -30,7 +31,10 @@ class RedisCache(RedisCacheBase):
 
     def __init__(self, host='localhost', port=6379, password=None,
                  db=0, default_timeout=300, key_prefix=None):
-        client = Redis(host=host, port=port, password=password, db=db)
+        if isinstance(host, string_types):
+            client = Redis(host=host, port=port, password=password, db=db)
+        else:
+            client = host
         super(RedisCache, self).__init__(client, port, password, db,
                                          default_timeout, key_prefix)
 
@@ -83,10 +87,6 @@ def _redis_backend(app, config, args, kwargs, cache_class):
 
     redis_url = config.get('CACHE_REDIS_URL')
     if redis_url:
-        try:
-            from redis import from_url
-        except ImportError:
-            raise RuntimeError('redis module is not installed')
         kwargs['host'] = from_url(redis_url, db=kwargs.pop('db', None))
 
     return cache_class(*args, **kwargs)

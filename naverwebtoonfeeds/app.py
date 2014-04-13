@@ -71,9 +71,7 @@ def register_extensions(app):
     if app.config.get('GZIP'):
         gzip.init_app(app)
     if app.config.get('USE_REDIS_QUEUE'):
-        redis.init(host=app.config['CACHE_REDIS_HOST'],
-                   port=app.config['CACHE_REDIS_PORT'],
-                   password=app.config['CACHE_REDIS_PASSWORD'])
+        redis.init_app(app)
 
 
 def register_request_handlers(app):
