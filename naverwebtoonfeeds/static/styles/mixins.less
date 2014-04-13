@@ -18,10 +18,23 @@
   ._generate-hide-rules(@days, @i + 1, 1);
 }
 
-.hide-unless-equal(@a, @b, @value: ~"block") when (@a = @b) {
-  display: @value;
+.hide-unless-equal(@a, @b) when (@a = @b) {
 }
 
 .hide-unless-equal(@a, @b) when not (@a = @b) {
   display: none;
+}
+
+.generate-show-rules(@days) {
+  ._generate-show-rules(@days;);
+}
+
+._generate-show-rules(@days, @i: 1, @j: 1)
+    when (isstring(extract(@days, @i))) and (isstring(extract(@days, @j))) {
+  @day1: extract(@days, @i);
+  @day2: extract(@days, @j);
+  .show-day-@{day1} .media.@{day2} {
+    display: block;
+  }
+  ._generate-show-rules(@days, @i + 1, @j + 1);
 }
