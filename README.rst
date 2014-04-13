@@ -6,17 +6,11 @@ Unlike NaverComicFeed, it embeds links in feeds, instead of actual comic
 images.
 
 You can use the deployed app at http://naverwebtoonfeeds.clee.kr/, or
-run your own app if you like. See Installation_ for more.
+run your own app if you like. As an example, see nwf-heroku_ for information
+about deploying to Heroku.
 
 .. _NaverComicFeed: https://bitbucket.org/dahlia/navercomicfeed
-
-
-Installation
-------------
-
-Dependent on ``coffee-script`` (> 1.6.3).
-
-TBD
+.. _nwf-heroku: https://github.com/clee704/nwf-heroku
 
 
 License
