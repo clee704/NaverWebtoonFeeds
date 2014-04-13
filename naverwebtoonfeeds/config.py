@@ -124,9 +124,7 @@ class DefaultConfig(object):
 
     # Redis
     # CACHE_TYPE = 'naverwebtoonfeeds.cache.compressedredis'
-    # CACHE_REDIS_HOST = 'localhost'
-    # CACHE_REDIS_PORT = 6379
-    # CACHE_REDIS_PASSWORD = ''
+    # CACHE_REDIS_URL = 'redis://localhost:6379/'
 
     #: If *True*, use RQ (Redis Queue) to update the database by a background
     #: worker. :attr:`.CACHE_TYPE` must be ``redis``,
