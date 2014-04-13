@@ -27,7 +27,7 @@ try:
     from rq import Queue
     from .redis_ import Redis
     redis = Redis()
-    rq = Queue(connection=redis)
+    queue = Queue(connection=redis)
 except ImportError:
     redis = None
-    rq = None
+    queue = None

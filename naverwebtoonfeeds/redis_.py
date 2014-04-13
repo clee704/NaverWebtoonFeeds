@@ -9,15 +9,18 @@ import logging
 import random
 import time
 
-from redis import Redis as RedisBase
-from redis.exceptions import ResponseError
-
 
 logger = logging.getLogger(__name__)
 
 
-class Redis(RedisBase):
+try:
+    from redis import Redis as RedisBase
+    from redis.exceptions import ResponseError
+except ImportError:
+    RedisBase = object
 
+
+class Redis(RedisBase):
     response_error_max_retries = 10
 
     def __init__(self, *args, **kwargs):

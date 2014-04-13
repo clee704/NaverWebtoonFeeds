@@ -21,8 +21,8 @@ clean:
 	rm -rf build
 	rm -rf dist
 	rm -rf docs/_build
-	rm -rf naverwebtoonfeeds/static/webassets
-	rm -rf naverwebtoonfeeds/static/.webassets-cache
+	rm -rf instance/assets
+	rm -rf .tox
 	find . -type f -name '.*.sw?' -exec rm -f {} \;
 	find . -type f -name '*.py[co]' -exec rm -f {} \;
 	find . -type d -name '__pycache__' -depth -exec rm -rf {} \;

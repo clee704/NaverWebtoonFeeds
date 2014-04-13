@@ -10,7 +10,6 @@ import zlib
 from datetime import timedelta
 
 from flask_cache import Cache as CacheBase
-from redis import from_url
 from werkzeug.contrib.cache import RedisCache as RedisCacheBase
 
 from .redis_ import Redis
@@ -84,6 +83,10 @@ def _redis_backend(app, config, args, kwargs, cache_class):
 
     redis_url = config.get('CACHE_REDIS_URL')
     if redis_url:
+        try:
+            from redis import from_url
+        except ImportError:
+            raise RuntimeError('redis module is not installed')
         kwargs['host'] = from_url(redis_url, db=kwargs.pop('db', None))
 
     return cache_class(*args, **kwargs)

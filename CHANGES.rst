@@ -8,6 +8,8 @@
   - REDIS_QUEUE_BURST_MODE_IN_HEROKU is renamed to
     START_HEROKU_WORKER_ON_REQUEST
   - IMGPROXY_URL_PATTERN now interpolates *v* instead of *variable*.
+  - ENABLE_CACHE_COMPRESSION is removed. Use
+    ``naverwebtoonfeeds.cache.compressedredis`` for CACHE_TYPE instead.
 
 - Use bower for web libraries
 - Use Less instead of pyScss

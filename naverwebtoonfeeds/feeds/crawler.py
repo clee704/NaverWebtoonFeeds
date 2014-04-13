@@ -18,13 +18,12 @@ import lxml.html
 import lxml.html.soupparser
 import pytz
 import requests
-import rq
 from flask import current_app
 from netaddr import IPNetwork
 from requests.exceptions import HTTPError, RequestException
 from sqlalchemy.exc import SQLAlchemyError
 
-from ..ext import cache, db, redis, rq
+from ..ext import cache, db, redis, queue
 from .helpers import (as_naver_time_zone, get_public_ip, index_cache_key,
                       inner_html, NAVER_TIMEZONE, NAVER_URLS)
 from .models import Chapter, Series
@@ -37,6 +36,10 @@ logger = logging.getLogger(__name__)
 
 def run_worker(burst=False):
     logger.debug('run_worker(burst=%s) called', burst)
+    try:
+        import rq
+    except ImportError:
+        raise RuntimeError('rq module is not installed')
     with rq.Connection(connection=redis):
         w = rq.Worker([rq.Queue()])
         # Remove default exception handler that moves job to failed queue
@@ -618,7 +621,7 @@ def enqueue_job(job_func, cache_key, *args):
     cache.set(cache_key, True, timeout=300)
     try:
         func = get_rq_func(job_func, cache_key)
-        rq.enqueue_call(func=func, args=args, result_ttl=0, timeout=900)
+        queue.enqueue_call(func=func, args=args, result_ttl=0, timeout=900)
         if current_app.config.get('START_HEROKU_WORKER_ON_REQUEST'):
             start_heroku_process('worker')
     except Exception:
