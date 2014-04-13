@@ -1,52 +1,36 @@
-Flask==0.10.1
-Flask-SQLAlchemy==1.0
-Flask-Cache==0.12
-Flask-Script==0.6.3
-Flask-Assets==0.8
-Flask-gzip==0.1
-requests==2.0.1
-lxml==3.2.4
-BeautifulSoup==3.2.1
-netaddr==0.7.10
-pytz==2013.8
-yuicompressor==2.4.8
-pyScss==1.2.0.post3
-PyYAML==3.10
+# It contains all packages that are required or useful when developing
+# NaverWebtoonFeeds. If you just want to use the app, you don't have to install
+# these packages. Type `python setup.py install` and you are ready.
 
-## Dependencies
-Jinja2==2.7.1
-MarkupSafe==0.18
-SQLAlchemy==0.8.3
-Werkzeug==0.9.4
-itsdangerous==0.23
-six==1.4.1
-webassets==0.8
-wsgiref==0.1.2
+Flask==0.10.1
+Flask-Assets==0.9
+Flask-Cache==0.12
+Flask-gzip==0.1
+Flask-Script==0.6.7
+Flask-SQLAlchemy==1.0
+requests==2.2.1
+lxml==3.3.4
+BeautifulSoup==3.2.1
+PyYAML==3.11
+yuicompressor==2.4.8
+pytz==2014.2
+netaddr==0.7.11
+blinker==1.3
 
 ## Optional packages
 MySQL-python==1.2.5
-redis==2.8.0
-rq==0.3.11
+redis==2.9.1
+rq==0.3.13
 gunicorn==18.0
--e git://github.com/clee704/heroku.py.git@fix-requests-1.0#egg=heroku
 
-## Development
-ipython==1.1.0
-pylint==1.0.0
-Sphinx==1.1.3
-
-## Test
-pytest==2.4.2
-Flask-Testing==0.4
+## Development & Testing
+pytest==2.5.2
+pytest-cov==1.6
+pytest-pep8==1.0.5
 mock==1.0.1
-pysqlite==2.6.3
-
-## Dev dependencies
-Pygments==1.6
-astroid==1.0.1
-docutils==0.11
-logilab-common==0.60.0
-py==1.4.18
-python-dateutil==1.5
-times==0.6.2
-twill==0.9
+cssselect==0.9.1
+tox==1.7.1
+pylint==1.1.0
+Sphinx==1.2.2
+sphinx_rtd_theme==0.1.6
+ipython==2.0.0

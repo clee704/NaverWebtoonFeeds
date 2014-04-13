@@ -1,57 +1,81 @@
-from test import TestCase
-from ..util import Mock, patch
-import naverwebtoonfeeds.feeds.views as feeds_views
+# -*- coding: UTF-8 -*-
+from datetime import datetime
+
+from flask import url_for
+
+from naverwebtoonfeeds.ext import cache
+from naverwebtoonfeeds.feeds.helpers import feed_cache_key, index_cache_key
+from naverwebtoonfeeds.feeds.models import Chapter, Series
+from naverwebtoonfeeds.filters import externalize_filter
 
 
-class TestViews(TestCase):
+def test_index_with_empty_db(app, db):
+    with app.test_client() as client:
+        d = client.get('/').doc
+        assert cache.get(index_cache_key()) is not None
+        assert d.cssselect('.no-feeds')[0].text == u'구독할 수 있는 웹툰이 없습니다.'
+        assert d.xpath('//article') == []
 
-    @patch('naverwebtoonfeeds.feeds.views.current_app')
-    @patch('naverwebtoonfeeds.feeds.views.request')
-    def test_redirect_to_canonical_url_without_raw_uri_without_force_redirect(self, mock_request, mock_current_app):
-        mock_current_app.config = dict(URL_ROOT='http://bit.ly', FORCE_REDIRECT=False)
-        mock_request.environ = dict()
-        mock_request.url = 'http://foo.com/baa/aar'
-        view = Mock()
-        view_wrapper = lambda *args, **kwargs: view(*args, **kwargs)
-        decorated_view = feeds_views.redirect_to_canonical_url(view_wrapper)
-        decorated_view(1, 'x', y=3)
-        view.assert_called_with(1, 'x', y=3)
 
-    @patch('naverwebtoonfeeds.feeds.views.current_app')
-    @patch('naverwebtoonfeeds.feeds.views.request')
-    @patch('naverwebtoonfeeds.feeds.views.redirect')
-    def test_redirect_to_canonical_url_without_raw_uri_with_force_redirect(self, mock_redirect, mock_request, mock_current_app):
-        mock_current_app.config = dict(URL_ROOT='http://bit.ly', FORCE_REDIRECT=True)
-        mock_request.environ = dict()
-        mock_request.url = 'http://foo.com/baa/aar'
-        view = Mock()
-        view_wrapper = lambda *args, **kwargs: view(*args, **kwargs)
-        decorated_view = feeds_views.redirect_to_canonical_url(view_wrapper)
-        decorated_view(1, 'x', y=3)
-        mock_redirect.assert_called_with('http://bit.ly/baa/aar', 301)
+def test_index_with_series(app, db):
+    with app.test_client() as client:
+        db.session.add(Series(
+            id=1,
+            title='Peanuts',
+            author='Charles M. Schulz'))
+        db.session.add(Series(
+            id=2,
+            title="Alice's Adventures in Wonderland",
+            author='Lewis Carroll',
+            description='A girl named Alice falls down a rabbit hole into a '
+                        'fantasy world.'))
+        db.session.commit()
 
-    @patch('naverwebtoonfeeds.feeds.views.current_app')
-    @patch('naverwebtoonfeeds.feeds.views.request')
-    @patch('naverwebtoonfeeds.feeds.views.redirect')
-    def test_redirect_to_canonical_url_with_raw_uri_with_force_redirect(self, mock_redirect, mock_request, mock_current_app):
-        mock_current_app.config = dict(URL_ROOT='http://bit.ly', FORCE_REDIRECT=True)
-        mock_request.environ = dict(RAW_URI='/baa/aar')
-        mock_request.url = 'http://foo.com/baa/aar'
-        view = Mock()
-        view_wrapper = lambda *args, **kwargs: view(*args, **kwargs)
-        decorated_view = feeds_views.redirect_to_canonical_url(view_wrapper)
-        decorated_view(1, 'x', y=3)
-        mock_redirect.assert_called_with('http://bit.ly/baa/aar', 301)
+        d = client.get('/').doc
+        a1 = d.cssselect('article#series-1')[0]
+        assert a1.cssselect('.title')[0].text.strip() == 'Peanuts'
+        assert a1.cssselect('.author')[0].text == 'Charles M. Schulz'
 
-    def test_urlpath_minimum(self):
-        self.assertEqual(feeds_views.urlpath('http://a.co'), '')
+        a2 = d.cssselect('article#series-2')[0]
+        assert (a2.cssselect('.title')[0].text.strip() ==
+                "Alice's Adventures in Wonderland")
+        assert a2.cssselect('.author')[0].text == 'Lewis Carroll'
+        assert (a2.cssselect('.description')[0].text ==
+                'A girl named Alice falls down a rabbit hole into a fantasy '
+                'world.')
+        assert d.cssselect('.no-feeds') == []
+        assert d.xpath('count(//article)') == 2
+        assert (d.xpath('//article/attribute::id') == ['series-2', 'series-1'],
+                'Series should be sorted by title.')
+        assert (a1.cssselect('.feed-url')[0].attrib['value'] ==
+                externalize_filter(url_for('feeds.show', series_id=1)))
 
-    def test_urlpath_root(self):
-        self.assertEqual(feeds_views.urlpath('http://foo.bar.com/'), '/')
 
-    def test_urlpath_path(self):
-        self.assertEqual(feeds_views.urlpath('http://bit.ly/bEf232'), '/bEf232')
+def test_show_with_chapters(app, db):
+    with app.test_client() as client:
+        db.session.add(Series(
+            id=1, title='Peanuts', author='Charles M. Schulz'))
+        db.session.add(Chapter(
+            id=1,
+            title='Strip #1',
+            pubdate=datetime(1950, 10, 2),
+            atom_id='atom1',
+            series_id=1))
+        db.session.add(Chapter(
+            id=2,
+            title='Strip #2',
+            pubdate=datetime(1950, 10, 3),
+            atom_id='atom2',
+            series_id=1))
+        db.session.commit()
 
-    def test_urlpath_full(self):
-        self.assertEqual(feeds_views.urlpath('http://a.co/p;p1;p2;p3?a=1&b=2#frag'),
-                '/p;p1;p2;p3?a=1&b=2#frag')
+        d = client.get('/feeds/1.xml').doc
+        ns = {'a': 'http://www.w3.org/2005/Atom'}
+
+        assert cache.get(feed_cache_key(1)) is not None
+        assert d.xpath('a:title/text()', namespaces=ns) == ['Peanuts']
+        assert (d.xpath('a:author/a:name/text()', namespaces=ns) ==
+                ['Charles M. Schulz'])
+        assert d.xpath('count(a:entry)', namespaces=ns) == 2
+        assert (d.xpath('a:entry/a:id/text()', namespaces=ns) ==
+                ['atom2', 'atom1'])

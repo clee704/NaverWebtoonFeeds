@@ -2,7 +2,7 @@ init:
 	pip install -r requirements.txt
 
 test:
-	NWF_ENV=test py.test test
+	py.test test
 
 docs:
 	SPHINX_RUNNING=1 $(MAKE) -C docs html
@@ -23,9 +23,8 @@ clean:
 	rm -rf docs/_build
 	rm -rf naverwebtoonfeeds/static/webassets
 	rm -rf naverwebtoonfeeds/static/.webassets-cache
-	find . -type f -name '.DS_Store' -exec rm -f {} \;
-	find . -type f -name '*.sw?' -exec rm -f {} \;
-	find . -type f -name '*.py?' -exec rm -f {} \;
+	find . -type f -name '.*.sw?' -exec rm -f {} \;
+	find . -type f -name '*.py[co]' -exec rm -f {} \;
 	find . -type d -name '__pycache__' -depth -exec rm -rf {} \;
 
 lint:

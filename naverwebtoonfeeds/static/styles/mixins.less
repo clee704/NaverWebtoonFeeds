@@ -1,0 +1,27 @@
+.generate-hide-rules(@days) {
+  ._generate-hide-rules(@days;);
+}
+
+._generate-hide-rules(@days, @i: 1, @j: 1)
+    when (isstring(extract(@days, @i))) and (isstring(extract(@days, @j))) {
+  @day1: extract(@days, @i);
+  @day2: extract(@days, @j);
+  .show-day-@{day1} .media.@{day2} {
+    .hide-unless-equal(@day1, @day2);
+  }
+  ._generate-hide-rules(@days, @i, @j + 1);
+}
+
+._generate-hide-rules(@days, @i, @j)
+    when (isstring(extract(@days, @i))) and
+         not (isstring(extract(@days, @j))) {
+  ._generate-hide-rules(@days, @i + 1, 1);
+}
+
+.hide-unless-equal(@a, @b, @value: ~"block") when (@a = @b) {
+  display: @value;
+}
+
+.hide-unless-equal(@a, @b) when not (@a = @b) {
+  display: none;
+}

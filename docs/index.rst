@@ -1,16 +1,11 @@
-.. NaverWebtoonFeeds documentation master file, created by
-   sphinx-quickstart on Thu Jan 31 11:29:44 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+NaverWebtoonFeeds
+=================
 
-Welcome to Naver Webtoon Feeds's documentation!
-===============================================
-
-Naver Webtoon Feeds provides feeds for Naver webtoons (webcomics).
+Feeds for Naver webtoons (webcomics).
 
 
-Configurations
---------------
+Configuration
+-------------
 
 .. autoclass:: naverwebtoonfeeds.config.DefaultConfig
    :members:
@@ -24,20 +19,7 @@ API reference for developers
    :members:
    :member-order: bysource
 
-
-Template filters
-~~~~~~~~~~~~~~~~
-
-.. automodule:: naverwebtoonfeeds.template
-   :members:
-
-
-Feeds blueprint
-~~~~~~~~~~~~~~~
-
-.. automodule:: naverwebtoonfeeds.feeds
-
-.. automodule:: naverwebtoonfeeds.feeds.views
+.. automodule:: naverwebtoonfeeds.filters
    :members:
 
 
@@ -47,4 +29,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

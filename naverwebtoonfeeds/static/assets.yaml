@@ -1,0 +1,25 @@
+js_lib:
+  contents:
+  - bower_components/jquery/dist/jquery.js
+  - bower_components/bootstrap/dist/js/bootstrap.js
+  - bower_components/jquery.lazyload/jquery.lazyload.js
+  - bower_components/underscore/underscore.js
+  filters: yui_js
+  output: lib.%(version)s.js
+js_main:
+  contents:
+  - contents:
+    - scripts/main.coffee
+    filters: coffeescript
+    output: main.js
+  filters: yui_js
+  output: main.%(version)s.js
+css_main:
+  contents:
+  - contents:
+    - styles/main.less
+    filters: less
+    output: main.css
+    depends: styles/*.less
+  filters: yui_css
+  output: main.%(version)s.css

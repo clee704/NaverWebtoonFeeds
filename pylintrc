@@ -33,7 +33,7 @@ load-plugins=
 # can either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
-disable=missing-docstring,locally-disabled,bare-except,invalid-name
+disable=missing-docstring,invalid-name,no-init,no-self-use
 
 
 [REPORTS]
@@ -138,7 +138,7 @@ ignore-mixin-members=yes
 
 # List of classes names for which member attributes should not be checked
 # (useful for classes with attributes dynamically set).
-ignored-classes=SQLObject,SplitResult,Series,Chapter,Config
+ignored-classes=SQLAlchemy,scoped_session,Series,Chapter
 
 # When zope mode is activated, add a predefined set of Zope acquired attributes
 # to generated-members.

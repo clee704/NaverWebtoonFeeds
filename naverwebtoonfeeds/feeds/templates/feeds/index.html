@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+{% block body %}
+  <div class="container">
+    <form>
+      <div class="searchbar">
+        <input type="search" class="form-control" placeholder="검색">
+        <a class="close" href="#">&times;</a>
+      </div>
+      <div class="checkbox">
+        <label>
+          <input type="checkbox"> 완결 웹툰 보이기
+        </label>
+      </div>
+    </form>
+    {% if series_list %}
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#all">전체</a></li>
+        <li><a href="#mon">월요일</a></li>
+        <li><a href="#tue">화요일</a></li>
+        <li><a href="#wed">수요일</a></li>
+        <li><a href="#thu">목요일</a></li>
+        <li><a href="#fri">금요일</a></li>
+        <li><a href="#sat">토요일</a></li>
+        <li><a href="#sun">일요일</a></li>
+        <li class="empty"><a href="#ended">완결</a></li>
+      </ul>
+      <div class="tab-content">
+        {% for series in series_list %}
+          {% set feed_url = url_for('.show', series_id=series.id)|externalize %}
+          <article id="series-{{ series.id }}"
+                   class="media
+                          {{ "ended" if series.is_completed }}
+                          {{ ' '.join(series.upload_days.split(','))
+                             if series.upload_days and not series.is_completed }}">
+            <span class="pull-left">
+              <img class="media-object lazy"
+                   src="/static/images/grey.gif"
+                   width="217"
+                   height="165"
+                   alt=""
+                   data-original="{{ series.thumbnail_url|proxify }}">
+            </span>
+            <div class="media-body">
+              <header>
+                <h1>
+                  <a class="title" href="{{ naver_url(series.id) }}">
+                    {{ series.title }}
+                  </a>
+                </h1>
+                <span class="text-muted">
+                  by <span class="author">{{ series.author }}</span>
+                </span>
+              </header>
+              <p class="description">{{ series.description|safe }}</p>
+              <div class="links well well-sm">
+                <ul class="list-unstyled small">
+                  <li class="feed-url-wrapper">
+                    <i class="glyphicon glyphicon-bookmark"></i>
+                    <input class="feed-url"
+                           value="{{ feed_url }}"
+                           readonly="readonly">
+                  </li>
+                  <li>
+                    <i class="glyphicon glyphicon-globe"></i>
+                    <a href="{{ feed_url }}">브라우저에서 보기</a>
+                  </li>
+                  <li>
+                    <i class="glyphicon glyphicon-plus"></i>
+                    <a href="http://www.feedly.com/home#subscription/feed/{{ feed_url }}"
+                       target="_blank">Feedly에서 보기</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+        <p class="no-results">검색 결과가 없습니다.</p>
+      </div>
+    {% else %}
+      <p class="no-feeds">구독할 수 있는 웹툰이 없습니다.</p>
+    {% endif %}
+  </div>
+{% endblock %}

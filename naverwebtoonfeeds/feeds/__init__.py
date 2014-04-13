@@ -1,2 +1,8 @@
-from .models import Series, Chapter, Config
-from .views import feeds
+"""
+    naverwebtoonfeeds.feeds
+    ~~~~~~~~~~~~~~~~~~~~~~~
+
+    Implements the functionality that synchronizes data with the Naver website
+    and generates feeds.
+
+"""

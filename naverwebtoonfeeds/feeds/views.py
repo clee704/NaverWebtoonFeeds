@@ -1,94 +1,72 @@
-from functools import wraps
+"""
+    naverwebtoonfeeds.feeds.views
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Defines endpoints for feeds.
+
+"""
 import logging
-import urlparse
 
-from flask import Blueprint, current_app, request, redirect
+from blinker import Namespace
+from flask import Blueprint, render_template, Response
 
-from ..extensions import cache
+from ..ext import cache
+from .helpers import feed_cache_key, index_cache_key, naver_url
 from .models import Series
-from .render import render_feed_index, render_feed_show
-from .update import series_list_needs_fetching, update_series_list, update_series
-from .util import naver_url
-from .worker import enqueue_update_series_list, enqueue_update_series
 
 
-__logger__ = logging.getLogger(__name__)
+bp = Blueprint('feeds', __name__, template_folder='templates')
+
+view_signals = Namespace()
+index_requested = view_signals.signal('index-requested')
+feed_requested = view_signals.signal('feed-requested')
+
+logger = logging.getLogger(__name__)
 
 
-#: Blueprint for feeds.
-feeds = Blueprint('feeds', __name__, template_folder='templates')
-
-
-def redirect_to_canonical_url(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        path = request.environ['RAW_URI'] if 'RAW_URI' in request.environ else urlpath(request.url)
-        canonical_url = current_app.config['URL_ROOT'] + path
-        if current_app.config.get('FORCE_REDIRECT') and request.url != canonical_url:
-            __logger__.debug('request.url=%s != canonical_url=%s', request.url, canonical_url)
-            __logger__.debug('Redirecting to the canonical URL')
-            return redirect(canonical_url, 301)
-        else:
-            return f(*args, **kwargs)
-    return wrapper
-
-
-@feeds.route('/')
-@redirect_to_canonical_url
+@bp.route('/')
 def index():
-    """Returns a cached index page containing feeds."""
-    invalidate_cache = False
-    if series_list_needs_fetching():
-        if current_app.config.get('USE_REDIS_QUEUE'):
-            enqueue_update_series_list()
-        else:
-            invalidate_cache = update_series_list()[0]
-    if not invalidate_cache:
-        response = cache.get('feed_index')
-        if response:
-            __logger__.debug('Cache hit for /')
-            return response
-    return render_feed_index()
+    """Returns a page that contains feeds."""
+    index_requested.send(bp)
+    response = cache.get(index_cache_key())
+    if response:
+        logger.debug('Cache hit for /')
+        return response
+    return render_index()
 
 
-@feeds.route('/feeds/<int:series_id>.xml')
-@redirect_to_canonical_url
+@bp.route('/feeds/<int:series_id>.xml')
 def show(series_id):
-    """
-    Returns a cached Atom feed containing all episodes of the given series.
-
-    """
-    series = None
-    invalidate_cache = False
-    if series_list_needs_fetching():
-        if current_app.config.get('USE_REDIS_QUEUE'):
-            enqueue_update_series_list()
-        elif update_series_list()[0]:
-            cache.delete('feed_index')
-    series = Series.query.get_or_404(series_id)
-    if series.new_chapters_available:
-        if current_app.config.get('USE_REDIS_QUEUE'):
-            enqueue_update_series(series_id)
-        else:
-            invalidate_cache = any(update_series(series))
-    if not invalidate_cache:
-        response = cache.get('feed_show_%d' % series_id)
-        if response:
-            __logger__.debug('Cache hit for /feeds/%d.xml', series_id)
-            return response
-    return render_feed_show(series)
+    """Returns an Atom feed containing all episodes of the specified series."""
+    feed_requested.send(bp, series_id=series_id)
+    response = cache.get(feed_cache_key(series_id))
+    if response:
+        logger.debug('Cache hit for /feeds/%d.xml', series_id)
+        return response
+    return render_feed(series_id)
 
 
-@feeds.context_processor
+@bp.before_app_first_request
+def remove_index_cache():
+    # Without it, assets are not regenerated even if there are changes.
+    cache.delete(index_cache_key())
+
+
+@bp.context_processor
 def context():
     return dict(naver_url=naver_url)
 
 
-def urlpath(url):
-    parts = urlparse.urlsplit(url)
-    path = parts.path
-    if parts.query:
-        path += '?' + parts.query
-    if parts.fragment:
-        path += '#' + parts.fragment
-    return path
+def render_index():
+    series_list = Series.query.order_by(Series.title).all()
+    response = render_template('feeds/index.html', series_list=series_list)
+    cache.set_permanently(index_cache_key(), response)
+    return response
+
+
+def render_feed(series_id):
+    series = Series.query.get_or_404(series_id)
+    xml = render_template('feeds/show.xml', series=series)
+    response = Response(response=xml, content_type='application/atom+xml')
+    cache.set_permanently(feed_cache_key(series.id), response)
+    return response
