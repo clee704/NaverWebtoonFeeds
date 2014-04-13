@@ -1,7 +1,6 @@
 include Makefile LICENSE README.rst CHANGES.rst tox.ini
 include requirements.txt pylintrc package.json bower.json .bowerrc
 include .gitignore
-recursive-include * .gitignore
 recursive-include docs *
 recursive-include test *
 recursive-include naverwebtoonfeeds/static *
