@@ -26,4 +26,4 @@ class Gzip(GzipBase):
     def after_request(self, response):
         # Fix https://github.com/elasticsales/Flask-gzip/issues/7
         response.direct_passthrough = False
-        return Gzip.after_request(self, response)
+        return super(Gzip, self).after_request(response)
