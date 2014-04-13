@@ -1,6 +1,5 @@
-include Makefile LICENSE README.rst CHANGES.md
-include requirements.txt dev-requirements.txt pylintrc
-include package.json bower.json .bowerrc
+include Makefile LICENSE README.rst CHANGES.rst tox.ini
+include requirements.txt pylintrc package.json bower.json .bowerrc
 include .gitignore
 recursive-include * .gitignore
 recursive-include docs *
