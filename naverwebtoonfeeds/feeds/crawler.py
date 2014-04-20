@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 def run_worker(burst=False):
-    logger.debug('run_worker(burst=%s) called', burst)
+    logger.debug('run_worker(burst=%r) called', burst)
     try:
         import rq
     except ImportError:
@@ -45,7 +45,7 @@ def run_worker(burst=False):
         # Remove default exception handler that moves job to failed queue
         w.pop_exc_handler()
         w.work(burst=burst)
-    logger.debug('run_worker(burst=%s) done', burst)
+    logger.debug('run_worker(burst=%r) done', burst)
 
 
 def on_index_requested(bp, **extra):
@@ -120,10 +120,12 @@ class Crawler(object):
 
         for series in Series.query.filter_by(new_chapters_available=True):
             series_updated, chapters_added = self.update_series(
-                series, render_views=False)
+                series, do_commit=False, render_views=False)
             updated[0] |= series_updated
             if series_updated or chapters_added:
                 updated[1].append(series.id)
+
+        self._commit()
 
         # Pre-render pages for better performance for end users. However, if
         # the cache is not large enough to contain all the rendered page, it
@@ -173,12 +175,7 @@ class Crawler(object):
                 series.retries_left -= 1
 
         if do_commit:
-            try:
-                db.session.commit()
-                logger.debug('Changes committed')
-            except SQLAlchemyError:
-                logger.exception('Failed to commit')
-                db.session.rollback()
+            self._commit()
 
         if render_views and (series_updated or chapters_added):
             render_feed(series.id)
@@ -300,6 +297,14 @@ class Crawler(object):
         return update_attrs(chapter,
                             info,
                             ['title', 'pubdate', 'thumbnail_url'])
+
+    def _commit(self):
+        try:
+            db.session.commit()
+            logger.debug('Changes committed')
+        except SQLAlchemyError:
+            logger.exception('Failed to commit')
+            db.session.rollback()
 
 
 def series_list_needs_update():
@@ -616,6 +621,7 @@ def enqueue_update_series(series_id):
 
 
 def enqueue_job(job_func, cache_key, *args):
+    logger.debug('enqueue_job')
     if cache.get(cache_key):
         return
     cache.set(cache_key, True, timeout=300)
