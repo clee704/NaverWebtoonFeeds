@@ -17,9 +17,10 @@ from flask_script import Manager, prompt_bool
 from flask_script.commands import Server, Shell, ShowUrls
 
 from ..ext import assets_env, cache, db
-from ..feeds.crawler import Crawler, run_worker
+from ..feeds.crawler import Crawler
 from ..feeds.helpers import feed_cache_key, index_cache_key
 from ..feeds.models import Chapter, Series
+from ..feeds.worker import run_worker
 from .base import Manager
 
 

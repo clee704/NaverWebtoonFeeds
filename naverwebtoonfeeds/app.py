@@ -12,11 +12,12 @@ from flask import Flask, redirect, request, send_from_directory
 from ._compat import string_types, urlparse, urlunparse
 from .config import DefaultConfig, instance_path, resolve_instance_path
 from .ext import assets_env, cache, db, gzip, redis
-from .feeds.views import bp as feeds_blueprint
+from .feeds import worker  # Necessary for signals
+from .feeds.views import feeds
 from .filters import register_filters
 
 
-default_blueprints = [feeds_blueprint]
+default_blueprints = [feeds]
 
 
 def create_app(config_pyfile_or_dict=None, blueprints=None):

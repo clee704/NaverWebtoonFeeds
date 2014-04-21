@@ -7,27 +7,23 @@
 """
 import logging
 
-from blinker import Namespace
 from flask import Blueprint, render_template, Response
 
 from ..ext import cache
 from .helpers import feed_cache_key, index_cache_key, naver_url
 from .models import Series
+from .signals import feed_requested, index_requested
 
 
-bp = Blueprint('feeds', __name__, template_folder='templates')
-
-view_signals = Namespace()
-index_requested = view_signals.signal('index-requested')
-feed_requested = view_signals.signal('feed-requested')
+feeds = Blueprint('feeds', __name__, template_folder='templates')
 
 logger = logging.getLogger(__name__)
 
 
-@bp.route('/')
+@feeds.route('/')
 def index():
     """Returns a page that contains feeds."""
-    index_requested.send(bp)
+    index_requested.send(feeds)
     response = cache.get(index_cache_key())
     if response:
         logger.debug('Cache hit for /')
@@ -35,10 +31,10 @@ def index():
     return render_index()
 
 
-@bp.route('/feeds/<int:series_id>.xml')
+@feeds.route('/feeds/<int:series_id>.xml')
 def show(series_id):
     """Returns an Atom feed containing all episodes of the specified series."""
-    feed_requested.send(bp, series_id=series_id)
+    feed_requested.send(feeds, series_id=series_id)
     response = cache.get(feed_cache_key(series_id))
     if response:
         logger.debug('Cache hit for /feeds/%d.xml', series_id)
@@ -46,13 +42,13 @@ def show(series_id):
     return render_feed(series_id)
 
 
-@bp.before_app_first_request
+@feeds.before_app_first_request
 def remove_index_cache():
     # Without it, assets are not regenerated even if there are changes.
     cache.delete(index_cache_key())
 
 
-@bp.context_processor
+@feeds.context_processor
 def context():
     return dict(naver_url=naver_url)
 
