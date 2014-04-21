@@ -47,9 +47,6 @@ class Crawler(object):
         fetched_data = self._fetch_series_list()
         series_list = self._update_existing_series(fetched_data, update_all,
                                                    updated)
-        existing_series_ids = set(series.id for series in series_list)
-        new_series_ids = fetched_data.viewkeys() - existing_series_ids
-        self._add_new_series(new_series_ids, fetched_data, update_all, updated)
 
         # Update badges are cleared at the midnight and generated when the
         # series has been uploaded today.
@@ -75,7 +72,11 @@ class Crawler(object):
                 if not series.is_completed:
                     series.new_chapters_available = True
 
-        cache.set_permanently('series_list_fetched', datetime.utcnow())
+        existing_series_ids = set(series.id for series in series_list)
+        new_series_ids = fetched_data.viewkeys() - existing_series_ids
+        self._add_new_series(new_series_ids, fetched_data, update_all, updated)
+
+        self._commit()
 
         for series in Series.query.filter_by(new_chapters_available=True):
             series_updated, chapters_added = self.update_series(
@@ -94,6 +95,8 @@ class Crawler(object):
                 render_index()
             for series_id in updated[1]:
                 render_feed(series_id)
+
+        cache.set_permanently('series_list_fetched', datetime.utcnow())
 
         return updated
 
@@ -308,8 +311,7 @@ def series_list_out_of_sync():
     # above the minimum fetch interval will be fine.
     fetched = cache.get('series_list_fetched')
     if fetched is None:
-        # The series list is never fetched; so nothing to be out of sync.
-        return False
+        return True
     now = datetime.utcnow()
     last_midnight = as_naver_time_zone(now).replace(hour=0,
                                                     minute=0,
