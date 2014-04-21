@@ -49,6 +49,7 @@ def run_worker(burst=False):
 
 
 def on_index_requested(bp, **extra):
+    logger.debug('on_index_requested')
     if not current_app.config.get('USE_REDIS_QUEUE'):
         return
     if series_list_needs_update():
@@ -56,6 +57,7 @@ def on_index_requested(bp, **extra):
 
 
 def on_feed_requested(bp, **extra):
+    logger.debug('on_feed_requested')
     if not current_app.config.get('USE_REDIS_QUEUE'):
         return
     if series_list_needs_update():
@@ -621,13 +623,13 @@ def enqueue_update_series(series_id):
 
 
 def enqueue_job(job_func, cache_key, *args):
-    logger.debug('enqueue_job')
     if cache.get(cache_key):
         return
     cache.set(cache_key, True, timeout=300)
     try:
         func = get_rq_func(job_func, cache_key)
         queue.enqueue_call(func=func, args=args, result_ttl=0, timeout=900)
+        logger.debug('Job enqueued (job_func=%r, args=%r)', job_func, args)
         if current_app.config.get('START_HEROKU_WORKER_ON_REQUEST'):
             start_heroku_process('worker')
     except Exception:
