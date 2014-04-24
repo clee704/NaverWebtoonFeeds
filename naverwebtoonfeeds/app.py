@@ -75,13 +75,6 @@ def register_extensions(app):
 
 def register_request_handlers(app):
 
-    if app.config.get('USE_REDIS_QUEUE'):
-        @app.before_first_request
-        def init_queue():
-            import rq
-            rq.connections.use_connection(cache.cache._client)
-            g.queue = rq.Queue()
-
     if app.config['REDIRECT_TO_CANONICAL_URL']:
         @app.before_request
         def redirect_to_canonical_url():
