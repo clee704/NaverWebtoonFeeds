@@ -77,10 +77,10 @@ def enqueue_job(job_func, cache_key, *args):
         return
     cache.set(cache_key, True, timeout=300)
     try:
-        func = get_rq_func(job_func, cache_key)
-        get_queue().enqueue_call(func=func, args=args, result_ttl=0,
+        args = (job_func, cache_key) + args
+        get_queue().enqueue_call(func=run_rq_job, args=args, result_ttl=0,
                                  timeout=900)
-        logger.debug('Job enqueued (job_func=%r, args=%r)', job_func, args)
+        logger.debug('Job enqueued (job_func=%r, args=%r)', run_rq_job, args)
         if current_app.config.get('START_HEROKU_WORKER_ON_REQUEST'):
             start_heroku_process('worker')
     except Exception:
@@ -88,26 +88,23 @@ def enqueue_job(job_func, cache_key, *args):
         cache.delete(cache_key)
 
 
-def get_rq_func(job_func, cache_key):
-    @functools.wraps(job_func)
-    def wrapper(*args, **kwargs):
-        try:
-            return job_func(*args, **kwargs)
-        except AccessDenied:
-            # Cache should be deleted here as finally block is not executed
-            # when the process is killed by os.kill.
-            cache.delete(cache_key)
-            # Stop the current worker as we can't do anything with the current
-            # IP address. This can happen if we are on AWS (e.g. Heroku). You
-            # should start another worker process with a different public IP
-            # address.
-            logger.warning('Stopping the worker')
-            os.kill(os.getppid(), signal.SIGTERM)
-        except Exception:
-            logger.exception('Failed to process the job')
-        finally:
-            cache.delete(cache_key)
-    return wrapper
+def run_rq_job(job_func, cache_key, *args):
+    try:
+        return job_func(*args)
+    except AccessDenied:
+        # Cache should be deleted here as finally block is not executed
+        # when the process is killed by os.kill.
+        cache.delete(cache_key)
+        # Stop the current worker as we can't do anything with the current
+        # IP address. This can happen if we are on AWS (e.g. Heroku). You
+        # should start another worker process with a different public IP
+        # address.
+        logger.warning('Stopping the worker')
+        os.kill(os.getppid(), signal.SIGTERM)
+    except Exception:
+        logger.exception('Failed to process the job')
+    finally:
+        cache.delete(cache_key)
 
 
 def start_heroku_process(command):
