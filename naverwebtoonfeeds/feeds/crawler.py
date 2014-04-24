@@ -444,7 +444,7 @@ class NaverBrowser(object):
     def get_series_info(self, series_id):
         url = NAVER_URLS['last_chapter'].format(series_id=series_id)
         resp = self.get(url)
-        if resp.url != url:
+        if resp.url == 'http://comic.naver.com/main.nhn':
             return dict(removed=True)
         doc = parse_html(resp.content, resp.url)
         return parse_series_info(doc, series_id)
@@ -453,6 +453,8 @@ class NaverBrowser(object):
         url = NAVER_URLS['chapter'].format(series_id=series_id,
                                            chapter_id=chapter_id)
         resp = self.get(url)
+        if resp.url == 'http://comic.naver.com/main.nhn':
+            return dict(not_found=True)
         doc = parse_html(resp.content, resp.url)
         return parse_chapter_info(doc, series_id, chapter_id, url)
 
@@ -540,8 +542,6 @@ def parse_series_info(doc, series_id):
 
 def parse_chapter_info(doc, series_id, chapter_id, url):
     logger.debug('Parsing chapter %d of series %d', chapter_id, series_id)
-    if url != doc.xpath('//meta[@property="og:url"]/@content')[0]:
-        return dict(not_found=True)
     date_str = doc.xpath('//form[@name="reportForm"]/input[@name="itemDt"]'
                          '/@value')[0]
     naive_dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
