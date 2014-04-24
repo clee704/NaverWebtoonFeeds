@@ -5,12 +5,16 @@ from tempfile import mkstemp
 import lxml.etree
 import lxml.html
 import yaml
+from fakeredis import FakeRedis
+from fakeredis import FakeStrictRedis
 from flask import Response as ResponseBase
 from lxml.html import HtmlElementClassLookup, HTMLParser, submit_form
 from mock import Mock
 from pytest import fixture
+from redis import Redis
 
 from naverwebtoonfeeds.app import create_app
+from naverwebtoonfeeds.cache import RedisCache
 from naverwebtoonfeeds.ext import db as flask_db
 
 from ._compat import (addinfourl, build_opener, http_client, HTTPHandler,
@@ -20,7 +24,8 @@ from ._compat import (addinfourl, build_opener, http_client, HTTPHandler,
 tempfile_path = mkstemp()[1]
 test_settings = dict(
     SQLALCHEMY_DATABASE_URI='sqlite:///' + tempfile_path,
-    CACHE_TYPE='simple',
+    CACHE_TYPE='naverwebtoonfeeds.cache.redis',
+    USE_REDIS_QUEUE=True,
 )
 
 
@@ -33,6 +38,9 @@ def app(request):
             ctx.pop()
     request.addfinalizer(fin)
 
+    RedisCache.redis_class = FakeRedis
+    import rq
+    rq.compat.connections.StrictRedis = FakeStrictRedis
     app = create_app(test_settings)
     app.testing = True
     app.response_class = Response

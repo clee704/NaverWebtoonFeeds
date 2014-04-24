@@ -10,6 +10,10 @@ except ImportError:
 from naverwebtoonfeeds import __version__
 
 
+packages = [
+    'naverwebtoonfeeds',
+    'naverwebtoonfeeds.feeds',
+]
 install_requires = [
     'Flask==0.10.1',
     'Flask-Assets==0.9',
@@ -26,9 +30,18 @@ install_requires = [
     'netaddr==0.7.11',
     'blinker==1.3',
 ]
-packages = [
-    'naverwebtoonfeeds',
-    'naverwebtoonfeeds.feeds',
+test_requires = [
+    'pytest == 2.5.2',
+    'pytest-cov == 1.6',
+    'pytest-pep8 == 1.0.5',
+    'mock == 1.0.1',
+    'fakeredis == 0.4.2',
+    'redis == 2.9.1',
+    'rq == 0.3.13',
+    'cssselect == 0.9.1',
+]
+dependency_links = [
+    'https://github.com/clee704/fakeredis/tarball/9d3f8acdd337f39f15e36cf333f23083c49cd9f4',
 ]
 
 
@@ -91,13 +104,8 @@ setup(
     packages=packages,
     package_data=package_data,
     install_requires=install_requires,
-    tests_requires=[
-        'pytest == 2.5.2',
-        'pytest-cov == 1.6',
-        'pytest-pep8 == 1.0.5',
-        'mock == 1.0.1',
-        'cssselect == 0.9.1',
-    ],
+    tests_requires=test_requires,
+    dependency_links=dependency_links,
     cmdclass={'test': pytest},
     entry_points={
         'console_scripts': [

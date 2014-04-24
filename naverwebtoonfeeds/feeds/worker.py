@@ -3,9 +3,9 @@ import logging
 import os
 import signal
 
-from flask import current_app
+from flask import current_app, g
 
-from ..ext import cache, db, queue, redis
+from ..ext import cache, db
 from .crawler import AccessDenied, Crawler, series_list_needs_update
 from .models import Series
 from .signals import feed_requested, index_requested
@@ -21,11 +21,10 @@ def run_worker(burst=False):
         import rq
     except ImportError:
         raise RuntimeError('rq module is not installed')
-    with rq.Connection(connection=redis):
-        w = rq.Worker([rq.Queue()])
-        # Remove default exception handler that moves job to failed queue
-        w.pop_exc_handler()
-        w.work(burst=burst)
+    w = rq.Worker([rq.Queue()])
+    # Remove default exception handler that moves job to failed queue
+    w.pop_exc_handler()
+    w.work(burst=burst)
     logger.debug('run_worker(burst=%r) done', burst)
 
 
@@ -79,7 +78,7 @@ def enqueue_job(job_func, cache_key, *args):
     cache.set(cache_key, True, timeout=300)
     try:
         func = get_rq_func(job_func, cache_key)
-        queue.enqueue_call(func=func, args=args, result_ttl=0, timeout=900)
+        g.queue.enqueue_call(func=func, args=args, result_ttl=0, timeout=900)
         logger.debug('Job enqueued (job_func=%r, args=%r)', job_func, args)
         if current_app.config.get('START_HEROKU_WORKER_ON_REQUEST'):
             start_heroku_process('worker')

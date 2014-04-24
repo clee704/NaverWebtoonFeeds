@@ -29,10 +29,13 @@ class Cache(CacheBase):
 
 class RedisCache(RedisCacheBase):
 
+    redis_class = Redis
+
     def __init__(self, host='localhost', port=6379, password=None,
                  db=0, default_timeout=300, key_prefix=None):
         if isinstance(host, string_types):
-            client = Redis(host=host, port=port, password=password, db=db)
+            client = self.redis_class(host=host, port=port, password=password,
+                                      db=db)
         else:
             client = host
         super(RedisCache, self).__init__(client, port, password, db,

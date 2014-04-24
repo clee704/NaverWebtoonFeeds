@@ -23,23 +23,25 @@ except ImportError:
 
 
 class Redis(RedisBase):
-    response_error_max_retries = 10
+    response_error_max_retries = 20
+    shared_connection_pool = None
 
-    def __init__(self, *args, **kwargs):
-        self._initialized = False
-        if args or kwargs:
-            super(Redis, self).__init__(*args, **kwargs)
-            self._initialized = True
-
-    def init_app(self, app):
-        if not self._initialized:
-            host, port, db, password = _parse_redis_url(
-                app.config['REDIS_URL'])
-            super(Redis, self).__init__(host=host, port=port, db=db,
-                                        password=password)
-            self._initialized = True
-        else:
-            raise RuntimeError('already initialized')
+    def __init__(self, host='localhost', port=6379,
+                 db=0, password=None, socket_timeout=None,
+                 connection_pool=None, charset='utf-8',
+                 errors='strict', decode_responses=False,
+                 unix_socket_path=None):
+        if connection_pool is None:
+            connection_pool = self.__class__.shared_connection_pool
+        super(Redis, self).__init__(host=host, port=port, db=db,
+                                    password=password,
+                                    socket_timeout=socket_timeout,
+                                    connection_pool=connection_pool,
+                                    charset=charset, errors=errors,
+                                    decode_responses=decode_responses,
+                                    unix_socket_path=unix_socket_path)
+        if self.__class__.shared_connection_pool is None:
+            self.__class__.shared_connection_pool = self.connection_pool
 
     def execute_command(self, *args, **kwargs):
         retry = self.response_error_max_retries
@@ -54,7 +56,7 @@ class Redis(RedisBase):
                     delay = random.random() * backoff
                     logger.debug('Waiting %.1f seconds before retrying', delay)
                     time.sleep(delay)
-                    backoff *= 2
+                    backoff += 2
                 else:
                     logger.exception('Maximum number of retries reached')
                     raise

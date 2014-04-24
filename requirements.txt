@@ -28,6 +28,7 @@ pytest==2.5.2
 pytest-cov==1.6
 pytest-pep8==1.0.5
 mock==1.0.1
+-e git://github.com/clee704/fakeredis.git@9d3f8acdd337f39f15e36cf333f23083c49cd9f4#egg=fakeredis
 cssselect==0.9.1
 tox==1.7.1
 pylint==1.1.0

@@ -11,7 +11,7 @@ import logging.config
 import sys
 from datetime import timedelta
 
-from flask import current_app
+from flask import current_app, g
 from flask_assets import ManageAssets
 from flask_script import Manager, prompt_bool
 from flask_script.commands import Server, Shell, ShowUrls
@@ -78,8 +78,8 @@ asset_manager.help = 'run commands for assets'
 
 
 def _shell_context():
-    return dict(current_app=current_app, db=db, cache=cache, Series=Series,
-                Chapter=Chapter)
+    return dict(current_app=current_app, g=g, db=db, cache=cache,
+                Series=Series, Chapter=Chapter)
 
 shell_command = Shell(make_context=_shell_context)
 shell_command.help = 'run a Python shell inside the Flask app context'

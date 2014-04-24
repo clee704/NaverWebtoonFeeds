@@ -21,13 +21,3 @@ gzip = Gzip()
 
 
 assets_env.from_yaml(join(dirname(__file__), 'static/assets.yaml'))
-
-
-try:
-    from rq import Queue
-    from .redis_ import Redis
-    redis = Redis()
-    queue = Queue(connection=redis)
-except ImportError:
-    redis = None
-    queue = None

@@ -7,11 +7,11 @@
 """
 import os
 
-from flask import Flask, redirect, request, send_from_directory
+from flask import Flask, g, redirect, request, send_from_directory
 
 from ._compat import string_types, urlparse, urlunparse
 from .config import DefaultConfig, instance_path, resolve_instance_path
-from .ext import assets_env, cache, db, gzip, redis
+from .ext import assets_env, cache, db, gzip
 from .feeds import worker  # Necessary for signals
 from .feeds.views import feeds
 from .filters import register_filters
@@ -71,11 +71,16 @@ def register_extensions(app):
     cache.init_app(app)
     if app.config.get('GZIP'):
         gzip.init_app(app)
-    if app.config.get('USE_REDIS_QUEUE'):
-        redis.init_app(app)
 
 
 def register_request_handlers(app):
+
+    if app.config.get('USE_REDIS_QUEUE'):
+        @app.before_first_request
+        def init_queue():
+            import rq
+            rq.connections.use_connection(cache.cache._client)
+            g.queue = rq.Queue()
 
     if app.config['REDIRECT_TO_CANONICAL_URL']:
         @app.before_request
