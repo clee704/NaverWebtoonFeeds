@@ -14,9 +14,9 @@ $ ->
   $form = $('form')
   $searchBar = $form.find('input[type=search]')
   $checkbox = $form.find('input[type=checkbox]')
-  $tabs = $('.nav-tabs li')
-  $tabContent = $('.tab-content')
-  $mediaElements = $tabContent.find('.media')
+  $tabs = $('.nav li')
+  $seriesList = $('.series-list')
+  $seriesElements = $seriesList.find('.series')
 
   # Use Lazy Load.
   $('img.lazy').lazyload
@@ -24,7 +24,7 @@ $ ->
     threshold: 1000
 
   # Select the whole feed URL when it is clicked.
-  $tabContent.on 'click', '.feed-url', -> this.select()
+  $seriesList.on 'click', '.series-feed-url input', -> this.select()
 
   # Prevent submitting the form.
   $form.on 'submit', ->
@@ -72,30 +72,31 @@ $ ->
 
   # Index the normalized strings with their IDs.
   tuples = {}
-  $mediaElements.each ->
+  $seriesElements.each ->
     attrs = ['title', 'author', 'description']
     $this = $(this)
-    tuple = (normalize($this.find(".#{attr}").text()) for attr in attrs)
+    tuple = (normalize($this.find(".series-#{attr}").text()) for attr in attrs)
     tuples[$this.attr('id')] = tuple
 
-  toggleCompletedSeries = ->
+  toggleCompleted = ->
     $body.removeClass('show-ended hide-ended')
     if $checkbox.is(':checked')
       $body.addClass('show-ended')
     else
       $body.addClass('hide-ended')
     organizeTabs()
+    updateAlternatingClass()
     loadLazyImagesInCurrentViewport()
 
-  toggleMatchedSeries = ->
+  toggleMatched = ->
     $body.removeClass('show-all show-matched')
-    $mediaElements.removeClass('matched')
+    $seriesElements.removeClass('matched')
     key = normalize($searchBar.val())
     if key.length == 0
       $body.addClass('show-all')
     else
       $body.addClass('show-matched')
-      $mediaElements.each ->
+      $seriesElements.each ->
         $this = $(this)
         $this.removeClass('matched unmatched')
         tuple = tuples[$this.attr('id')]
@@ -104,6 +105,7 @@ $ ->
         else
           $this.addClass('unmatched')
     organizeTabs()
+    updateAlternatingClass()
     loadLazyImagesInCurrentViewport()
 
   $tabs.each ->
@@ -111,23 +113,24 @@ $ ->
 
   DAYS = 'all mon tue wed thu fri sat sun ended'.split(' ')
   DAY_CLASSES = ("show-day-#{day}" for day in DAYS).join(' ')
-  toggleSelectedUploadDaySeries = ->
+  toggleSelectedUploadDay = ->
     $tab = location.hash and $("a[href='#{location.hash}']").parent() or
            $tabs.eq(0)
     $body.removeClass(DAY_CLASSES)
     $body.addClass("show-day-#{$tab.data('day')}")
     $tabs.removeClass('active')
     $tab.addClass('active')
+    updateAlternatingClass()
     loadLazyImagesInCurrentViewport()
 
-  # Compute the number of visible media elements and hide empty tabs.
+  # Compute the number of visible series elements and hide empty tabs.
   organizeTabs = ->
     $tabs.removeClass('empty')
-    $tabContent.removeClass('empty')
+    $seriesList.removeClass('empty')
     $tabs.each ->
       $this = $(this)
       day = $this.data('day')
-      $e = $mediaElements
+      $e = $seriesElements
       $e = $e.filter(".#{day}") if day != 'all'
       $e = $e.filter('.matched') if $body.hasClass('show-matched')
       $e = $e.filter(':not(.ended)') if $body.hasClass('hide-ended')
@@ -138,14 +141,20 @@ $ ->
       location.href = $tabs.first().find('a').attr('href')
     # Mark the tab content as empty if the first tab is empty.
     if $tabs.first().is('.empty')
-      $tabContent.addClass('empty')
+      $seriesList.addClass('empty')
+
+  # Update even/odd class for visible series elements
+  updateAlternatingClass = ->
+    $seriesElements.removeClass('even odd')
+    $seriesElements.filter(':visible').each (i) ->
+      $(this).addClass(if i % 2 then 'odd' else 'even')
 
   # Load lazy images currently visible in the viewport.
   loadLazyImagesInCurrentViewport = ->
     $body.trigger('scroll')
 
-  $checkbox.on('click', toggleCompletedSeries).triggerHandler('click')
-  $searchBar.on(searchBarEventType, _.debounce(toggleMatchedSeries, 200))
+  $checkbox.on('click', toggleCompleted).triggerHandler('click')
+  $searchBar.on(searchBarEventType, _.debounce(toggleMatched, 200))
   $searchBar.triggerHandler(searchBarEventType)
-  $(window).on('hashchange', toggleSelectedUploadDaySeries)
+  $(window).on('hashchange', toggleSelectedUploadDay)
            .triggerHandler('hashchange')

@@ -1,6 +1,7 @@
 @import '../bower_components/bootstrap/less/bootstrap.less';
 @import 'mixins.less';
 
+@brand-primary: #8cc152;
 @icon-font-path: "../bower_components/bootstrap/fonts/";
 @font-family-sans-serif: "Helvetica Neue", Helvetica, Arial, "Apple SD Gothic Neo", "Nanum Gothic", NanumGothic, "나눔고딕", "서울남산체", "Malgun Gothic", "맑은 고딕", "맑은고딕", sans-serif;
 @font-size-base: 14px;
@@ -8,6 +9,12 @@
 @font-size-title: 21px;
 @line-height-base: 1.428571429; // 20/14
 @line-height-computed: 20px;
+@input-border-focus: @brand-primary;
+@nav-pills-border-radius: 0;
+@series-margin-vertical: 15px;
+@series-margin-horizontal: 10px;
+@series-thumbnail-width: 217px;
+@series-thumbnail-height: 165px;
 
 body {
   margin: @line-height-computed 0;
@@ -17,12 +24,12 @@ body {
   position: relative;
   .close {
     position: absolute;
-    top: 6px;
+    top: 5px;
     right: 10px;
   }
 }
 
-.nav-tabs {
+.nav {
   .empty {
     // Hide empty tab handles except for the first one
     display: none;
@@ -32,81 +39,123 @@ body {
   }
 }
 
-.tab-content {
+.series-list {
+  padding-top: @series-margin-vertical;
   .no-results {
     display: none;
   }
   &.empty .no-results {
     display: block;
-    margin-top: @line-height-computed;
   }
 }
 
-.media {
-  &:first-child {
-    margin-top: @line-height-computed;
-  }
+.series {
+  overflow: hidden;
+  margin-bottom: @series-margin-vertical;
   &.ended {
     display: none;
   }
-  .media-object {
-    width: 217px;
-    height: 165px;
+}
+
+.series-thumbnail {
+  display: block;
+  float: left;
+  margin-right: @series-margin-horizontal;
+  width: @series-thumbnail-width;
+  height: @series-thumbnail-height;
+  @media (max-width: (@series-thumbnail-width * 2 + 40px)) {
+    width: @series-thumbnail-width * 3 / 4;
+    height: @series-thumbnail-height * 3 / 4;
   }
-  header {
-    display: block;
-    margin-bottom: @line-height-computed / 2;
-    h1 {
-      font-size: @font-size-title;
-      margin: 0;
-      display: inline;
-      line-height: 1;
-      a {
-        color: inherit;
-        text-decoration: none;
-      }
-    }
-  }
-  .description {
-    margin-bottom: @line-height-computed / 2;
-  }
-  .links {
-    margin-bottom: 0;
-    ul {
-      margin-bottom: 0;
-    }
-  }
-  .feed-url-wrapper {
-    white-space: nowrap;
-    overflow: hidden;
-    .feed-url {
-      color: inherit;
-      background: transparent;
-      border: 0;
-      padding: 0;
-      margin: 0;
-      display: inline;
-      cursor: pointer;
-      font-size: inherit;
-      width: 100%;
-      min-height: 0;
-    }
+  @media (max-width: (@series-thumbnail-width * 3 / 2 + 40px)) {
+    float: none;
+    margin-right: 0;
+    margin-bottom: @series-margin-vertical;
+    width: @series-thumbnail-width;
+    height: @series-thumbnail-height;
   }
 }
 
-// Show or hide .media based on the current search term and 'show ended works'
+.series-body {
+  overflow: hidden;
+}
+
+.series-header {
+  display: block;
+  margin-bottom: @line-height-computed / 2;
+}
+
+.series-title {
+  display: inline;
+  margin: 0;
+  font-size: @font-size-title;
+  line-height: 1;
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+.series-description {
+  margin-bottom: @line-height-computed / 2;
+}
+
+.series-links {
+  margin-bottom: 0;
+  padding: 10px;
+  background-color: #eee;
+  color: #444;
+  ul {
+    margin-bottom: 0;
+  }
+  a {
+    color: @text-color;
+  }
+}
+
+.series-feed-url {
+  overflow: hidden;
+  white-space: nowrap;
+  input {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-size: inherit;
+    cursor: pointer;
+  }
+}
+
+@media (min-width: @screen-lg-min) {
+  .series {
+    float: left;
+    width: 50%;
+    &.even {
+      clear: left;
+    }
+  }
+  .series-body {
+    margin-right: @series-margin-horizontal;
+  }
+}
+
+// Show or hide .series based on the current search term and 'show ended works'
 // checkbox.
 @days: ~"mon", ~"tue", ~"wed", ~"thu", ~"fri", ~"sat", ~"sun", ~"ended";
 
-.show-ended .media.ended,
-.show-matched .media.matched {
+.show-ended .series.ended,
+.show-matched .series.matched {
   display: block;
 }
 
 .generate-hide-rules(@days);
 .generate-show-rules(@days);
 
-.hide-ended .media.ended,
-.show-matched .media.unmatched {
+.hide-ended .series.ended,
+.show-matched .series.unmatched {
   display: none;
 }

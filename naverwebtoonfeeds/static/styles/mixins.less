@@ -6,7 +6,7 @@
     when (isstring(extract(@days, @i))) and (isstring(extract(@days, @j))) {
   @day1: extract(@days, @i);
   @day2: extract(@days, @j);
-  .show-day-@{day1} .media.@{day2} {
+  .show-day-@{day1} .series.@{day2} {
     .hide-unless-equal(@day1, @day2);
   }
   ._generate-hide-rules(@days, @i, @j + 1);
@@ -33,7 +33,7 @@
     when (isstring(extract(@days, @i))) and (isstring(extract(@days, @j))) {
   @day1: extract(@days, @i);
   @day2: extract(@days, @j);
-  .show-day-@{day1} .media.@{day2} {
+  .show-day-@{day1} .series.@{day2} {
     display: block;
   }
   ._generate-show-rules(@days, @i + 1, @j + 1);
