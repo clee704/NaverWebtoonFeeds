@@ -15,13 +15,15 @@ from .views import feeds
 logger = logging.getLogger(__name__)
 
 
-def run_worker(burst=False):
+def run_worker(burst=False, worker_class=None):
     logger.debug('run_worker(burst=%r) called', burst)
     try:
         import rq
     except ImportError:
         raise RuntimeError('rq module is not installed')
-    w = rq.Worker([get_queue()])
+    if worker_class is None:
+        worker_class = rq.Worker
+    w = worker_class([get_queue()])
     # Remove default exception handler that moves job to failed queue
     w.pop_exc_handler()
     w.work(burst=burst)
