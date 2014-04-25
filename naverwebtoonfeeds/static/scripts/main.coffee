@@ -135,7 +135,7 @@ $ ->
         $this.addClass('empty')
     # Select the first tab if the current tab become empty.
     if $tabs.slice(1).is('.active.empty')
-      $tabs.first().find('a').triggerHandler('click')
+      location.href = $tabs.first().find('a').attr('href')
     # Mark the tab content as empty if the first tab is empty.
     if $tabs.first().is('.empty')
       $tabContent.addClass('empty')
