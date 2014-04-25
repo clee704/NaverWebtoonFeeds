@@ -103,22 +103,21 @@ manager.add_command('routes', routes_command)
 
 
 @manager.command
-def update():
-    """update the database by fetching changes from the Naver Comics website"""
-    crawler = Crawler()
-    crawler.update_series_list(update_all=True)
+def update(series_id=None):
+    """update the database by fetching changes from the Naver Comics website;
+    if series_id is specified, only the specified series will be updated
 
-
-@manager.command
-def updateseries(series_id):
-    """update the specified series by fetching changes from the Naver Comics
-    website"""
+    """
     crawler = Crawler()
-    series = Series.query.get(series_id)
-    if series:
-        crawler.update_series(series)
+    if series_id is None:
+        crawler.update_series_list(update_all=True)
     else:
-        print('Series #{} does not exist'.format(series_id), file=sys.stderr)
+        series = Series.query.get(series_id)
+        if series:
+            crawler.update_series(series)
+        else:
+            print('Series #{} does not exist'.format(series_id),
+                  file=sys.stderr)
 
 
 @manager.command

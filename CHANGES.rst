@@ -11,6 +11,7 @@
   - ENABLE_CACHE_COMPRESSION is removed. Use
     ``naverwebtoonfeeds.cache.compressedredis`` for CACHE_TYPE instead.
 
+- Merge the ``updateseries`` command into the ``update`` command.
 - Use bower for web libraries
 - Use Less instead of pyScss
 - Remove Heroku-specific files
