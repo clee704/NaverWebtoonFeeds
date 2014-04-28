@@ -14,7 +14,7 @@ def test_index_with_empty_db(app, db):
         d = client.get('/').doc
         assert cache.get(index_cache_key()) is not None
         assert d.cssselect('.no-feeds')[0].text == u'구독할 수 있는 웹툰이 없습니다.'
-        assert d.xpath('//article') == []
+        assert d.cssselect('.series') == []
 
 
 def test_index_with_series(app, db):
@@ -32,22 +32,22 @@ def test_index_with_series(app, db):
         db.session.commit()
 
         d = client.get('/').doc
-        a1 = d.cssselect('article#series-1')[0]
-        assert a1.cssselect('.title')[0].text.strip() == 'Peanuts'
-        assert a1.cssselect('.author')[0].text == 'Charles M. Schulz'
+        a1 = d.cssselect('#series-1')[0]
+        assert a1.cssselect('.series-title a')[0].text.strip() == 'Peanuts'
+        assert a1.cssselect('.series-author')[0].text == 'Charles M. Schulz'
 
-        a2 = d.cssselect('article#series-2')[0]
-        assert (a2.cssselect('.title')[0].text.strip() ==
+        a2 = d.cssselect('#series-2')[0]
+        assert (a2.cssselect('.series-title a')[0].text.strip() ==
                 "Alice's Adventures in Wonderland")
-        assert a2.cssselect('.author')[0].text == 'Lewis Carroll'
-        assert (a2.cssselect('.description')[0].text ==
+        assert a2.cssselect('.series-author')[0].text == 'Lewis Carroll'
+        assert (a2.cssselect('.series-description')[0].text ==
                 'A girl named Alice falls down a rabbit hole into a fantasy '
                 'world.')
         assert d.cssselect('.no-feeds') == []
-        assert d.xpath('count(//article)') == 2
-        assert (d.xpath('//article/attribute::id') == ['series-2', 'series-1'],
-                'Series should be sorted by title.')
-        assert (a1.cssselect('.feed-url')[0].attrib['value'] ==
+        assert len(d.cssselect('.series')) == 2
+        assert ([e.attrib['id'] for e in d.cssselect('.series')] ==
+                ['series-2', 'series-1']), 'Series should be sorted by title.'
+        assert (a1.cssselect('.series-feed-url input')[0].attrib['value'] ==
                 externalize_filter(url_for('feeds.show', series_id=1)))
 
 
