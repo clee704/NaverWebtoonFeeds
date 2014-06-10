@@ -46,3 +46,13 @@ def test_get_series_list(app):
             url=url, content=read_fixture('weekday.nhn.html'))
         assert (browser.get_series_list() ==
                 read_fixture('weekday.nhn.parsed.yaml'))
+
+
+def test_get_series_info(app):
+    with app.test_client():
+        browser = NaverBrowser()
+        browser.session = Mock()
+        browser.session.get.side_effect = lambda url, **kwargs: mock_obj(
+            url=url, content=read_fixture('25455_325.html'))
+        assert (browser.get_series_info(25455) ==
+                read_fixture('25455_325.parsed.yaml'))

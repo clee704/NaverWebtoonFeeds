@@ -525,15 +525,15 @@ def parse_completed_series(doc):
 
 def parse_series_info(doc, series_id):
     logger.debug('Parsing series %d', series_id)
-    comicinfo_dsc = doc.xpath('//*[@class="comicinfo"]/*[@class="dsc"]')[0]
+    comicinfo = doc.xpath('//*[@class="comicinfo"]/*[@class="detail"]')[0]
     permalink = doc.xpath('//meta[@property="og:url"]/@content')[0]
     status = doc.xpath('//*[@id="submenu"]//*[@class="current"]/em'
                        '/text()')[0].strip()
     return {
-        'title': comicinfo_dsc.xpath('h2/text()')[0].strip(),
-        'author': comicinfo_dsc.xpath('h2/*[@class="wrt_nm"]')[0]
-                               .text_content().strip(),
-        'description': inner_html(comicinfo_dsc.xpath('p[@class="txt"]')[0]),
+        'title': comicinfo.xpath('h2/text()')[0].strip(),
+        'author': comicinfo.xpath('h2/*[@class="wrt_nm"]')[0]
+                           .text_content().strip(),
+        'description': inner_html(comicinfo.xpath('p[@class="txt"]')[0]),
         'last_chapter': int(re.search(r'no=(\d+)', permalink).group(1)),
         'is_completed': status == u'완결웹툰',
         'thumbnail_url': doc.xpath('//meta[@property="og:image"]/@content')[0],
