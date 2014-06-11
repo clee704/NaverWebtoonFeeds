@@ -118,3 +118,7 @@ def read_fixture(filename):
             return yaml.load(text)
         else:
             return text
+
+
+read_fixture('25455_325.html')
+read_fixture('25455_325.parsed.yaml')

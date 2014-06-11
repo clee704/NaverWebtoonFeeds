@@ -48,11 +48,15 @@ def test_get_series_list(app):
                 read_fixture('weekday.nhn.parsed.yaml'))
 
 
-def test_get_series_info(app):
+@pytest.mark.parametrize('name', [
+    '25455_325',
+    '626938_1',
+])
+def test_get_series_info(name, app):
     with app.test_client():
         browser = NaverBrowser()
         browser.session = Mock()
         browser.session.get.side_effect = lambda url, **kwargs: mock_obj(
-            url=url, content=read_fixture('25455_325.html'))
+            url=url, content=read_fixture('{}.html'.format(name)))
         assert (browser.get_series_info(25455) ==
-                read_fixture('25455_325.parsed.yaml'))
+                read_fixture('{}.parsed.yaml'.format(name)))
