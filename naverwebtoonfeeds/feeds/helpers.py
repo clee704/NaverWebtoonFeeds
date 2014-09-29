@@ -7,6 +7,7 @@
 """
 import logging
 import re
+import socket
 
 import lxml.html
 import pytz
@@ -65,7 +66,7 @@ def get_public_ip():
             return IPAddress(ip_str)
         except (AttributeError, IndexError, TypeError):
             logger.debug('Unrecognizable data: %r', data, exc_info=True)
-        except URLError as exc:
+        except (URLError, socket.timeout) as exc:
             logger.debug("Couln't get %s: %s", url, exc)
 
 
