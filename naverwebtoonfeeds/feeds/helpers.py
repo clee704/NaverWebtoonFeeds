@@ -60,7 +60,7 @@ def get_public_ip():
         logger.debug('Trying to get public IP using %s', url)
         data = None
         try:
-            data = urlopen(url, timeout=60).read()
+            data = urlopen(url, timeout=10).read()
             ip_str = re.search(pattern, data).group(1)
             return IPAddress(ip_str)
         except (AttributeError, IndexError, TypeError):
