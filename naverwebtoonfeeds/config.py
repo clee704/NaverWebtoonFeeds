@@ -165,9 +165,9 @@ class DefaultConfig(object):
     IMGPROXY_URL_VARIABLE = staticmethod(lambda url: hash(url) % 3)
 
     PUBLIC_IP_SERVERS = {
-        'http://ipecho.net/plain': r'(\d{1,3}(\.\d{1,3}){3})',
         'http://httpbin.org/ip': r'"origin": "(\d{1,3}(\.\d{1,3}){3})"',
         'http://checkip.dyndns.com/': r'Address: (\d{1,3}(\.\d{1,3}){3})',
+        'http://ipecho.net/plain': r'(\d{1,3}(\.\d{1,3}){3})',
     }
 
     # Config values that need not be changed by the user.
