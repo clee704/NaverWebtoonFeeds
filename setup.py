@@ -15,7 +15,7 @@ packages = [
     'naverwebtoonfeeds.feeds',
 ]
 install_requires = [
-    'Flask==0.10.1',
+    'Flask==1.0',
     'Flask-Assets==0.9',
     'Flask-Cache==0.12',
     'Flask-gzip==0.1',

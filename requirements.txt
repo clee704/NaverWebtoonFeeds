@@ -2,7 +2,7 @@
 # NaverWebtoonFeeds. If you just want to use the app, you don't have to install
 # these packages. Type `python setup.py install` and you are ready.
 
-Flask==0.10.1
+Flask==1.0
 Flask-Assets==0.9
 Flask-Cache==0.12
 Flask-gzip==0.1
