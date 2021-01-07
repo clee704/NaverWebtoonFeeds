@@ -22,7 +22,7 @@ install_requires = [
     'Flask-Script==0.6.7',
     'Flask-SQLAlchemy==1.0',
     'requests==2.2.1',
-    'lxml==3.3.4',
+    'lxml==4.6.2',
     'BeautifulSoup==3.2.1',
     'PyYAML==3.11',
     'yuicompressor==2.4.8',
